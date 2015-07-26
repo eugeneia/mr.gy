@@ -3,4 +3,5 @@
 :stylesheets ((:media "screen" :href "/site-assets/style.css"))
 
 :meta-defaults (:document (:author "Max Rottenkolber")
-                :html (:index-headers-p nil :author nil))
+                :html (:index-headers-p nil :author nil)
+                :latex (:preamble interstellar.ventures:latex-en))
