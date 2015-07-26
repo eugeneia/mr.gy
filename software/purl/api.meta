@@ -1,0 +1,4 @@
+:document (:title "purl API Documentation")
+:source (:system :purl
+         :api-document (:purl))
+:stylesheets ((:media "screen" :href "/site-assets/api.css"))
