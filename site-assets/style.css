@@ -1,0 +1,239 @@
+@font-face {
+	font-family: Lato;
+	font-weight: 300;
+	src: url('/site-assets/Lato-Light.ttf');
+}
+@font-face {
+	font-family: Lato;
+	font-weight: 300;
+        font-style: italic;
+	src: url('/site-assets/Lato-LightItalic.ttf');
+}
+@font-face {
+	font-family: Lato;
+	font-weight: medium;
+	src: url('/site-assets/Lato-Medium.ttf');
+}
+@font-face {
+	font-family: Lato;
+	font-weight: medium;
+        font-style: italic;
+	src: url('/site-assets/Lato-MediumItalic.ttf');
+}
+@font-face {
+	font-family: Lato;
+	font-weight: bold;
+	src: url('/site-assets/Lato-Heavy.ttf');
+}
+@font-face {
+	font-family: Lato;
+	font-weight: bold;
+        font-style: italic;
+	src: url('/site-assets/Lato-HeavyItalic.ttf');
+}
+@font-face {
+	font-family: Inconsolata;
+	src: url('/site-assets/Inconsolata.otf');
+}
+
+html {
+    background: white;
+    color: black;
+    font-family: Helvetica Neue, Lato, sans-serif;
+    font-weight: medium;
+    background: white;
+    line-height: 1.4;
+    margin: 0 1.4em 0 1.4em;
+    padding: 0;
+}
+
+p {
+    margin: 0 0 1.4em 0;
+}
+
+code, pre, tt {
+    font-family: Inconsolata, monospace;
+}
+
+code, tt {
+    white-space: nowrap;
+}
+
+a:link {
+    text-decoration: none;
+}
+
+a:link:hover {
+    text-decoration: underline;
+}
+
+ul, ol, dl {
+    margin: 0 0 1.4em 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    padding: 0;
+    margin: 0;
+}
+
+header {
+    margin-bottom: 1.4em;
+    clear: both;
+}
+
+h1 {
+    font-size: 1.8em;
+}
+
+h2 {
+    font-weight: bold;
+    font-size: 1.5em;
+}
+
+h3 {
+    font-weight: bold;
+    font-size: 1.2em;
+}
+
+h4, h5, h6 {
+    font-weight: bold;
+    font-size: 1.0em;
+}
+
+nav {
+    margin: 1.4em 0;
+}
+
+nav ul, nav ol {
+    margin: 0;
+}
+
+figure {
+    margin: 0 0 1.4em 0;
+}
+
+figure > pre {
+    min-width: 37.3em;
+    display: inline-block;
+}
+
+figure audio {
+    width: 100%;
+    border-radius: 0.175em;
+}
+    
+
+figure img {
+    border-radius: 0.35em;
+    display: block;
+    margin: auto;
+    max-width: 100%;
+}
+
+figcaption {
+    text-align: center;
+    font-size: 0.9em;
+    padding: 0.777775em 1.55555em 0 1.55555em;
+}
+
+pre {
+    padding: 0.35em;
+    background: #f9f9f9;
+    border-radius: 0.35em;
+    margin: 0;
+}
+
+table {
+    margin: auto;
+    width: 100%;
+    padding: 1.4em;
+    border-collapse: collapse;
+    border: 1px solid black;
+    background: white;
+}
+
+th {
+    font-size: 0.9em;
+    padding: 0.388888em;
+    border-right: 1px solid black;
+    border-bottom: 1px solid black;
+}
+
+td {
+    padding: 0.388888em;
+    border-right: 1px solid black;
+}
+
+body {
+    max-width: 38em;
+    margin: 0 auto;
+    padding: 0;
+}
+
+p, ul, ol, table, section, header, nav, img {
+    max-width: 38em;
+}
+
+aside {
+    margin: 0 0 1.4em 0;
+}
+
+aside p {
+    font-weight: 300;
+}
+
+aside.meta {
+    margin: 1.4em 0;
+}
+
+aside.meta p {
+    font-size: 0.9em;
+    background: white;
+    color: #a6a6a6;
+    line-height: 1.5;
+}
+
+aside.meta a {
+    font-size: 0.9em;
+    color: #a6a6a6;
+    border: 1px solid;
+    border-radius: 0.2em;
+    padding: 0 0.2em;
+}
+
+aside.meta a:hover {
+    color: #88f;
+    text-decoration: none;
+}
+
+aside.meta span {
+    margin-right: 0.7em;
+}
+
+article {
+    margin-top: 1.4em;
+    margin-bottom: 2.8em;
+}
+
+@media all and (min-width: 71.6em) {
+    article {
+        margin-top: 2.8em;
+    }
+    aside.meta {
+        width: 14em;
+        position: fixed;
+        top: 1.4em;
+        right: 1.4em;
+    }
+    aside.meta span:after {
+        content:"\a";
+        white-space: pre;
+    }
+}
+
+@media all and (max-width: 30em) {
+    aside.meta span:after {
+        content:"\a";
+        white-space: pre;
+    }
+}
