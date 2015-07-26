@@ -1,0 +1,4 @@
+:document (:title "q-thread-pool API Documentation")
+:source (:system :q-thread-pool
+         :api-document (:q-thread-pool))
+:stylesheets ((:media "screen" :href "/site-assets/api.css"))
