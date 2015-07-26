@@ -1,0 +1,617 @@
+< Ausgangssituation
+
+ < Projektziele und Kundenwünsche
+
+  Im Rahmen des *MicroLisp-Projekts* soll eine Umgebung für die
+  Entwicklung von Programmen für die _MicroTouch_-Plattform produziert
+  werden. Die Entwicklungsumgebung soll sowohl einen Kompilierer als auch
+  einen Emulator bereit stellen, die jeweils den entworfenen Lisp-Dialekt
+  _MicroLisp_ implementieren.
+
+  Der Kunde will die Entwicklung von Anwendungen für die
+  _MicroTouch_-Plattform erleichtern und beschleunigen, indem er den
+  direkten Kontakt mit gerätenahen Sprachen wie _C_ und
+  _Assemblersprache_ vermeidet. Die _MicroLisp_-Sprache soll durch ihre
+  Dynamik und Ausdrucksstärke einen wesentlich unaufwendigeren
+  Entwicklungsprozess ermöglichen. Sie soll über eine *automatisierte
+  Speicherbereinigung* verfügen, den _Lambda-Calculus_ implementieren und
+  *plattformspeziefische Operationen* wie Ein- und Ausgabe unterstützen.
+  Außerdem soll die Sprache durch ein _Makrosystem_ erweiterbar sein.
+
+  Mit Beendigung des Projekts soll das Verhältnis zwischen Kosten und
+  Nutzen abgewogen werden. Hierbei soll insbesondere überprüft werden, ob
+  die erwartete *Produktivitätssteigerung* erreicht wurde.
+
+ >
+
+ < Teilaufgaben des Projekts
+
+  Der Entwicklung der benötigten Softwarekomponenten geht eine
+  umfangreiche Planung voraus. Die Planung beinhaltet alle Komponenten
+  und ihre internen Schnittstellen im System. Zusätzlich muss die
+  Interaktion mit Schnittstellen außerhalb des Systems geplant werden.
+
+  Die Entwicklungsumgebung besteht aus mehreren Software-Komponenten die
+  in Zusammenarbeit Programme für die zwei Endpunkte, Kompilation und
+  Emulation, generieren. Zusätzlich gibt es eine _Standardbibliothek_
+  die die Sprache mit grundlegenden Prozeduren und _Makros_ anreichert.
+
+  Die *Analysatorkomponente* liest eine _MicroLisp_-Quelldatei und
+  erzeugt einen _abstrakten Syntaxbaum_. Die *Makrokomponente*
+  transformiert den _abstrakten Syntaxbaum_ mit Hilfe von
+  _Makroprozeduren_, die unter anderem in einer _Standardbibliothek_
+  definiert sind. Danach kann das Programm entweder durch die
+  *Emulationskomponente* in der Entwicklungsumgebung interaktiv
+  ausgeführt oder durch die *Kompilationskomponente* in _C_-Quelltext
+  umgewandelt werden. Das resultierende _C_-Programm greift auf die
+  *Laufzeitkomponente* zurück, um erweiterte Funktionalitäten von
+  _MicroLisp_ zu ermöglichen. Die Entwicklung jeder Komponente stellt
+  eine Teilaufgabe dar. Die Komponenten müssen außerdem auf
+  Funktionalität und Korrektheit getestet werden.
+
+  #media 1.1 Die Komponenten im Überblick.#
+  komponenten.png
+
+  Abschließend soll angesichts einer Kosten-Nutzen-Analyse getestet
+  werden ob die _MicroLisp_-Entwicklungsumgebung die Projektziele erfüllt.
+  Dazu wird eine Testanwendung mit _MicroLisp_ und in _ANSI C_ entwickelt
+  und die Ergebnisse werden verglichen.
+
+ >
+
+ < Projektumfeld und Schnittstellen
+
+  Die _MicroLisp_-Sprache ist ein _Lisp-Dialekt_. Eine detaillierte
+  Definition der Sprache kann in der _MicroLisp_-Bedienungsanleitung
+  gefunden werden.
+
+  _MicroLisp_-Programme sollen in _ANSI C_-Quelltext und von dort aus
+  wiederum in Maschinenanweisungen für _Atmel AVR_ \[Atmel AVR\]
+  Prozessoren kompiliert werden. Da die _MicroTouch_-Plattform sehr stark
+  begrenzte Hardware-Ressourcen bietet, sollen die resultierenden
+  Programme die Ressourcen des Geräts möglichst schonen.
+
+  Der größte Teil der Komponenten soll in _Common Lisp_ geschrieben
+  werden, daher wird eine Schnittstelle die _SBCL Common
+  Lisp_-Implementation sein. Sie wird die Plattform sein, auf der die
+  Entwicklungsumgebung ausgeführt wird. Eine weitere Schnittstelle des
+  Systems wird die _GNU Compiler Collection_, die die generierten
+  _C_-Programme in Maschinenanweisungen übersetzen soll.
+
+  #media 1.2 Systemlandschaft im Überblick.#
+  systemlandschaft.png
+
+ >
+
+>
+
+< Ressourcen- und Ablaufplanung
+
+ < Ressourcenplanung
+
+  Die für das _MicroLisp_-Projekt benötigten materiellen Ressourcen
+  bleiben aufgrund der Software-Lastigkeit des Projekts sehr
+  überschaubar. Für die Planung, Entwicklung und Dokumentation der
+  Komponenten wird mindestens ein Software-Entwickler für die
+  festgesetzte Dauer von 70 Stunden benötigt.
+
+  An Sachmitteln fällt ein Arbeitsplatz mit einem Desktop-Computer an.
+  Dieser muss in der Lage sein, ein _UNIX_-artiges Betriebssystem
+  auszuführen, welches wiederum die _GNU Compiler Collection_ und die
+  _SBCL Common Lisp_-Implementation unterstützen muss.
+
+  Bis auf die Personalkosten, den Desktop-Computer und den Arbeitsplatz
+  fallen keine Kosten an. Die benötigte Software ist _Open Source_
+  und frei verfügbar. Als Betriebssystem kann eine frei erhältliche
+  _UNIX_-Variante wie _BSD_ oder _Linux_ verwendet werden.
+
+ >
+
+ < Ablaufplanung
+
+  Zuerst muss das System und seine Architektur geplant werden. Die als
+  erstes zu programmierende Komponente ist der Analysator. Danach können
+  die Makro- und Emulatorkomponenten parallel programmiert werden. Wenn
+  die oben genannten Komponenten einsatzbereit sind, ist bereits eine
+  repräsentative Ausführungsumgebung für die _MicroLisp_-Sprache
+  implementiert. Somit kann die Programmierung der _Standardbibliothek_
+  beginnen und eine _Test-Suite_ für die Sprache geschrieben werden.
+
+  Mit der _Test-Suite_ müssen dann die primitiven Operatoren der
+  Sprache, sowie die Prozeduren und _Makros_ der _Standardbibliothek_
+  auf Korrektheit und Integrität getestet werden. Somit soll schon
+  frühzeitig die Funktionalität der Sprache sichergestellt werden können.
+  Außerdem ist es bereits möglich zu prüfen, ob die Sprache die
+  Anforderungen an die Produktivitätssteigerung beim Programmieren
+  erfüllt. 
+
+  Wenn die Tests zeigen, dass ein zufriedenstellender Stand erreicht ist,
+  kann mit der Programmierung der _Laufzeitumgebung_ und der
+  Kompilationskomponente begonnen werden. Wenn beide Komponenten
+  funktionstüchtig sind, kann _MicroLisp_-Quelltext in lauffähigen
+  _C_-Quellcode übersetzt werden.
+
+  Um die Integrität der Kompilationskomponente und die Korrektheit der
+  _Laufzeitumgebung_ zu gewährleisten, wird mithilfe der _Test-Suite_ die
+  Funktionalität beider Komponenten getestet. Dabei wird besonderer Wert
+  auf die Korrektheit interner Vorgänge der Laufzeitkomponente gelegt.
+
+  Wenn die Tests ein überzeugendes Ergebnis liefern, kann die
+  Kosten-Nutzen-Analyse durchgeführt werden. Dazu wird eine ausreichend
+  komplexe Testanwendung sowohl in _MicroLisp_ als auch in _C_
+  programmiert. Die resultierenden Anwendungen werden unter den
+  Gesichtspunkten Quelltext-Komplexität, Performanz, Wartbarkeit und
+  Erweiterbarkeit verglichen. Anhand dieses Vergleichs soll die
+  Rentabilität des _MicroLisp_-Projekts beurteilt werden.
+
+  In Anhang 1 ([#section-5-1]) wird der oben beschriebene Ablaufplan
+  durch ein Flussdiagramm visuell dargestellt.
+
+  Aus der Ablaufplanung lassen sich mehrere zentrale Termine entnehmen.
+  Dazu gehören wichtige *Meilensteine* in der Programmierung der
+  Komponenten sowie die drei *Testphasen*. In Abbildung 2.2 werden die
+  Termine tabellarisch zusammengefasst. Die Terminplanung berücksichtigt
+  einen Zeitraum von zehn Stunden für das Verfassen der
+  Projektdokumentation.
+
+  #table 2.2 Termine aus der Ablaufplanung.#
+  | Tag   | Teilaufgabe
+  | Tag 2 | Meilenstein 1: Erste repräsentative Ausführungsumgebung
+  | Tag 4 | Testphase 1: Analysator-, Makro-, Emulationskomponente und Standardbibliothek
+  | Tag 6 | Meilenstein 2: Lauffähige C-Programme können erzeugt werden
+  | Tag 7 | Testphase 2: Laufzeitumgebung und Kompilationskomponente
+  | Tag 8 | Testphase 3: Kosten-Nutzen-Analyse durch Testanwendung
+
+ >
+
+>
+
+< Durchführung und Auftragsbearbeitung
+
+ < Vorgehensweise & architektonische Entscheidungen
+
+  Die Projektdurchführung beginnt, wie in Abbildung 2.1 veranschaulicht
+  wird, mit der Planung der Systemarchitektur. Ich entscheide mich, wie
+  in Abbildung 1.1 dargestellt wird, für eine modulare Architektur. Diese
+  trennt Softwarekomponenten mit unabhängigen Funktionalitäten sauber von
+  einander ab. Quelltext 3.1 veranschaulicht wie das System
+  Subkomponenten, ohne geteilten Status oder verknüpfter Semantik,
+  in einer Oberprozedur kombiniert.
+
+  #code 3.1 Definition der Emulationsfunktion {evaluate}.#
+
+  (defun evaluate (expression environment)
+    "Evaluate MicroLisp EXPRESSION in ENVIRONMENT."
+    (evaluate-expanded-expression
+      (expand-expression expression *macros*)
+      environment))
+  #
+
+  Diese Art der Programmierung hat den Vorteil, dass ausgehend vom
+  Quelltextbeispiel 3.1 die Prozedur {evaluate-expanded-expression}
+  unabhängig von der Prozedur {expand-expression} definiert werden kann.
+  Gleichermaßen benötigt die Oberprozedur {evaluate} keine Informationen
+  über Implementationsdetails der anderen beiden Prozeduren, um sie
+  anzuwenden. Diese Eigenschaften erleichtern nachträgliche Änderungen
+  und Erweiterungen an Systemkomponenten und beschränken die Komplexität
+  des gesamten Systems.
+
+  Die Analysatorkomponente kann mit geringem Aufwand entwickelt werden,
+  da die _MicroLisp_-Sprache und _Common Lisp_ untereinander Syntaxregeln
+  teilen. Die benötigten Prozeduren zum Einlesen von
+  _MicroLisp_-Quelldateien werden von _Common Lisp_ zur Verfügung
+  gestellt. Diese generieren einen _abstrakten Syntaxbaum_ der als
+  verschachtelte _Listenstruktur_ repräsentiert wird. Die in Abbildung
+  3.2 veranschaulichte Repräsentationsform, ermöglicht es
+  _MicroLisp_-Quelltext mit geringem Aufwand zu verarbeiten.
+
+  #media 3.2 Interne Repräsentation des _abstrakten Syntaxbaums_.
+  Dargestellt durch die so genannte "Box and Pointer"-Notation.#
+  ast.png
+
+  Nun können Makrokomponente und Emulationskomponente parallel entwickelt
+  werden. Weil ich alleine am _MicroLisp_-Projekt arbeite, entscheide ich
+  mich dafür die Makrokomponente als erstes zu implementieren. Diese
+  Komponente sucht in einem _Abstrakten Syntaxbaum_, ausgegeben von der
+  Analysatorkomponente, nach Ausdrücken, für die in einer _Makrotabelle_
+  ein _Makro_ definiert ist und dehnt die Ausdrücke mithilfe des _Makros_
+  aus.
+
+  #code 3.3 Signatur der Prozedur zum Suchen und Ausdehnen von
+  _Makroausdrücken_.#
+
+  (defun expand-expression (expression macros)
+    "Expand MACROS in EXPRESSION and return expanded expression."
+    [...])
+  #
+
+  Ein _Makro_ ist als eine Prozedur implementiert, die als Parameter die
+  Argumente eines _Makroausdrucks_ annimmt und einen neuen Ausdruck als
+  Rückgabewert hat. Quelltext 3.4 zeigt eine einfache _Makroprozedur_.
+
+  #code 3.4 _Makroprozedur_ die einen klassischen {if}-Ausdruck zu einem
+   {cond}-Ausdruck ausdehnt.#
+
+  (lambda (condition then else)
+    `(cond (,condition ,then)
+           (t ,else)))
+  #
+
+  Angenommen die Prozedur {expand-expression} aus Quelltext 3.3 findet
+  einen Ausdruck in der Form {(if BEDINGUNG WAHR-AUSDRUCK
+  FALSCH-AUSDRUCK)}, übergibt diesen Ausdruck an die _Makroprozedur_
+  aus Quelltext 3.4 und ersetzt ihn mit dem Rückgabewert, dann lautet der
+  ausgedehnte Ausdruck {(cond (BEDINGUNG WAHR-AUSDRUCK) (t
+  FALSCH-AUSDRUCK))}. So wurde der _MicroLisp_-Sprache mithilfe des
+  _Axioms_ {cond} ein neues Kontrollkonstrukt {if} hinzugefügt.
+
+  Die Entwicklung der Emulationskomponente birgt zwei Hauptprobleme: Die
+  Umsetzung von _Axiomen_ und die Implementation von Prozeduren. Die
+  _MicroLisp-Axiome_ und -Datentypen lassen sich mithilfe von _Common
+  Lisp_ mit wenig Aufwand umsetzten, weil beide Sprachen auf den gleichen
+  Kernfunktionen aufbauen. Es müssen lediglich die _MicroLisp-Axiome_ und
+  -Datentypen den entsprechenden Operatoren aus _Common Lisp_ zugeordnet
+  werden.
+
+  #code 3.5 Ausschnitt aus der Emulationskomponente: Umsetzung des
+  {add}-Axioms.#
+
+  (add (+ (evaluate (first call-arguments) environment)
+          (evaluate (second call-arguments) environment)))
+  #
+  
+  Quelltext 3.5 zeigt eine Klausel aus einem {case}-Ausdruck. Jedes
+  _Axiom_ wird in einer Klausel wie dieser implementiert. Das
+  {add}-_Axiom_ zum Addieren von Zahlen wird umgesetzt, indem die
+  Argumente (_MicroLisp-Ausdrücke_) mit der Emulationskomponente rekursiv
+  ausgewertet werden und mit dem _Common Lisp_ Additionsoperator {+}
+  summiert werden.
+
+  _MicroLisp_-Prozeduren müssen einer essentiellen Anforderung gerecht
+  werden. Sie müssen den _lexikalischen Sichtbarkeitsbereich_ von
+  _Bezeichnern_ innerhalb ihres Körpers, genannt _Funktionsabschluss_,
+  implementieren. Dafür muss die Zuordnung von _Bezeichnern_ und Werten,
+  auch _Environment_ genannt, zur Zeit der Prozedurdefinition konserviert
+  werden.
+
+  #code 3.6 _Konstruktor_ für eine Prozedur.#
+
+  (defun make-procedure (lambda-expression environment)
+    "Return new procedure consisting of LAMBDA-EXPRESSION and
+  ENVIRONMENT."
+    (unless (lambda-p lambda-expression)
+      (error "~a is not a valid lambda expression."
+             lambda-expression))
+    (list 'procedure
+           lambda-expression
+           environment))
+  #
+
+  Quelltext 3.6 zeigt wie der _Konstruktor_ {make-procedure} ein
+  Prozedurobjekt _instanziiert_. Er übernimmt einen _Lambda-Ausdruck_ und
+  ein _Environment_ als Parameter und gibt ein Objekt zurück, das den
+  _Lambda-Ausdruck_ mit dem _Environment_ verknüpft. Wenn eine Prozedur
+  aufgerufen wird, werden die _Bezeichner_ im Körper der Prozedur
+  mithilfe des konservierten _Environments_ Werten zugeordnet.
+
+  Die initiale _Standardbibliothek_ beinhaltet Prozeduren und _Makros_,
+  die der Entwicklung der _Test-Suite_ erleichtern. Die Implementation
+  dieser ist nicht zwangsweise trivial, jedoch spielt sie im Rahmen des
+  _MicroLisp_-Projekts eine geringfügige Rolle und wird deswegen nicht
+  genauer erläutert.
+
+  Als nächstes wird die wichtigste und komplexeste Komponente, die
+  _Laufzeitumgebung_ entwickelt. Die Repräsentation von Werten stellt die
+  erste Herausforderung dar. Aufgrund der dynamischen Eigenschaften von
+  _MicroLisp_ muss die statische Typisierung von _C_ umgangen werden.
+
+  #code 3.7 Definition des {value}-Typs durch geschickte Ausnutzung von
+   _C_ {struct}- und {union}-_Ausdrücken_.#
+
+  enum type { PROCEDURE, CELL, SYMBOL, NUMBER, CHARACTER };
+
+  [...]
+
+  typedef struct {
+    enum type type;
+    struct symbol *symbol;
+  } symbol;
+ 
+  [...]
+
+  union value {
+    enum type type;
+    procedure procedure;
+    cell cell;
+    symbol symbol;
+    number number;
+    character character;
+  };
+  
+  typedef union value value;
+  #
+
+  Quelltext 3.7 zeigt, wie die Typen der _MicroLisp_-Sprache zu einem Typ
+  {value} zusammengefasst werden. Alle Typen sowie die {value} {union}
+  haben ein Feld {type}. Dieses ermöglicht den speziellen Typ eines
+  {value}-Objekts zu ermitteln. So können _MicroLisp_-Objekte innerhalb
+  der _Laufzeitumgebung_ einheitlich als {value}-Objekt herumgereicht
+  werden. Diese Technik impliziert, dass die primtiven Operatoren die
+  Typen von Objekten zur _Laufzeit_ überprüfen müssen, um
+  _Speicherzugriffsfehler_ zu vermeiden.
+
+  Anders als bei der Emulationskomponente müssen die _Axiome_ und
+  Datentypen der Sprache von Hand implementiert werden. Beispielsweise
+  müssen in _Symbole_ mit _C_ Strukuren implementiert werden.
+
+  #code 3.8 Struktur und Schnittstelle des {symbol}-Typs.#
+
+  /* symbol-structure:  Symbol structure. */
+
+  struct symbol {
+    unsigned long identifier;
+    char *name;
+  };
+
+
+  /* symbol:  Constants and prototypes for symbol functions. */
+
+  #define T new_symbol("T")
+  #define NIL NULL
+
+  symbol *new_symbol (char *);
+  symbol *symbolic_equality (symbol *, symbol *);
+  symbol *symbol_p (value *);
+  #
+
+  Quelltext 3.8 zeigt Details der internen Repräsentation von
+  _Symbolen_. Die Prozedur {new_symbol} wird verwendet um _Symbole_ aus
+  _Literalen_ zu erzeugen. Sie nimmt einen Namen in Form einer
+  Zeichenkette als Parameter und gibt das entsprechende _Symbol_ zurück.
+  Weil _Symbole_ einzigartig sind und es aber mehrere _Instanzen_ von
+  einem _Symbol_ geben kann werden sie nicht im {symbol}-Objekt
+  gespeichert. Stattdessen sucht {new_symbol} in einer Tabelle nach einer
+  {symbol}-Struktur mit gleichem Namen. Wenn keine passende Struktur
+  gefunden wird, fügt {new_symbol} einen neuen Eintrag für ein _Symbol_
+  mit dem Namen und einem eindeutigen Schlüssel in die Tabelle ein.
+  Anschließend wird ein {symbol}-Objekt mit einem _Zeiger_ auf die
+  entsprechende Struktur zurückgegeben.
+
+  Es sind zwei spezielle _Symbole_ {T} und {NIL} vordefiniert,
+  konventionell indizieren sie die _Wahrheitswerte_. Die Prozedur
+  {symbolic_equality} entspricht dem {symbolic=}-_Axiom_. Sie gibt {NIL}
+  zurück, wenn die Schlüssel der übergebenen _Symbole_ nicht gleich
+  sind. Die Prozedur {symbol_p} entspricht dem {symbol?}-_Axiom_ und gibt
+  {NIL} zurück wenn das übergebene Objekt nicht vom Typ {symbol} ist, wie
+  sich durch das uniforme {type}-Feld des {value}-Typs feststellen lässt.
+
+  Die Implementation des {symbol}-Typs ermöglicht den effizienten
+  Vergleich von _Symbolen_ anhand eines numerischen Schlüssels, anstatt
+  zum Beispiel einer Zeichenkette. Weil _Symbole_ primär als Schlüssel
+  verwendet werden, sind die Eigenschaften dieser Implementation
+  essenziell für die Performanz der Sprache.
+
+  Die _MicroLisp_-Sprache soll automatisierte _Speicherbereinigung_
+  implementieren. Standardmäßig unterstützt _C_ jedoch nur manuelle
+  Speicherverwaltung. Um diese Diskrepanz zu überwinden, wird ein
+  schlanker _Referenzzählender Garbage Collector_ mit folgender
+  Schnittstelle implementiert.
+
+  #code 3.9 Schnittstelle des _Garbage Collectors_.#
+
+  void use (value *);
+  void disuse (value *);
+  void collect_garbage (void);
+  #
+
+  Die {use}-Prozedur inkrementiert den _Referenzzähler_ eines Objekts.
+  Dieser _Referenzzähler_ wird in einer _Hashtabelle_ gespeichert, die
+  die _Speicheradressen_ der Objekte als Schlüssel verwendet. Wenn ein
+  Objekt noch keinen Eintrag in der Referenztabelle hat wird dieser von
+  {use} eingefügt. Die {disuse}-Prozedur dekrementiert den
+  _Referenzzähler_ eines Objekts. Die {collect_garbage}-Prozedur
+  befreit den Speicherplatz, der von _Speicheradressen_ in der
+  Referenztabelle referenziert wird, wenn der entsprechende
+  _Referenzzähler_ null ist.
+
+  Die {use}- und {disuse}-Prozeduren werden von Prozeduren der
+  _Laufzeitumgebung_ aufgerufen, die Objekte binden. So bindet zum
+  Beispiel die {new_procedure}-Prozedur, die eine _MicroLisp_-Prozedur
+  instanziiert, die Objekte in ihrem _Environment_. Die Verwendung der
+  {use}- und {disuse}-Prozeduren garantiert in diesem Fall das die
+  Objekte aus dem _Environment_ solange verfügbar sind wie sie benötigt
+  werden. Die {collect_garbage}-Prozedur wird periodisch von der
+  _Laufzeitumgebung_ aufgerufen, um den Speicher zu bereinigen.
+
+  Es wurde die _Referenzzählende_ Variante des _Garbage Collectiors_
+  gewählt, weil sie vergleichsweise implementationsunaufwendig ist. Der
+  implementierte _Garbage Collector_ kann die standard
+  Speicherverwaltungsprozeduren {malloc} und {free} verwenden und es muss
+  kein spezieller _Heap_ implementiert werden, wie zum Beispiel bei der
+  _Mark and Sweep_ Variante.
+
+  Als Letztes muss die Kompilationskomponente entwickelt werden und dank
+  der umfangreichen _Laufzeitumgebung_ muss diese nur noch ein Problem
+  lösen. Die _MicroLisp_-Sprache behandelt Prozeduren als _Objekte erster
+  Klasse_. Dementsprechend können Prozeduren an jedem Ort im Quelltext
+  definiert werden. _C_ unterstützt allerdings nur Prozedurdefinitonen
+  auf oberster Ebene des Quelltextes.
+
+  #code 3.10 Prozedursignatur aus der Kompilationskomponente zum
+  Extrahieren von Prozedurdefinitionen.#
+
+  (defun nextract-procedures (expanded-expressions)
+    "Extract procedures from EXPANDED-EXPRESSIONS, return procedures
+  and expressions in which procedures are replaced with pointers
+  (desctructively)."
+    [...])
+  #
+
+  Quelltext 3.10 zeigt die Signatur der Prozedur zum Extrahieren von
+  Prozedurdefinitionen. Die extrahierten Prozedurdefinitionen werden dann
+  gesammelt am Anfang des resultierenden _C_-Programms als Prozeduren
+  {proc1} bis {procN} definiert und können aufgrund der vorhersehbaren
+  Namenskonvention von Aufrufen der {new_procedure}-Prozedur referenziert
+  werden.
+  
+ >
+
+ < Qualitätssicherung
+
+  Um die Qualität der Softwarekomponenten während der Entwicklung zu
+  sichern, wird eine _Test-Suite_ geschrieben die die _Axiome_ der
+  Sprache sowie die Prozeduren und _Makros_ der _Standardbibliothek_
+  abdeckt.
+
+  #code 3.11 Ausschnitt aus der _Test-Suite_.#
+
+  (test (assert "T does not evaluate to itself."
+	        (symbolic= t (quote t)))
+        [...])
+  #
+
+  Quelltext 3.11 zeigt einen Ausschnitt aus der _Test-Suite_. Die
+  _Test-Suite_ wird wie in der Ablaufplanung beschrieben Ausgewertet um
+   die Funktionalität der Systemkomponenten zu verifizieren, wenn die
+  Meilensteine erreicht sind. Um die Laufzeitkomponente zusätzlich zu
+  verifizieren wird ein _C-Profiler_ verwendet. Die Internen Vorgänge der
+  _Laufzeitumgebung_ werden Analysiert um subtile Fehler wie
+  _Speicherlecks_ aufzudecken. 
+
+  Abschließend wird eine Testanwendung sowohl in _MicroLisp_ als auch in
+  _ANSI C_ entwickelt. Die Quelltexte der Testanwendungen {units.ml} und
+  {units-c.c} sind unter dem Verzeichnis {test/} hinterlegt. Beide
+  Anwendungen sind vom Funktionsumfang her identisch. Sie interpretieren
+  eine einfache Sprache zum Umwandeln von Längeneinheiten und berichten
+  die Ergebnisse. Um beide Entwicklungsumgebungen zu vergleichen, werden
+  relevante Merkmale von {units} und {units-c} aus Entwickler- und
+  Benutzersicht gemessen.
+
+  #table 3.12 Messergebnisse von {time}. {real} bezeichnet die Zeit
+  zwischen Aufruf und Beendigung des Programs, {user} bezeichnet die Zeit
+  die im _Benutzermodus_ und {sys} die Zeit die im
+  _Kernelmodus_ verbracht wird.#
+  | Laufzeit | {units} 1x | {units-c} 1x | {units} 1000x | {units-c} 1000x
+  | {real} | 0.008s | 0.007s | 7.373s | 6.378s
+  | {user} | 0.003s | 0.000s | 2.070s | 0.540s
+  | {sys}  | 0.003s | 0.000s | 2.976s | 1.193s
+
+  Weil der Funktionsumfang beider Anwendungen identisch ist kann aus
+  Sicht des Benutzers nur die Performanz verglichen werden. Mit dem
+  _UNIX_-Werkzeug {time} wird die Laufzeit beider Anwendungen gemessen.
+  Die Messergebnisse in Tabelle 3.12 zeigen, dass messbare
+  Performanzunterschiede erst bei sehr langen Berechnungen auftreten. Der
+  Benutzer kann den Performanzunterschied bei den Testanwendungen nicht
+  wahrnehmen.
+
+   Aus Sicht des Entwicklers fällt nicht nur auf, dass die _C_-Anwendung
+  fast doppelt so lang ist. Die Einheitentabelle kann in der
+  _MicroLisp_-Anwendung mithilfe der _primitiven_ Datentypen zentral und
+  Leserlich definiert werden. In der _C_-Anwendung muss eine passende
+  Datenstruktur erst geschaffen werden. Dabei kommen einige
+  Implementationsfragen auf, wie zum Beispiel arbiträre Begrenzungen, die
+  nicht relevant für die Logik der Anwendung sind. Um eine neue
+  Längeneinheit zu definieren müssen mehrere Stellen im Quelltext
+  angepasst werden.
+
+  Zusätzlich ermöglicht die _MicroLisp_-Sprache intensive Abstraktion durch
+  Prozeduren höherer Ordnung wie {find} und {map}. _C_ erschwert durch
+  das statische Typsystem selbst die Abstraktion von generischen
+  Operationen. Durch die verringerte Abstraktion muss der Entwickler der
+  _C_-Anwendung auf eine Vielzahl von unrelevanten Details achten.
+
+  Der direkte Vergleich zeigt, dass die _C_-Anwendung nicht nur in der
+  initialen Entwicklung wesentlich aufwendiger ist. Auch die Wart- und
+  Erweiterbarkeit ist erschwert. Es wird sichtbar das die
+  _MicroLisp_-Entwicklungsumgebung den Aufwand der Anwendungsentwicklung
+  langfristig stark mindert.
+
+ >
+
+>
+
+< Projektergebnisse
+
+ < Abnahme und Projektübergabe
+
+  In das Abnahmeprotokoll fließt eine Analyse von Stand und
+  Funktionalität der Softwarekomponenten sowie die Kosten-Nutzen-Analyse
+  ein. Tabelle 4.1 zeigt das Abnahmeprotokoll.
+
+  #table 4.1 Abnahmeprotokoll des _MicroLisp_-Projekts. Fehlergrad:
+  1 = hoch, 2 = mittel, 3 = niedrig.#
+  | Abnahmekriterium                                       | Ergebnis (Fehlergrad)
+  | Funktionalität durch _Test-Suite_ bestätigt            | Ja
+  | Laufzeitkomponente ist Performanzoptimiert             | Nein (3)
+  | automatisierte Speicherbereinigung ist funktional      | Ja
+  | _Lambda-Calculus_ ist implementiert                    | Ja
+  | _Axiome_ für Ein- und Ausgabe vorhanden und funktional | Ja
+  | Ergebnisse der Kosten-Nutzen-Analyse zufriedenstellend | Ja
+  | Qualität der Dokumentation zufriedenstellend           | Ja
+
+  Da das Abnahmeprotokoll keine wesentlichen Mängel aufweist, kann das
+  Projekt wie geplant übergeben werden. Die _Laufzeitumgebung_ wird den
+  Anforderungen an Funktionalität zwar gerecht, ihre Performanz ist
+  allerdings verbesserungswürdig. Weitere Entwicklung im Umfang der
+  Systemwartung soll die Performanz der _Laufzeitumgebung_ optimieren und
+  gegebenenfalls bisher unerkannte Fehler beheben.
+
+ >
+
+ < Fazit
+
+  Im Rahmen des Projekts wurde eine umfangreiche Entwicklungsumgebung für
+  die _MicroLisp_-Sprache entwickelt. Die geforderten Komponenten sind
+  funktionstüchtig und werden den Kundenwünschen weitgehend gerecht. Das
+  resultierende Softwaresystem ist in der Lage, die _MicroLisp_-Sprache
+  zu emulieren und nach _C_ zu kompilieren und bietet den gewünschten
+  _Makro_-Mechanismus zur Erweiterung der Sprache.
+
+  Der geplante Ablauf konnte eingehalten werden und die gewählten
+  Methoden haben sich bewährt. Allerdings muss angemerkt werden, dass die
+  der _Laufzeitumgebung_ inhärente Komplexität größer ist als angenommen
+  wurde. Demnach konnte die Qualität der Laufzeitkomponente nur auf einen
+  zufriedenstellenden aber verbesserungswürdigen Stand gebracht werden.
+
+  Vor Beginn des Projekts hätte der Aufwand für die Entwicklung der
+  einzelnen Softwarekomponenten intensiver evaluiert werden müssen. Eine
+  detailliertere Abschätzung des Aufwands hätte zu dem Ergebnis geführt,
+  dass das System innerhalb der festgesetzten 70 Stunden zwar vollständig
+  entwickelt werden kann, jedoch reicht die Zeit nicht aus um die
+  gewünschte Qualität aller Softwarekomponenten zu erreichen. Der
+  Projektantrag hätte also spezifizieren müssen, dass das Ziel des
+  Projekts eine Vorabversion der Entwicklungsumgebung ist, die
+  nachträglich iterativ weiterentwickelt werden soll.
+
+  Als besonders positiv kann die _Test-Suite_ bewertet werden. Sie stellt
+  einen Qualitätssicherungsmechanismus für mehrere Komponenten des
+  Systems dar, weil sie sowohl die Emulations- und Kompilations- sowie
+  Makro- und Laufzeitkomponente testet. Es stellt sich außerdem heraus,
+  dass der geplante Ablauf, in Form der Emulationskomponente, sehr
+  schnell eine Implementation der konzipierten Sprache produziert. Die
+  initiale Implementation ermöglicht schon früh das Testen der Sprache
+  und stellt eine Referenz für weitere Entwicklungsschritte dar.
+
+  Abschließend kann gesagt werden, dass die Entwicklung der
+  _MicroLisp_-Entwicklungsumgebung noch nicht endgültig abgeschlossen
+  ist. Im Rahmen des _MicroLisp_-Projekts wurde allerdings ein robustes
+  und erweiterbares System entwickelt, welches fast allen Anforderungen
+  gerecht wird und einen wichtigen Meilenstein darstellt. Somit wurde
+  eine Produktionstaugliche Umgebung für die Entwicklung komplexer
+  Software geschaffen. Dementsprechend ist das Projekt in seiner
+  Gesamtheit als erfolgreich zu bewerten.
+
+ >
+
+>
+
+< Anhang
+
+ < Anhang 1: Ablaufplan als Flussdiagramm
+
+  #media 7.1 Geplanter Ablauf im Flussdiagramm.#
+  ablaufplan.png
+
+ >
+
+>

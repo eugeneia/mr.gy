@@ -1,0 +1,3 @@
+:document (:title "Das MicroLisp Projekt"
+           :index-caption "Inhaltsverzeichnis")
+:latex (:preamble interstellar.ventures:latex-de)
