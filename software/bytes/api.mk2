@@ -1,0 +1,59 @@
+< bytes
+
+ Macros around READ-WRITE, WRITE-BYTE and LDB to ease reading and writing
+ multibyte binary strings.
+
+
+ < read-bytes \(Macro\)
+
+  *Syntax:*
+
+  — Macro: *read-bytes* _stream_ _length_
+
+  → _value_
+
+  *Arguments and Values:*
+
+  _stream_—a _binary input stream_.
+
+  _length_—an {\(integer 0 \*\)} denoting the number of octets to be
+  read.
+
+  _value_—an {\(unsigned-byte} _n_{\)} where _n_ is {\(\* 8}
+  _length_{\)}.
+
+  *Description:*
+
+  {read-bytes} reads _length_ octets from _stream_ and returns their
+  little-endian unsigned _value_. _Length_ is evaluated during
+  macro-expansion.
+
+ >
+
+
+ < write-bytes \(Macro\)
+
+  *Syntax:*
+
+  — Macro: *write-bytes* _integer_ _length_ _stream_
+
+  *Arguments and Values:*
+
+  _integer_—an {\(unsigned-byte} _n_{\)} where _n_ is {\(\* 8}
+  _length_{\)}.
+
+  _length_—an {\(integer 0 \*\)} denoting the number of octets to be
+  written.
+
+  _stream_—a _binary output stream_.
+
+  *Description:*
+
+  {write-bytes} writes _integer_ to _stream_, represented as _length_
+  octets in little-endian order. _Length_ is evaluated during
+  macro-expansion.
+
+ >
+
+>
+

@@ -1,0 +1,4 @@
+:document (:title "bytes API Documentation")
+:source (:system :bytes
+         :api-document (:bytes))
+:stylesheets ((:media "screen" :href "/site-assets/api.css"))
