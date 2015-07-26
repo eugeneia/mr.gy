@@ -1,0 +1,4 @@
+:document (:title "riff-wave API Documentation")
+:source (:system :riff-wave
+         :api-document (:riff-wave.read :riff-wave.write))
+:stylesheets ((:media "screen" :href "/site-assets/api.css"))
