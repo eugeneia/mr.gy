@@ -1,0 +1,4 @@
+:document (:title "httpd0 API Documentation")
+:source (:system :httpd0
+         :api-document (:httpd0 :httpd0.responses))
+:stylesheets ((:media "screen" :href "/site-assets/api.css"))
