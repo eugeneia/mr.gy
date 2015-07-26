@@ -1,0 +1,4 @@
+:document (:title "cl-qprint API Documentation")
+:source (:system :cl-qprint
+         :api-document (:cl-qprint))
+:stylesheets ((:media "screen" :href "/site-assets/api.css"))

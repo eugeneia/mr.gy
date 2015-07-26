@@ -1,0 +1,66 @@
+< cl-qprint
+
+ Encode and decode quoted-printable encoded strings as defined by [RFC
+ 2045](http://tools.ietf.org/html/rfc2045).
+
+
+ < decode \(Function\)
+
+  *Syntax:*
+
+  — Function: *decode* _input_ {&key} _error-p_
+
+  *Arguments and Values:*
+
+  _input_—a _string_ or a _character stream_.
+
+  _error-p_—a _generalized boolean_. The default is false.
+
+  *Description*:
+
+  {decode} reads from _quoted-printable_ encoded _input_ and returns a
+  decoded _vector_ with {\(unsigned-byte 8\)} as its _element type_.
+
+  *Exceptional Situations:*
+
+  If _error-p_ is _true_, an error of _type_ {decode-error} signaled when
+  _input_ is malformed.
+
+ >
+
+
+ < decode-error \(Condition Type\)
+
+  *Class Precedence List:*
+
+  {decode-error}, {error}, {serious-condition}, {condition},
+  {standard-object}, {t}
+
+  The _type_ {decode-error} consists of error conditions related to
+  malformed encodings.
+
+ >
+
+
+ < encode \(Function\)
+
+  *Syntax:*
+
+  — Function: *encode* _input_ {&key} _columns_
+
+  *Arguments and Values:*
+
+  _input_—a _vector_ or a _stream_ with element type {\(unsigned-byte
+  8\)}.
+
+  _columns_—a positive _integer_.
+
+  *Description*:
+
+  {encode} reads from _input_ and returns a _quoted-printable_ encoded
+  _string_. _Columns_ denotes the maximum line length of _string_.
+
+ >
+
+>
+
