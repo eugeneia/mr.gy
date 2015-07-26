@@ -1,0 +1,102 @@
+< cl-rfc2047
+
+ Implementation of the Email header encoding defined in [RFC
+ 2047](http://tools.ietf.org/html/rfc2047).
+
+
+ < decode \(Function\)
+
+  *Syntax:*
+
+  — Function: *decode* _string_ {&key} _start_ _end_
+
+  *Arguments and Values:*
+
+  _string_—a _string_.
+
+  _start_, _end_—_bounding index designators_ of _string_. The default
+  for _start_ is 0 and the default for _end_ is {nil}.
+
+  *Description*:
+
+  {decode} returns the decoded word in _string_.
+
+  *Exceptional Situations:*
+
+  If {decode} fails an _error condition_ is signaled.
+
+ >
+
+
+ < decode\* \(Function\)
+
+  *Syntax:*
+
+  — Function: *decode\** _string_ {&key} _start_ _end_ _errorp_
+
+  *Arguments and Values:*
+
+  _string_—a _string_.
+
+  _start_, _end_—_bounding index designators_ of _string_. The default
+  for _start_ is 0 and the default for _end_ is {nil}.
+
+  _error-p_—a _generalized boolean_. The default is _true_.
+
+  *Description*:
+
+  {decode\*} returns a decoded copy of _string_ containing encoded as
+  well as unencoded words.
+
+  *Exceptional Situations:*
+
+  If {decode\*} fails and _error-p_ is _true_ an _error condition_ is
+  signaled.
+
+ >
+
+
+ < encode \(Function\)
+
+  *Syntax:*
+
+  — Function: *encode* _string_ {&key} _encoding_ _charset_
+
+  *Arguments and Values:*
+
+  _string_—a _string_.
+
+  _encoding_—a _keyword_. Can either be {:b} or {:q}. The default is
+  {:b}.
+
+  _charset_—a _keyword_ denoting the character encoding used. The default
+  is {:utf-8}.
+
+  *Description*:
+
+  {encode} returns an encoded copy of _string_. Words will be encoded
+  using _encoding_ and _charset_. If _encoding_ is {:b} then the "B"
+  encoding is used. If _encoding_ is {:q} then the "Q" encoding is used.
+
+ >
+
+
+ < should-encode-p \(Function\)
+
+  *Syntax:*
+
+  — Function: *should-encode-p* _string_
+
+  *Arguments and Values:*
+
+  _string_—a _string_.
+
+  *Description*:
+
+  {should-encode-p} returns _true_ if _string_ contains characters that
+  need to be encoded, otherwise, returns _false_.
+
+ >
+
+>
+
