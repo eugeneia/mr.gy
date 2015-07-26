@@ -1,0 +1,4 @@
+:document (:title "macro-html Widgets")
+:source (:system :macro-html
+         :api-document (:macro-html.widgets))
+:stylesheets ((:media "screen" :href "/site-assets/api.css"))
