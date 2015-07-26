@@ -1,0 +1,4 @@
+:document (:title "MPC API Documentation")
+:source (:system :mpc
+         :api-document (:mpc :mpc.characters :mpc.numerals))
+:stylesheets ((:media "screen" :href "/site-assets/api.css"))

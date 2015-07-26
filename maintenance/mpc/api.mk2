@@ -1,0 +1,909 @@
+< mpc
+
+ Monadic parser combinators. This package contains many different parser
+ combinators ranging from axioms to high level tools. It also contains
+ the RUN entry function and various macros that help integrate parser
+ combinators into the common lisp ecosystem. Functions and starting with
+ the {=}-prefix construct _parsers_. Their documentation is written from
+ the perspective of the resulting parsers. Refer to the [MPC
+ Manual](manual.html) for a general introduction.
+
+
+ < =and \(Function\)
+
+  *Syntax:*
+
+  — Function: *=and* {&rest} _parsers_
+
+  *Arguments and Values:*
+
+  _parsers_—_parsers_.
+
+  *Description:*
+
+  {=and} applies _parsers_ sequentially. If all _parsers_ succeed, {=and}
+  succeeds with the last _parser_'s result. Otherwise {=and} fails.
+
+ >
+
+
+ < =at-least \(Function\)
+
+  *Syntax:*
+
+  — Function: *=at-least* _n_ _parser_ {&key} _limit_
+
+  *Arguments and Values:*
+
+  _n_, _limit_—_bounding index designators_. The default for _limit_ is
+  {nil}.
+
+  _parser_—a _parser_.
+
+  *Description:*
+
+  {=at-least} applies _parser_ repeatedly until it fails and succeeds
+  with a list of the results unless _parser_ succeeded less than _n_
+  times or, if _limit_ is not {nil}, more than _limit_ times.
+
+ >
+
+
+ < =bind \(Function\)
+
+  *Syntax:*
+
+  — Function: *=bind* _parser_ _make-parser_
+
+  *Arguments and Values:*
+
+  _parser_—a _parser_.
+
+  _make-parser_—a _function designator_ for a one-argument _function_
+  which returns a _parser_.
+
+  *Description:*
+
+  {=bind} applies _parser_ to the input. For each resulting {\(value .
+  input\)} pair {=bind} calls _make-parser_ with each _value_ and applies
+  the resulting parser to each _input_. {=bind} succeeds with the
+  concatenated results or fails if _parser_ fails.
+
+ >
+
+
+ < =end-of-input \(Function\)
+
+  *Syntax:*
+
+  — Function: *=end-of-input* _\<no arguments\>_
+
+  *Description:*
+
+  {=end-of-input} succeeds only if the input is empty.
+
+ >
+
+
+ < =eql \(Function\)
+
+  *Syntax:*
+
+  — Function: *=eql* _x_
+
+  *Arguments and Values:*
+
+  _x_—an _object_.
+
+  *Description:*
+
+  {=eql} consumes the next item and succeeds with that item as its result
+  if the item is {eql} to _object_. Fails if the input is empty.
+
+ >
+
+
+ < =exactly \(Function\)
+
+  *Syntax:*
+
+  — Function: *=exactly* _n_ _parser_
+
+  *Arguments and Values:*
+
+  _n_—an non-negative _integer_.
+
+  _parser_—a _parser_.
+
+  *Description:*
+
+  {=exactly} applies _parser_ repeatedly until it fails and succeeds with
+  a list of the results unless _parser_ succeeded not exactly _n_ times.
+
+ >
+
+
+ < =fail \(Macro\)
+
+  *Syntax:*
+
+  — Macro: *=fail* {&body} _handling_
+
+  *Arguments and Values:*
+
+  _handling_—_forms_ to run when the parser is invoked.
+
+  *Description:*
+
+  {=fail} always fails. If supplied, the _handling forms_ will be run
+  when {=fail} is applied. The _handling forms_ may call
+  {get-input-position}.
+
+ >
+
+
+ < =funcall \(Function\)
+
+  *Syntax:*
+
+  — Function: *=funcall* _parser_ _function_
+
+  *Arguments and Values:*
+
+  _parser_—a _parser_.
+
+  _function_—a _function designator_.
+
+  *Description:*
+
+  {=funcall} applies _parser_. If successful, {=funcall} applies
+  _function_ on its result and succeeds with the return value.
+
+ >
+
+
+ < =handler-case \(Macro\)
+
+  *Syntax:*
+
+  — Macro: *=handler-case* _parser_ {&rest} _handlers_
+
+  *Arguments and Values:*
+
+  _parser_—a _parser_.
+
+  _handlers_—handler clauses for {handler-case}.
+
+  *Description:*
+
+  {=handler-case} establishes _handlers_ as if by {handler-case} before
+  applying _parser_ to the input. _Handlers_ must return _parsers_. If
+  _parser_ signals an _error_ matched by a _handler_, the _parser_
+  returned by the _handler_ will be applied to the input.
+
+ >
+
+
+ < =if \(Function\)
+
+  *Syntax:*
+
+  — Function: *=if* _test-parser_ _then-parser_ {&optional} _else-parser_
+
+  *Arguments and Values:*
+
+  _test-parser_—a _parser_.
+
+  _then-parser_—a _parser_.
+
+  _else-parser_—a _parser_. The default is {\(=fail\)}.
+
+  *Description:*
+
+  {=if} applies _then-parser_ if _test-parser_ would succeed and
+  _else-parser_ otherwise. Note that _test-parser_ is not actually
+  applied to the input.
+
+ >
+
+
+ < =item \(Function\)
+
+  *Syntax:*
+
+  — Function: *=item* _\<no arguments\>_
+
+  *Description:*
+
+  {=item} consumes the next item and succeeds with that item as its
+  result unless the input is empty. Fails if the input is empty.
+
+ >
+
+
+ < =let\* \(Macro\)
+
+  *Syntax:*
+
+  — Macro: *=let\** _bindings_ {&body} _forms_
+
+  _bindings_::= {\(}〚{\(}_symbol_ _parser_{\)}\*〛{\)}
+
+  *Arguments and Values:*
+
+  _forms_—_forms_ of which the last _form_ must return a _parser_.
+
+  _symbol_—a _symbol_.
+
+  _parser_—a _form_ whose result is a _parser_.
+
+  *Description:*
+
+  {=let\*} applies the _parsers_ in _bindings_ as if by {=and} and
+  evaluates _forms_ in an implicit {let} environment where the results
+  are bound to the _symbols_ in _bindings_. Finally, {=let\*} applies the
+  parser returned by the last _form_.
+
+ >
+
+
+ < =list \(Function\)
+
+  *Syntax:*
+
+  — Function: *=list* {&rest} _parsers_
+
+  *Arguments and Values:*
+
+  _parsers_—_parsers_.
+
+  *Description:*
+
+  {=list} applies _parsers_ sequentially. If all _parsers_ succeed,
+  {=list} succeeds with a list of their results. Otherwise {=list} fails.
+
+ >
+
+
+ < =maybe \(Function\)
+
+  *Syntax:*
+
+  — Function: *=maybe* _parser_
+
+  *Arguments and Values:*
+
+  _parser_—a _parser_.
+
+  *Description:*
+
+  {=maybe} applies _parser_. If _parser_ succeeds {=maybe} will succeed
+  with its result, otherwise it will succeed with {nil}.
+
+ >
+
+
+ < =none-of \(Function\)
+
+  *Syntax:*
+
+  — Function: *=none-of* _list_
+
+  *Arguments and Values:*
+
+  _list_—a _list_ of _objects_.
+
+  *Description:*
+
+  {=none-of} consumes the next item and succeeds with that item as its
+  result unless the item is {eql} to one of the _objects_ in _list_.
+  Fails if the input is empty.
+
+ >
+
+
+ < =not \(Function\)
+
+  *Syntax:*
+
+  — Function: *=not* _parser_
+
+  *Arguments and Values:*
+
+  _parser_—a _parser_.
+
+  *Description:*
+
+  {=not} consumes the next item and succeeds with that item as its result
+  if _parser_ would fail. E.g. it negates _parser_. Note that _parser_ is
+  not actually applied to the input. Fails if the input is empty.
+
+ >
+
+
+ < =one-of \(Function\)
+
+  *Syntax:*
+
+  — Function: *=one-of* _list_
+
+  *Arguments and Values:*
+
+  _list_—a _list_ of _objects_.
+
+  *Description:*
+
+  {=one-of} consumes the next item and succeeds with that item as its
+  result if the item is {eql} to any _object_ in _list_. Fails if the
+  input is empty.
+
+ >
+
+
+ < =one-or-more \(Function\)
+
+  *Syntax:*
+
+  — Function: *=one-or-more* _parser_
+
+  *Arguments and Values:*
+
+  _parser_—a _parser_.
+
+  *Description:*
+
+  {=one-or-more} applies _parser_ repeatedly until it fails and succeeds
+  with a list of the results if _parser_ succeeded at least one time.
+
+ >
+
+
+ < =one-to \(Function\)
+
+  *Syntax:*
+
+  — Function: *=one-to* _n_ _parser_
+
+  *Arguments and Values:*
+
+  _n_—a positive _integer_.
+
+  _parser_—a _parser_.
+
+  *Description:*
+
+  {=one-to} applies _parser_ repeatedly until it fails and succeeds with
+  a list of the results unless _parser_ succeeded less than once or more
+  than _n_ times.
+
+ >
+
+
+ < =or \(Function\)
+
+  *Syntax:*
+
+  — Function: *=or* {&rest} _parsers_
+
+  *Arguments and Values:*
+
+  _parsers_—_parsers_.
+
+  *Description:*
+
+  {=or} applies _parsers_ until one _parser_ succeeds, in which case it
+  succeeds with the result of that _parser_. If no _parser_ succeeds
+  {=or} fails.
+
+ >
+
+
+ < =plus \(Function\)
+
+  *Syntax:*
+
+  — Function: *=plus* {&rest} _parsers_
+
+  *Arguments and Values:*
+
+  _parser_—a _parser_.
+
+  *Description:*
+
+  {=plus} is the non-deterministic choice combinator. It applies
+  _parsers_ to input and succeeds with the result of every successful
+  _parser_. {=plus} fails if every _parser_ fails.
+
+ >
+
+
+ < =prog1 \(Function\)
+
+  *Syntax:*
+
+  — Function: *=prog1* _parser_ {&rest} _parsers_
+
+  *Arguments and Values:*
+
+  _parser_—a _parser_.
+
+  _parsers_—_parsers_.
+
+  *Description:*
+
+  {=prog1} applies _parser_ and _parsers_ sequentially. If they all
+  succeed, {=prog1} succeeds with _parser_'s result. Otherwise {=prog1}
+  fails.
+
+ >
+
+
+ < =prog2 \(Function\)
+
+  *Syntax:*
+
+  — Function: *=prog2* _parser1_ _parser2_ {&rest} _parsers_
+
+  *Arguments and Values:*
+
+  _parser1_—a _parser_.
+
+  _parser2_—a _parser_.
+
+  _parsers_—_parsers_.
+
+  *Description:*
+
+  {=prog2} applies _parser1_, _parser2_ and _parsers_ sequentially. If
+  they all succeed, {=prog2} succeeds with _parser2_'s result. Otherwise
+  {=prog2} fails.
+
+ >
+
+
+ < =range \(Function\)
+
+  *Syntax:*
+
+  — Function: *=range* _from_ _to_ {&key} _parser_ _predicate_
+
+  *Arguments and Values:*
+
+  _from_—an _object_.
+
+  _to_—an _object_.
+
+  _parser_—a _parser_. The default is {\(=item\)}.
+
+  _predicate_—a _function designator_ for a three-argument predicate
+  _function_. The default is {char\<=}.
+
+  *Description:*
+
+  {=range} applies _parser_ and, if it succeeds, applies _predicate_ to
+  _from_, its results and _to. \{=range\} succeeds with the result
+  of_parser_if_predicate_is_true\_ and fails otherwise. Fails if the
+  input is empty.
+
+ >
+
+
+ < =restart-case \(Macro\)
+
+  *Syntax:*
+
+  — Macro: *=restart-case* _parser_ {&rest} _restarts_
+
+  *Arguments and Values:*
+
+  _parser_—a _parser_.
+
+  _restarts_—restart clauses for {restart-case}.
+
+  *Description:*
+
+  {=restart-case} establishes _restarts_ as if by {restart-case} before
+  applying _parser_ to the input. _Restarts_ must return _parsers_. If
+  _parser_ signals an _error_ matched by a _restart_, the _parser_
+  returned by the _restart_ will be applied to the input.
+
+ >
+
+
+ < =result \(Function\)
+
+  *Syntax:*
+
+  — Function: *=result* _value_
+
+  *Arguments and Values:*
+
+  _value_—an _object_.
+
+  *Description:*
+
+  {=result} always succeeds with _value_ as its result.
+
+ >
+
+
+ < =satisfies \(Function\)
+
+  *Syntax:*
+
+  — Function: *=satisfies* _predicate_
+
+  *Arguments and Values:*
+
+  _predicate_—a _function designator_ for a one-argument predicate
+  _function_.
+
+  *Description:*
+
+  {=satisfies} consumes the next item and succeeds with that item as its
+  result if the result satisfies _predicate_. Fails if the input is
+  empty.
+
+ >
+
+
+ < =unless \(Function\)
+
+  *Syntax:*
+
+  — Function: *=unless* _test-parser_ {&rest} _parsers_
+
+  *Arguments and Values:*
+
+  _test-parser_—a _parser_.
+
+  _parsers_—_parsers_.
+
+  *Description:*
+
+  {=unless} applies _parsers_ as if by {=and} if _test-parser_ would
+  fail. Note that _test-parser_ is not actually applied to the input.
+
+ >
+
+
+ < =when \(Function\)
+
+  *Syntax:*
+
+  — Function: *=when* _test-parser_ {&rest} _parsers_
+
+  *Arguments and Values:*
+
+  _test-parser_—a _parser_.
+
+  _parsers_—_parsers_.
+
+  *Description:*
+
+  {=when} applies _parsers_ as if by {=and} if _test-parser_ would
+  succeed. Note that _test-parser_ is not actually applied to the input.
+
+ >
+
+
+ < =zero-or-more \(Function\)
+
+  *Syntax:*
+
+  — Function: *=zero-or-more* _parser_
+
+  *Arguments and Values:*
+
+  _parser_—a _parser_.
+
+  *Description:*
+
+  {=zero-or-more} applies _parser_ repeatedly until it fails and succeeds
+  with a list of the results.
+
+ >
+
+
+ < =zero-to \(Function\)
+
+  *Syntax:*
+
+  — Function: *=zero-to* _n_ _parser_
+
+  *Arguments and Values:*
+
+  _n_—an non-negative _integer_.
+
+  _parser_—a _parser_.
+
+  *Description:*
+
+  {=zero-to} applies _parser_ repeatedly until it fails and succeeds with
+  a list of the results unless _parser_ succeeded more than _n_ times.
+
+ >
+
+
+ < get-input-position \(Function\)
+
+  *Syntax:*
+
+  — Function: *get-input-position* _\<no arguments\>_
+
+  → _position_
+
+  → _position_, _line_, _column_
+
+  *Arguments and Values:*
+
+  _position_, _column_—non-negative _integers_.
+
+  _line_—a positive _integer_.
+
+  *Description:*
+
+  {get-input-position} returns the number of items read from the input.
+  Additionally, _line_ and _column_ positions are returned if the input's
+  _element type_ is {character}. Lines are counted starting at 1 while
+  columns are counted starting from 0.
+
+  {get-input-position} may only be called from within the body of
+  {=fail}, the handlers of {=handler-case} or the restarts of
+  {=restart-case}.
+
+  *Exceptional Situations:*
+
+  {get-input-position} signals an _error_ of _type_ {simple-error} unless
+  called within {=fail}, {=handler-case} or {=restart-case}.
+
+ >
+
+
+ < run \(Function\)
+
+  *Syntax:*
+
+  — Function: *run* _parser_ _input-source_ {&key} _result_
+
+  *Arguments and Values:*
+
+  _parser_—a _parser_.
+
+  _input-source_—an _array_, an _input stream_ or a _list_.
+
+  _result_—a _function designator_ to a one-argument _function_. The
+  default is {caar}.
+
+  *Description:*
+
+  {run} applies _parser_ to _input-source_ and returns the result of
+  calling the _result_ function on the resulting list of {\(value .
+  input\)} pairs.
+
+ >
+
+>
+
+
+< mpc.characters
+
+ This package includes parsers specialised for character input. Covered
+ are case sensitivity, strings, whitespace and lines.
+
+
+ < \*whitespace\* \(Variable\)
+
+  *Initial Value:*
+
+  {\(\#\\Tab \#\\Newline \#\\PageUp \#\\Page \#\\Return \#\\ \)}
+
+  *Value Type:*
+
+  a _list_ of _characters_.
+
+  *Description:*
+
+  The _value_ of {\*whitespace\*} is a _list_ of _characters_ considered
+  to be _whitespace characters_.
+
+ >
+
+
+ < =character \(Function\)
+
+  *Syntax:*
+
+  — Function: *=character* _character_ {&optional} _case-sensitive-p_
+
+  *Arguments and Values:*
+
+  _character_—a _character_.
+
+  _case-sensitive-p_—a _generalized boolean_. The default is _true_.
+
+  *Description:*
+
+  {=character} consumes the next item and succeeds with that item as its
+  result if the item is equal to _character_. {=character} is case
+  sensitive unless _case-sensitive-p_ is _false_.
+
+ >
+
+
+ < =line \(Function\)
+
+  *Syntax:*
+
+  — Function: *=line* {&optional} _keep-newline-p_
+
+  *Arguments and Values:*
+
+  _keep-newline-p_—a _generalized boolean_. The default is _false_.
+
+  *Description:*
+
+  {=line} consumes a sequence of zero or more _characters_ terminated by
+  a {\#\\Newline} _character_ and succeeds with the _characters_ coerced
+  to a _string_. The terminating {\#\\Newline} _character_ is not
+  included in the result unless _keep-newline-p_ is _true_.
+
+ >
+
+
+ < =newline \(Function\)
+
+  *Syntax:*
+
+  — Function: *=newline* _\<no arguments\>_
+
+  *Description:*
+
+  {=newline} consumes the next item and succeeds with that item as its
+  result if the item is the {\#\\Newline} _character_.
+
+ >
+
+
+ < =skip-whitespace \(Function\)
+
+  *Syntax:*
+
+  — Function: *=skip-whitespace* _parser_
+
+  *Arguments and Values:*
+
+  _parser_—a _parser_.
+
+  *Description:*
+
+  {=skip-whitespace} consumes a sequence of zero or more items which are
+  members of {\*whitespace\*} and then applies _parser_ and, if
+  successful, succeeds with its result.
+
+ >
+
+
+ < =string \(Function\)
+
+  *Syntax:*
+
+  — Function: *=string* _string_ {&optional} _case-sensitive-p_
+
+  *Arguments and Values:*
+
+  _string_—a _string_.
+
+  _case-sensitive-p_—a _generalized boolean_. The default is _true_.
+
+  *Description:*
+
+  {=string} consumes a non-empty sequence of _characters_ and succeeds
+  with the _character sequence_ coerced to a _string_ if the result is
+  equal to _sting_. {=string} is case sensitive unless _case-sensitive-p_
+  is _false_.
+
+ >
+
+
+ < =string-of \(Function\)
+
+  *Syntax:*
+
+  — Function: *=string-of* _parser_
+
+  *Arguments and Values:*
+
+  _parser_—a _parser_.
+
+  *Description:*
+
+  {=string-of} repeatedly applies _parser_ to the input and succeeds with
+  the resulting _character sequence_ coerced to a _string_. {=string-of}
+  fails unless _parser_ succeeds at least once.
+
+ >
+
+
+ < =whitespace \(Function\)
+
+  *Syntax:*
+
+  — Function: *=whitespace* _\<no arguments\>_
+
+  *Description:*
+
+  {=whitespace} consumes the next item and succeeds with that item as its
+  result if the item is a member of {\*whitespace\*}.
+
+ >
+
+>
+
+
+< mpc.numerals
+
+ This package includes parsers for string numerals. Covered are single
+ digits, natural numbers and signed integers with arbitrary radixes.
+
+
+ < =digit \(Function\)
+
+  *Syntax:*
+
+  — Function: *=digit* {&optional} _radix_
+
+  *Arguments and Values:*
+
+  _radix_—a _number_ of _type_ {\(integer 2 36\)}. The default is {10}.
+
+  *Description:*
+
+  {=digit} consumes the next item and succeeds if the next item is a
+  digit _character_ in the specified radix. The result is the numerical
+  value of the digit.
+
+ >
+
+
+ < =integer-number \(Function\)
+
+  *Syntax:*
+
+  — Function: *=integer-number* {&optional} _radix_
+
+  *Arguments and Values:*
+
+  _radix_—a _number_ of _type_ {\(integer 2 36\)}. The default is {10}.
+
+  *Description:*
+
+  {=integer-number} consumes a signed non-empty sequence of digit
+  _characters_ in the specified _radix_ and succeeds with the _integer_
+  represented by that sequence. The leading sign is optional and can be
+  {\#\\\+} and {\#\\-} for positive and negative values respectively. The
+  default is a positive value.
+
+ >
+
+
+ < =natural-number \(Function\)
+
+  *Syntax:*
+
+  — Function: *=natural-number* {&optional} _radix_
+
+  *Arguments and Values:*
+
+  _radix_—a _number_ of _type_ {\(integer 2 36\)}. The default is {10}.
+
+  *Description:*
+
+  {=natural-number} consumes a non-empty sequence of digit _characters_
+  in the specified _radix_ and succeeds with the natural _number_
+  represented by that sequence.
+
+ >
+
+>
+
