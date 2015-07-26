@@ -1,0 +1,131 @@
+< texp
+
+ DSL for outputting _TeX_ expressions using S-expressions.
+
+
+ < \*escape-table\* \(Variable\)
+
+  *Initial Value:*
+
+  #code#
+((#\& . "\\&") (#\% . "\\%") (#\$ . "\\$") (#\# . "\\#") (#\_ . "\\_")
+ (#\{ . "\\{") (#\} . "\\}") (#\~ . "{\\textasciitilde}")
+ (#\^ . "{\\textasciicircum}") (#\\ . "{\\textbackslash}"))
+  #
+
+  *Description:*
+
+  _Alist_ mapping _TeX_ special characters to quoted equivalent.
+
+ >
+
+
+ < deftex \(Macro\)
+
+  *Syntax:*
+
+  — Macro: *deftex* _name_ _parameters_ {&body} _forms_
+
+  _parameters_::= {\(}〚_var_\*〛{\)}
+
+  *Arguments and Values:*
+
+  _name_—a _symbol_ or _string_.
+
+  _forms_—_forms_.
+
+  _var_—a _symbol_.
+
+  *Description:*
+
+  {deftex} prints the definition of a _TeX_ macro with _name_ that
+  expands to _forms_ to {\*standard-output\*}. If _name_ is a _symbol_ it
+  will be printed in lower case. _Forms_ are evaluated as if by {tex}
+  with each _var_ in _parameters_ bound to a numeric _TeX_ parameter
+  identifier.
+
+  *Examples:*
+
+  #code#
+(deftex hello (name) "Hello " ($ name))
+▷ \def \hello #1{Hello #1}
+  #
+
+ >
+
+
+ < escape \(Function\)
+
+  *Syntax:*
+
+  — Function: *escape* _string_
+
+  *Arguments and Values:*
+
+  _string_—a _string_.
+
+  *Description:*
+
+  {escape} encodes _string_ as defined by {\*escape-table\*}. E.g. it
+  quotes _TeX_ special characters.
+
+ >
+
+
+ < tex \(Macro\)
+
+  *Syntax:*
+
+  — Macro: *tex* {&rest} _expressions_
+
+  _expressions_::= ↓_expression_\*
+
+  _expression_::= ↓_break-clause_ \| ↓_interpolation-clause_ \|
+  ↓_brackets-clause_ \| ↓_braces-clause_ \| ↓_tex-clause_ \| _literal_
+
+  _break-clause_::= {\(br\)}
+
+  _interpolation-clause_::= {\($} _form_{\)}
+
+  _brackets-clause_::= {\(\[\]} 〚_expression_\*〛{\)}
+
+  _braces-clause_::= {\(\{}\} 〚_expression_\*〛{\)}
+
+  _tex-clause_::= {\(} _tex-macro_ 〚_expression_\*〛{\)}
+
+  *Arguments and Values:*
+
+  _literal_—a _string_, _symbol_ or _number_.
+
+  _form_—a _form_.
+
+  _tex-macro_—a _symbol_ or a _string_.
+
+  *Description:*
+
+  {tex} compiles _TeX expressions_ to {\*standard-output\*}.
+
+  A _Literal_ is printed as follows:
+
+  + a _string_ is printed as it is
+  + a _symbol_ is printed in lower case
+  + a _number_ is printed _readably_
+  
+  A _tex-clause_ prints a _TeX_ macro call of _tex-macro_ followed by
+  _expressions_.
+
+  A _break-clause_ prints two newlines \(e.g. a paragraph separator\).
+
+  An _interpolation-clause_ evaluates _form_ and prints its result if the
+  result is a _string_.
+
+  _Bracket-clause_ and _braces-clause_ print _expressions_ surrounded by
+  brackets \({\[}, {\]}\) and braces \({\{}, {\}}\) respectively. If the
+  _readtable_ {texp:syntax} is used then _bracket-clause_ and
+  _braces-clause_ can be written as {\[} _expression_\* {\]} and {\{}
+  _expression_\* \}.
+
+ >
+
+>
+

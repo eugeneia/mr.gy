@@ -1,0 +1,122 @@
+< Abstract
+
+ {texp} is a domain specific language embedded in _Common Lisp_ for
+ printing _TeX expressions_. Because, let's face it, _TeX_ is a horrible
+ programming language. I created {texp} to ease the programatic
+ generation of _TeX_ documents and programs from within _Common Lisp_.
+ By intertwining both languages, {texp} brings high level meta
+ programming to _TeX_ and enables you to produce high quality print media
+ in an easy and scalable fashion.
+
+ If you have no experience with _TeX_ then none of what follows will make
+ any sense to you. {texp} has no model of _TeX's_ semantics, besides
+ escaping special characters. For an introduction to _TeX_ I recommend
+ Knuth's _TeXbook_.
+
+>
+
+< A brief example
+
+ To utilize {texp} we need to intern the {texp} package and import the
+ {texp:syntax} readtable:
+
+ #code {in-readtable} is provided by {named-readtables}.#
+ (defpackage texp-example
+   (:use :texp :named-readtables))
+
+ (in-package :texp)
+
+ (in-readtable texp:syntax)
+ #
+
+ Assume we need to generate a localized document. We could do that by
+ using a function that accepts localized captions and fills in a _TeX_
+ document.
+
+ #code #
+ (defun tex-menu (menu translations)
+    (deftex item (caption price translation)
+      ($ caption) " " ($ price)
+      (br)
+      ($ translation)
+      (bigskip))
+    (loop for (caption price) in menu
+          for translation in translations
+      do (tex (item {($ (escape caption))}
+                    {($ (escape price))}
+                    {($ (escape translation))})))
+    (tex (bye)))
+ #
+
+ {deftex} enables us to use _TeX_'s {\\def} with more descriptive
+ parameter names. {br} prints a double newline and {escape} handles
+ escaping of _TeX_'s many special characters. _TeX_ macros can be
+ expressed in a lispy way.
+
+>
+
+
+< The {tex} macro
+
+ The {tex} macro translates its child expressions to _TeX_
+ expressions. It is a very thin abstraction at the syntax layer. The
+ translation rules are listed below:
+
+ #table {tex} translation rules. {foo} and {bar} could be strings or
+ numbers as well. In case of symbols, the {symbol-name}s are printed in
+ lower case for convenience. Brackets and curly braces require the
+ readtable {texp:syntax}. All expressions can be nested.#
+ | s-expression    | translates to
+ | {(foo bar baz)} | {\\foo barbaz}
+ | {[foo bar]}     | {[foobar]}
+ | {{foo bar\}}    | {{foobar\}}
+
+ The {(br)} form prints two newlines, used to seperate paragraphs in
+ _TeX_:
+
+ #code#
+ (tex (br))
+ ▷ 
+ ▷ 
+ #
+
+ The {$} form lets you interpolate values into {tex} bodies. Consider the
+ following example:
+
+ #code#
+ (let ((x "Hello!"))
+   (tex ($ x)))
+ ▷ Hello!
+ #
+
+ The {escape} function can be used to escape characters treated specially
+ by _TeX_ in strings of input. A table of escape rules is bound to
+ {*escape-table*}.
+
+ #code#
+ (tex ($ (escape "$$$")))
+ ▷ \$\$\$
+ #
+
+>
+
+< The {deftex} macro
+
+ The {deftex} macro simplifies writing _TeX_'s {\\def} statements using
+ {texp}. It's best described by example:
+
+ #code#
+ (deftex foo (parameter-a parameter-b)
+   (bar ($ parameter-a) ($ parameter-b)))
+ ▷ \def \foo #1#2{\bar #1#2}
+
+ (tex (foo {"hello"} {"world"}))
+ ▷ \foo {hello} {world}
+ #
+
+ As you can see, {deftex} does not do much at all. Nevertheless, it
+ provides a lispy syntax for _TeX_ {\\def}'s and enables you to use
+ descriptive parameter names by hiding _TeX_'s natural parameter syntax
+ with a {let}.
+
+>
