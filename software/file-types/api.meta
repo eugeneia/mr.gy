@@ -1,0 +1,4 @@
+:document (:title "file-types API Documentation")
+:source (:system :file-types
+         :api-document (:file-types))
+:stylesheets ((:media "screen" :href "/site-assets/api.css"))
