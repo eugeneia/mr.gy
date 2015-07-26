@@ -1,0 +1,2 @@
+:document (:title "Soundlab: Lazy Signal Combinators in Common Lisp"
+           :index-headers-p t)
