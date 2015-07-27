@@ -1,0 +1,78 @@
+==================================================================
+https://keybase.io/mrottenkolber
+--------------------------------------------------------------------
+
+I hereby claim:
+
+  * I am an admin of http://mr.gy
+  * I am mrottenkolber (https://keybase.io/mrottenkolber) on keybase.
+  * I have a public key with fingerprint 76EB 8DE4 EA28 A5C4 746C  71AA 7C7F 34CD CF4C DA75
+
+To do so, I am signing this object:
+
+{
+    "body": {
+        "key": {
+            "fingerprint": "76eb8de4ea28a5c4746c71aa7c7f34cdcf4cda75",
+            "host": "keybase.io",
+            "key_id": "7c7f34cdcf4cda75",
+            "kid": "01018184d628b431b229bdee6e1c91405a9a0d32fa4c8d446802bc425027db0552980a",
+            "uid": "d33f311bb969c682dbec15f3b074da00",
+            "username": "mrottenkolber"
+        },
+        "revoke": {
+            "sig_ids": [
+                "c76c0ab648f97d9cc4f07ef9344df1e413fded583a850c631334e7d406a0e1b50f"
+            ]
+        },
+        "service": {
+            "hostname": "mr.gy",
+            "protocol": "http:"
+        },
+        "type": "web_service_binding",
+        "version": 1
+    },
+    "ctime": 1437994981,
+    "expire_in": 157680000,
+    "prev": "e0eff243c890ae0b19285faeaac23417c933f42302e41eabc698a76eb13a99ec",
+    "seqno": 6,
+    "tag": "signature"
+}
+
+which yields the signature:
+
+-----BEGIN PGP MESSAGE-----
+Version: GnuPG v1
+
+owFlkntQFVUcxy9oPITi0aApYLSTNTg32MfZ18VhQAQ1e+kECMTjnN2z1yvcB/de
+LtyEQg0BxwIDioESEm2mzGSmgAmyshSTO4BFMyo9eOUgo4wKmMSEtMtU/7R/nJ1z
+9vv7/L7nu7/ah1fovL1KXwf9g88NF3l5ppAutTM4cB+BrLKbMOwj8vHySzFZjNhu
+s5ssTsJA8BxGgowBhrQAWQnwgJN4CkJe4hUGSLKkqAvkWUJP7LE6tAoVg6ADx5is
+6pm6yTXJGuf/+vzlDyRFUgIlAJmjBQQYCtG0iGSMOUxJIgVIFoqQlBlagUASZAA4
+gaSRBGiWpHkZkSxLiwIJVVzRMk5mGIWhKIRETpQ4gZYRlihWYRDJAxmSpCZ0YLsF
+mrGqNtutTie25FsLELYTZXrCjl3WfKzF4DAZVecOwpBFSDwnkRBxQFBEXhYlCSgk
+jxWRAUBWKAwoRpGxzAoMFFhS4hiKYQDmZUBykMQUYkmFyFbZaluXSVqGa1H9ZyHG
+6FZd2VQrVslaoB7tcTptBs2N023TJMUY5f5TnItMFln9QWqBC9sdJquFMFCqUnKa
+NBoFGF4UgShQegKX2Ex2nGvSFCyvxqY+WhvsUpGYxEqWQgNGEkQSYhJRIi2wCsQQ
+SjQDKF4S1SABzZC0ej8MkcSJAtSGgWKgKGKJ0O5TaLESBk71CY0qU03MAp1FdkyU
+rar2jlip8/LW+TzkrQ2ZbpV/8L+T190SrGtdEZnoiZvMQS2vLebIu47tLE+LyuOY
+el9PevzoUFhHTXxFPffHtz9+fqZp6W48CEnvb31rf2vGxoPkgl/0xcalZE/mYKKf
+V3K44buh85tGcsoHB1qMFQl3ChYiyFeKS8JTgzqJs3M0m5ryWTQo7QlqPn37VszO
+HfFZzffXVLrf8BnxrU+q7BoYXO1+MoGg+sLLhKi29d3+aYdShp8IY17Q1/7w8+al
+2aMxF13XFjp7PpxtC1u56Svz05GLVT6XVy+4Ju/Nnc6O9Fy61tcfMDFeFR118MTm
+rY1XWrlz1x878c5HDW9f/foZvWO4MXPOL6JOrh6LudlVjnwLr4x5HYh+tyFno09A
+ZE1v6eC2bP2zsaEd9e81bD/WkmYemG1bwmG1TWvfnxq9Pjn98fybF1qPh7d/EnLm
+y7267YdDprbsftXYGDwehX+/N235deKGLzc2M5G14YDf2iPJ+ZdmQmzrk9ZNBv5S
+sX9bQnf0B9SnxxUx6aVvZuq81pl25Z27tVSasDtxJDn2/vDls0H+vyWTIz0ZOu/C
+5vGtTX+OfuGJeh7lPaiM9b2996fQkMNHak7VL87aKePQPFu45mhp3IXpk2PfOx7f
+cjJlQ1VoXwbRL76sBFydjyx+kO640x4f0dtm7g00nJrb8aKn+uZfJXXNieiGf2jX
+o+bhp+4yC+2PxLkPZRIG22RTR+Z5+m8=
+=mEog
+-----END PGP MESSAGE-----
+
+And finally, I am proving ownership of this host by posting or
+appending to this document.
+
+View my publicly-auditable identity here: https://keybase.io/mrottenkolber
+
+==================================================================
