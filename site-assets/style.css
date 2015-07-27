@@ -199,3 +199,9 @@ article {
         white-space: pre;
     }
 }
+
+@viewport {
+    width: extend-to-zoom 100%;
+    height: extend-to-zoom 100%;
+    zoom: 1;
+}
