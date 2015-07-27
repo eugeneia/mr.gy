@@ -1,45 +1,7 @@
-@font-face {
-	font-family: Lato;
-	font-weight: 300;
-	src: url('/site-assets/Lato-Light.ttf');
-}
-@font-face {
-	font-family: Lato;
-	font-weight: 300;
-        font-style: italic;
-	src: url('/site-assets/Lato-LightItalic.ttf');
-}
-@font-face {
-	font-family: Lato;
-	font-weight: medium;
-	src: url('/site-assets/Lato-Medium.ttf');
-}
-@font-face {
-	font-family: Lato;
-	font-weight: medium;
-        font-style: italic;
-	src: url('/site-assets/Lato-MediumItalic.ttf');
-}
-@font-face {
-	font-family: Lato;
-	font-weight: bold;
-	src: url('/site-assets/Lato-Heavy.ttf');
-}
-@font-face {
-	font-family: Lato;
-	font-weight: bold;
-        font-style: italic;
-	src: url('/site-assets/Lato-HeavyItalic.ttf');
-}
-@font-face {
-	font-family: Inconsolata;
-	src: url('/site-assets/Inconsolata.otf');
-}
-
 html {
     background: white;
     color: black;
-    font-family: Helvetica Neue, Lato, sans-serif;
+    font-family: Helvetica Neue, Helvetica, Lato, Arial, sans-serif;
     font-weight: medium;
     background: white;
     line-height: 1.4;
