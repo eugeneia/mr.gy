@@ -1,5 +1,3 @@
-:site-title "Max Rottenkolber's personal website"
-
 :stylesheets ((:media "screen" :href "/site-assets/style.css"))
 
 :meta-defaults (:document (:author "Max Rottenkolber")
