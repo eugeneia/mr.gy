@@ -1,0 +1,61 @@
+< trivial-documentation
+
+ Extract documentation and definitions for symbols and packages.
+
+
+ < package-api \(Function\)
+
+  *Syntax:*
+
+  — Function: *package-api* _package_
+
+  *Arguments and Values:*
+
+  _package_—a _package_ or a _string designator_ naming a _package_.
+
+  *Description:*
+
+  {extract-api} compiles and returns a _property list_ mapping the
+  external symbols of _package_ to lists of definitions as returned by
+  {symbol-definitions}. The returned _property list_ is in alphabetical
+  order \(by comparing the keys\).
+
+ >
+
+
+ < symbol-definitions \(Function\)
+
+  *Syntax:*
+
+  — Function: *symbol-definitions* _symbol_
+
+  *Arguments and Values:*
+
+  _symbol_—a symbol.
+
+  *Description:*
+
+  {symbol-definitions} compiles and returns a list of definitions for
+  _symbol_. Each definition is a _property list_ containing at least two
+  _properties_:
+
+  + {:kind}—one of {:constant}, {:variable}, {:function},
+    {:generic-function}, {:macro}, {:structure}, {:class} or {:type}.
+  + {:documentation}—the respective documentation string or {nil}.
+  
+  Definitions of kind {:constant} and {:variable} have an additional
+  _property_ {:value} which holds the initial value of the constant or
+  variable.
+
+  Definitions of kind {:function}, {:generic-function} and {:macro} have
+  an additional _property_ {:lambda-list} which holds the lambda list of
+  the \(generic\) function or macro.
+
+  Definitions of kind {:class} have two additional _properties_
+  {:precedence-list} and {:initargs} which hold the class precedence list
+  and initialization arguments of the class.
+
+ >
+
+>
+

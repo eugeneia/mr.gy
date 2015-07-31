@@ -1,0 +1,4 @@
+:document (:title "trivial-documentation API Documentation")
+:source (:system :trivial-documentation
+         :api-document (:trivial-documentation))
+:stylesheets ((:media "screen" :href "/site-assets/api.css"))
