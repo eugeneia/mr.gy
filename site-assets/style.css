@@ -17,10 +17,6 @@ code, pre, tt {
     font-family: Inconsolata, monospace;
 }
 
-code, tt {
-    white-space: nowrap;
-}
-
 a:link {
     text-decoration: none;
 }
