@@ -110,8 +110,11 @@
 
   *Arguments and Values:*
 
-  _string_—a _string. \*Description\*: \{url-decode\} decodes
-  encoded_string_using_Percent-Encoding\_¹.
+  _string_—a \_string.
+
+  *Description*:
+
+  {url-decode} decodes encoded _string_ using _Percent-Encoding_¹.
 
   *See Also:*
 
@@ -129,8 +132,11 @@
 
   *Arguments and Values:*
 
-  _string_—a _string. \*Description\*: \{url-encode\}
-  encodes_string_using_Percent-Encoding\_¹.
+  _string_—a \_string.
+
+  *Description*:
+
+  {url-encode} encodes _string_ using _Percent-Encoding_¹.
 
   *See Also:*
 
@@ -198,7 +204,13 @@
 
   — Function: *url-path* _url_
 
-  Get path for URL.
+  *Arguments and Values:*
+
+  _url_—a _url_ designator.
+
+  *Description*:
+
+  {url-path} returns a _string_ denoting the path part of _url_.
 
  >
 
