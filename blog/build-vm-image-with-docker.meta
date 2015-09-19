@@ -1,0 +1,5 @@
+:document (:title "Building VM Images from Docker Containers"
+           :author "Max Rottenkolber <max@mr.gy>"
+           :index-p nil
+           :index-headers-p nil)
+:publication-date "2015-09-19 18:52"
