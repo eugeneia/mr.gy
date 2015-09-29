@@ -12,8 +12,8 @@ solutions to the problems it solves such as
 [DocBook](https://en.wikipedia.org/wiki/DocBook),
 [AsciiDoc](https://en.wikipedia.org/wiki/AsciiDoc) and
 [Markdown](https://en.wikipedia.org/wiki/Markdown).  Heck, even within
-the Common Lisp community Geneva could not possibly be considered
-novel. Fernando Borretti wrote [CommonDoc](https://github.com/CommonDoc)
+the Common Lisp community Geneva could not possibly be considered
+novel. Fernando Borretti wrote [CommonDoc](https://github.com/CommonDoc)
 which does everything Geneva does and more, as far as I
 understand. Apparently he also did what took me close to five years in
 less than one.¹ _Sigh._ What follows is the tale of why and how it came
@@ -68,7 +68,7 @@ Geneva as well as the design decisions I made along the lines.
  needs to be aware of the semantics of a document in order to be able to
  express his intent. For instance, you will find that Markdown is poorly
  specified. Markdown's semantics could be considered the shared subset of
- its most popular implementations, but John Gruber might disagree.
+ its most popular implementations, but John Gruber might disagree.
 
  Having defined a document model divides the remaining parts of the
  system into two categories:
