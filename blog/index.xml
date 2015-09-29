@@ -5,6 +5,11 @@
         <link>http://mr.gy/blog/</link>
         <language>en-us</language>
         <item>
+            <title>The&#xA0;Making&#xA0;of&#xA0;Geneva: A&#xA0;Portable&#xA0;Document&#xA0;System</title>
+            <link>http://mr.gy/blog/making-of-geneva.html</link>
+            <pubDate>Tue, 29 Sep 2015 20:40:00 GMT</pubDate>
+        </item>
+        <item>
             <title>Building VM&#xA0;Images from Docker&#xA0;Containers</title>
             <link>http://mr.gy/blog/build-vm-image-with-docker.html</link>
             <pubDate>Sat, 19 Sep 2015 18:52:00 GMT</pubDate>
