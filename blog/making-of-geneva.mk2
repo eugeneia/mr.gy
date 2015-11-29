@@ -62,7 +62,7 @@ Geneva as well as the design decisions I made along the lines.
  reason.
 
  A formal specification of document semantics is important for both
- implementers and document authors alike. An implement wants to know
+ implementers and document authors alike. An implementer wants to know
  precisely what types of content he needs to deal with, and he needs to
  ensure that his program preserves document semantics. A document author
  needs to be aware of the semantics of a document in order to be able to
@@ -119,7 +119,7 @@ Geneva as well as the design decisions I made along the lines.
  documents. I did think about simply implementing a Markdown front end
  for Geneva, but decided against it for two reasons. First, the syntax of
  Markdown is not formally defined. Implementing a parser for a language
- whose syntax practically undefined is an impossible task. Obviously,
+ whose syntax is practically undefined is an impossible task. Obviously,
  there are a lot of people who wrote parsers for Markdown, but I like to
  argue that most, if not all, of these parsers are incorrect. Second,
  Markdown's semantics are defined in terms of HTML. That means Geneva
@@ -199,8 +199,8 @@ Geneva as well as the design decisions I made along the lines.
  Geneva's [LaTeX back end](http://inters.co/geneva/open-geneva-api.html#section-6)
  reflects an uphill battle between two detrimental forces: automation and
  sophistication. It patches over many edge cases that are not properly
- handled by LaTeX while attempting to make as much use as possible of the
- features provided by it. The LaTeX back end accepts a “preamble”
+ handled by LaTeX while attempting to make as much use of the features
+ provided by it as possible. The LaTeX back end accepts a “preamble”
  argument—somewhat analogous to a CSS stylesheet—allowing to insert
  arbitrary (La)TeX code into the output. Depending on the LaTeX
  implementation used to process the resulting TeX files, a preamble might
