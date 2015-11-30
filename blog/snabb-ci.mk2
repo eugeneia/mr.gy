@@ -144,6 +144,9 @@ around?
  software. For that, we [make use of
  Docker](build-vm-image-with-docker.html) too.
 
+ #media#
+ snabb-ci.png
+
  Finally, there is _SnabbBot_ (200 lines, _Bash_): Snabb Switch's own
  tailor made continuous integration service. _SnabbBot_ is a _cron job_
  that launches automated test runs for incoming contributions:
