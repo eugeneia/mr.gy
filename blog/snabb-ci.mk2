@@ -2,7 +2,7 @@ For over year now, I have been working on
 [Snabb Switch](https://github.com/SnabbCo/snabbswitch), an open source
 software Ethernet networking stack. One of my ongoing responsibilities
 has been to devise, develop and maintain a _continuous integration_ (CI)
-tools for the project. Wait, why would anyone spend time “developing” a
+tool for the project. Wait, why would anyone spend time “developing” a
 new continuous integration system with _Jenkins_ and _Travis CI_ being
 around?
 
@@ -18,8 +18,8 @@ around?
  are recommended to merge with. The release itself consists of commonly
  beneficial contributions pulled in from individual forks during the
  course of a month. This work flow enables Snabb Switch development to
- take place in a loosely decentralized fashion: Contributors can do
- _their thing_¹ and propose bug fixes and new features that they feel
+ take place in a loosely decentralized fashion: contributors can do
+ _their thing_,¹ and propose bug fixes and new features that they feel
  benefit a wider audience to be merged into upstream while receiving
  everyone else's contributions too. Snabb Switch development is
  coordinated on _GitHub_.
@@ -28,13 +28,13 @@ around?
  in mind. Often, a fork will develop a Snabb Switch application that
  itself has no place in the upstream repository because its too specific
  to a certain problem or product.² These applications usually have their
- own test suites and benchmarks in addition to the upstream suite as
- well, and the testing infrastructure provided by Snabb GmbH supports that
- use case too.³
+ own test suites and benchmarks in addition to the upstream test suite as
+ well, and the testing infrastructure provided by Snabb GmbH supports
+ that use case too.³
 
  Testing a high performance Ethernet networking stack requires high
  performance networking hardware. Further than that, a big part of our
- test suite are _performance regressions tests_. Performance regression
+ test suite are _performance regression tests_. Performance regression
  tests are benchmarks in which Snabb Switch may not score below a certain
  threshold. In order to run a representative benchmark you need to run it
  in a deterministic environment. Specifically, we need a dedicated
@@ -46,19 +46,19 @@ around?
  with the right hardware as well as a broad range of different hardware
  and software platforms. Some parts of the test suite even spin up
  virtual machines using _QEMU_ to test virtualized networking. Different
- CPU models, different Operating Systems and different user land software
+ CPU models, different operating systems and different user land software
  versions: all these are factors that can impact the performance of
  Snabb Switch and thus need to be covered by the test infrastructure.
 
  Another important factor to effectively cooperating on a peer developed
  software system is _reproducibility_. Whenever somebody produces a test
- result for review it needs to be reproducible so others can confirm the
- result. Traditionally, truthfully reproducing a given test result, which
- may depend on the specific hardware and/or software in use, can be a
- tedious and time consuming task. Ideally, that process should be simple
- and fast. Especially for Snabb Switch, which supports a broad range of
- different platforms, there is demand for reducing the overhead inherent
- to reproducing different test environments.
+ result for review it needs to be reproducible so that others can confirm
+ the result. Traditionally, truthfully reproducing a given test result,
+ which may depend on the specific hardware and/or software in use, can be
+ a tedious and time consuming task. Ideally, that process should be
+ simple and fast. Especially for Snabb Switch, which supports a broad
+ range of different platforms, there is demand for reducing the overhead
+ inherent to reproducing different test environments.
 
  + 1. The different parties working on Snabb Switch indeed have different
       goals, needs and specialties.
@@ -81,7 +81,7 @@ around?
  possible solutions just to throw most of them away afterward.
 
  _Big dependencies_ get in the way of that process: first you need to
- learn how to use a complex system and then it will be hard to adapt to
+ learn how to use a complex system, and then it will be hard to adapt to
  new requirements. We prefer a 200 line _Bash_ script that does exactly
  what we _think_ we want over a complex Java application that probably
  only does a subset of what we _think_ we want. Small, orthogonal
@@ -101,8 +101,8 @@ around?
    _selftest_ which is invoked to run a module's unit tests. (This is a
    convention imposed by Snabb Switch.)
  + Additionally, any file named _selftest.sh_ is considered a test and
-   run as such. This enables “free form” testing entailing things such as
-   spinning up virtual machines.
+   run as such. This mechanism allows for “free form” testing that
+   entails things such as  spinning up virtual machines.
  + Some tests can or must be configured via _environment variables_ and
    the result of a test (success, failure or “skipped”) is indicated by
    its return value.
@@ -137,7 +137,7 @@ around?
  lines, _Bash_) is provided to seamlessly run the test suite of your
  Snabb Switch working tree within such a container. That way, test
  results depending on a specific software environment can be quickly
- reproduced on any machine that runs _Docker_. The creation of our tests
+ reproduced on any machine that runs _Docker_. The creation of our test
  environment and the containing _Docker_ image is another complex hassle
  that I only want to touch briefly. For instance, we need to repeatably
  build virtual machine images containing specific versions of some
