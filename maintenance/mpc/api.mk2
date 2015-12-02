@@ -27,11 +27,11 @@
  >
 
 
- < =at-least \(Function\)
+ < =at‑least \(Function\)
 
   *Syntax:*
 
-  — Function: *=at-least* _n_ _parser_ {&key} _limit_
+  — Function: *=at‑least* _n_ _parser_ {&key} _limit_
 
   *Arguments and Values:*
 
@@ -53,7 +53,7 @@
 
   *Syntax:*
 
-  — Function: *=bind* _parser_ _make-parser_
+  — Function: *=bind* _parser_ _make‑parser_
 
   *Arguments and Values:*
 
@@ -72,11 +72,11 @@
  >
 
 
- < =end-of-input \(Function\)
+ < =end‑of‑input \(Function\)
 
   *Syntax:*
 
-  — Function: *=end-of-input* _\<no arguments\>_
+  — Function: *=end‑of‑input* _\<no arguments\>_
 
   *Description:*
 
@@ -162,11 +162,11 @@
  >
 
 
- < =handler-case \(Macro\)
+ < =handler‑case \(Macro\)
 
   *Syntax:*
 
-  — Macro: *=handler-case* _parser_ {&rest} _handlers_
+  — Macro: *=handler‑case* _parser_ {&rest} _handlers_
 
   *Arguments and Values:*
 
@@ -188,7 +188,7 @@
 
   *Syntax:*
 
-  — Function: *=if* _test-parser_ _then-parser_ {&optional} _else-parser_
+  — Function: *=if* _test‑parser_ _then‑parser_ {&optional} _else‑parser_
 
   *Arguments and Values:*
 
@@ -227,7 +227,7 @@
 
   — Macro: *=let\** _bindings_ {&body} _forms_
 
-  _bindings_::= {\(}〚{\(}_symbol_ _parser_{\)}\*〛{\)}
+  _bindings_::= {\(}{\{}{\(}_symbol_ _parser_{\)}{\}}\*{\)}
 
   *Arguments and Values:*
 
@@ -283,11 +283,11 @@
  >
 
 
- < =none-of \(Function\)
+ < =none‑of \(Function\)
 
   *Syntax:*
 
-  — Function: *=none-of* _list_
+  — Function: *=none‑of* _list_
 
   *Arguments and Values:*
 
@@ -321,11 +321,11 @@
  >
 
 
- < =one-of \(Function\)
+ < =one‑of \(Function\)
 
   *Syntax:*
 
-  — Function: *=one-of* _list_
+  — Function: *=one‑of* _list_
 
   *Arguments and Values:*
 
@@ -340,11 +340,11 @@
  >
 
 
- < =one-or-more \(Function\)
+ < =one‑or‑more \(Function\)
 
   *Syntax:*
 
-  — Function: *=one-or-more* _parser_
+  — Function: *=one‑or‑more* _parser_
 
   *Arguments and Values:*
 
@@ -358,11 +358,11 @@
  >
 
 
- < =one-to \(Function\)
+ < =one‑to \(Function\)
 
   *Syntax:*
 
-  — Function: *=one-to* _n_ _parser_
+  — Function: *=one‑to* _n_ _parser_
 
   *Arguments and Values:*
 
@@ -488,11 +488,11 @@
  >
 
 
- < =restart-case \(Macro\)
+ < =restart‑case \(Macro\)
 
   *Syntax:*
 
-  — Macro: *=restart-case* _parser_ {&rest} _restarts_
+  — Macro: *=restart‑case* _parser_ {&rest} _restarts_
 
   *Arguments and Values:*
 
@@ -551,7 +551,7 @@
 
   *Syntax:*
 
-  — Function: *=unless* _test-parser_ {&rest} _parsers_
+  — Function: *=unless* _test‑parser_ {&rest} _parsers_
 
   *Arguments and Values:*
 
@@ -571,7 +571,7 @@
 
   *Syntax:*
 
-  — Function: *=when* _test-parser_ {&rest} _parsers_
+  — Function: *=when* _test‑parser_ {&rest} _parsers_
 
   *Arguments and Values:*
 
@@ -587,11 +587,11 @@
  >
 
 
- < =zero-or-more \(Function\)
+ < =zero‑or‑more \(Function\)
 
   *Syntax:*
 
-  — Function: *=zero-or-more* _parser_
+  — Function: *=zero‑or‑more* _parser_
 
   *Arguments and Values:*
 
@@ -605,11 +605,11 @@
  >
 
 
- < =zero-to \(Function\)
+ < =zero‑to \(Function\)
 
   *Syntax:*
 
-  — Function: *=zero-to* _n_ _parser_
+  — Function: *=zero‑to* _n_ _parser_
 
   *Arguments and Values:*
 
@@ -625,11 +625,11 @@
  >
 
 
- < get-input-position \(Function\)
+ < get‑input‑position \(Function\)
 
   *Syntax:*
 
-  — Function: *get-input-position* _\<no arguments\>_
+  — Function: *get‑input‑position* _\<no arguments\>_
 
   → _position_
 
@@ -664,7 +664,7 @@
 
   *Syntax:*
 
-  — Function: *run* _parser_ _input-source_ {&key} _result_
+  — Function: *run* _parser_ _input‑source_ {&key} _result_
 
   *Arguments and Values:*
 
@@ -714,7 +714,7 @@
 
   *Syntax:*
 
-  — Function: *=character* _character_ {&optional} _case-sensitive-p_
+  — Function: *=character* _character_ {&optional} _case‑sensitive‑p_
 
   *Arguments and Values:*
 
@@ -735,7 +735,7 @@
 
   *Syntax:*
 
-  — Function: *=line* {&optional} _keep-newline-p_
+  — Function: *=line* {&optional} _keep‑newline‑p_
 
   *Arguments and Values:*
 
@@ -765,11 +765,11 @@
  >
 
 
- < =skip-whitespace \(Function\)
+ < =skip‑whitespace \(Function\)
 
   *Syntax:*
 
-  — Function: *=skip-whitespace* _parser_
+  — Function: *=skip‑whitespace* _parser_
 
   *Arguments and Values:*
 
@@ -788,7 +788,7 @@
 
   *Syntax:*
 
-  — Function: *=string* _string_ {&optional} _case-sensitive-p_
+  — Function: *=string* _string_ {&optional} _case‑sensitive‑p_
 
   *Arguments and Values:*
 
@@ -806,11 +806,11 @@
  >
 
 
- < =string-of \(Function\)
+ < =string‑of \(Function\)
 
   *Syntax:*
 
-  — Function: *=string-of* _parser_
+  — Function: *=string‑of* _parser_
 
   *Arguments and Values:*
 
@@ -859,18 +859,18 @@
 
   *Description:*
 
-  {=digit} consumes the next item and succeeds if the next item is a
-  digit _character_ in the specified radix. The result is the numerical
-  value of the digit.
+  {=digit} consumes the next item and succeeds with that item as its
+  result if the next item is a digit _character_ in the specified
+  _radix_.
 
  >
 
 
- < =integer-number \(Function\)
+ < =integer‑number \(Function\)
 
   *Syntax:*
 
-  — Function: *=integer-number* {&optional} _radix_
+  — Function: *=integer‑number* {&optional} _radix_
 
   *Arguments and Values:*
 
@@ -887,11 +887,11 @@
  >
 
 
- < =natural-number \(Function\)
+ < =natural‑number \(Function\)
 
   *Syntax:*
 
-  — Function: *=natural-number* {&optional} _radix_
+  — Function: *=natural‑number* {&optional} _radix_
 
   *Arguments and Values:*
 

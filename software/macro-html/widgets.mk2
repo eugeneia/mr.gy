@@ -3,11 +3,11 @@
  HTML widget functions. All widgets print to {\*standard-output\*}.
 
 
- < html-widget-document \(Function\)
+ < html‑widget‑document \(Function\)
 
   *Syntax:*
 
-  — Function: *html-widget-document* _title_ _body_ {&key} _stylesheets_
+  — Function: *html‑widget‑document* _title_ _body_ {&key} _stylesheets_
   _scripts_ _feeds_ _encoding_ _viewport_
 
   *Arguments and Values:*
@@ -44,11 +44,11 @@
  >
 
 
- < html-widget-form \(Function\)
+ < html‑widget‑form \(Function\)
 
   *Syntax:*
 
-  — Function: *html-widget-form* _action_ _fields_ {&key} _method_
+  — Function: *html‑widget‑form* _action_ _fields_ {&key} _method_
   _description_
 
   *Arguments and Values:*
@@ -76,11 +76,11 @@
  >
 
 
- < html-widget-head \(Function\)
+ < html‑widget‑head \(Function\)
 
   *Syntax:*
 
-  — Function: *html-widget-head* _title_ {&key} _stylesheets_ _scripts_
+  — Function: *html‑widget‑head* _title_ {&key} _stylesheets_ _scripts_
   _feeds_ _encoding_ _viewport_
 
   *Arguments and Values:*
@@ -113,11 +113,11 @@
  >
 
 
- < html-widget-input \(Function\)
+ < html‑widget‑input \(Function\)
 
   *Syntax:*
 
-  — Function: *html-widget-input* _name_ _label_ {&optional} _type_
+  — Function: *html‑widget‑input* _name_ _label_ {&optional} _type_
 
   *Arguments and Values:*
 
@@ -137,11 +137,11 @@
  >
 
 
- < html-widget-list \(Function\)
+ < html‑widget‑list \(Function\)
 
   *Syntax:*
 
-  — Function: *html-widget-list* _list_ {&key} _type_ _to-string_
+  — Function: *html‑widget‑list* _list_ {&key} _type_ _to‑string_
 
   *Arguments and Values:*
 
@@ -170,11 +170,11 @@
  >
 
 
- < html-widget-meta \(Function\)
+ < html‑widget‑meta \(Function\)
 
   *Syntax:*
 
-  — Function: *html-widget-meta* {&key} _content-type_ _encoding_
+  — Function: *html‑widget‑meta* {&key} _content‑type_ _encoding_
 
   *Arguments and Values:*
 
@@ -192,18 +192,18 @@
  >
 
 
- < html-widget-select \(Function\)
+ < html‑widget‑select \(Function\)
 
   *Syntax:*
 
-  — Function: *html-widget-select* _name_ _label_ _options_ {&key}
+  — Function: *html‑widget‑select* _name_ _label_ _options_ {&key}
   _multiple_
 
-  _options_::= {'\(}〚↓_option-group_\* \| ↓_option_\*〛{\)}
+  _options_::= {'\(}{\{}↓_option-group_ \| ↓_option_{\}}\*{\)}
 
-  _option-group_::= {\(}{:group} _label_ 〚↓_option_\*〛{\)}
+  _option-group_::= {\(}{:group} _label_ {\{}↓_option_{\}}\*{\)}
 
-  _option_::= {\(}_value_ _label_ 〚{:selected}〛{\)}
+  _option_::= {\(}_value_ _label_ {\[}{:selected}{\]}{\)}
 
   *Arguments and Values:*
 
@@ -224,11 +224,11 @@
  >
 
 
- < html-widget-table \(Function\)
+ < html‑widget‑table \(Function\)
 
   *Syntax:*
 
-  — Function: *html-widget-table* _head_ _body_
+  — Function: *html‑widget‑table* _head_ _body_
 
   *Arguments and Values:*
 
@@ -244,11 +244,11 @@
  >
 
 
- < html-widget-textarea \(Function\)
+ < html‑widget‑textarea \(Function\)
 
   *Syntax:*
 
-  — Function: *html-widget-textarea* _name_ _label_ _initial-text_
+  — Function: *html‑widget‑textarea* _name_ _label_ _initial‑text_
 
   *Arguments and Values:*
 
