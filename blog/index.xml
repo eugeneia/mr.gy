@@ -5,6 +5,11 @@
         <link>http://mr.gy/blog/</link>
         <language>en-us</language>
         <item>
+            <title>Experimental Meta-Programming for&#xA0;Lua</title>
+            <link>http://mr.gy/blog/lua-meta-programming.html</link>
+            <pubDate>Fri, 18 Dec 2015 21:08:00 GMT</pubDate>
+        </item>
+        <item>
             <title>Continuous&#xA0;Integration for Snabb&#xA0;Switch</title>
             <link>http://mr.gy/blog/snabb-ci.html</link>
             <pubDate>Sun, 29 Nov 2015 23:34:00 GMT</pubDate>

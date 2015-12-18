@@ -1,5 +1,7 @@
 Hi, I'm [Max Rottenkolber](http://mr.gy) and this is my technical Blog.
 
++ [Experimental Meta-Programming
+  for Lua](lua-meta-programming.html) _Friday, 18 December 2015_
 + [Continuous Integration for
   Snabb Switch](snabb-ci.html) _Sunday, 29 November 2015_
 + [The Making of Geneva:
