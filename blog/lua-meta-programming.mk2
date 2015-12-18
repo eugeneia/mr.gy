@@ -97,10 +97,11 @@ something similar for Lua?
  facility to install macros. The back-quote syntax is just a list
  comprehension tool—or table comprehension in our case. It lets us
  conveniently build abstract syntax trees by splicing symbols, strings
- (quoted symbols) and tables into other tables. The back-quoting syntax is
- really just a sugar coating at the reader level that expand to {quote},
- {unquote} and {splice} forms at read time. The former is implemented as
- a built-in, and the latter two only have meaning within a {quote} form.
+ (quoted symbols) and tables into other tables. The back-quoting syntax
+ is really just a sugar coating at the reader level that expand to
+ {quote}, {unquote} and {splice} forms at read time. The former is
+ implemented as a built-in, and the latter two only have meaning within a
+ {quote} form.
 
  #table#
  | S‑Lua                        | Expands to                             | Evaluates to
@@ -178,7 +179,7 @@ something similar for Lua?
  problem such as boxing the packet pointers, but it achieves something
  that can not be replicated in plain Lua: it does not operate on a value,
  but instead expects its argument to be a _place_—a symbol denoting a
- variable or object slot which a value can be read from and assigned to.
+ variable or object slot from which a value can be read and assigned to.
 
 >
 
@@ -199,10 +200,12 @@ something similar for Lua?
 
  The downside to S‑Lua—as felt by all source-to-source compilers—is that
  it obfuscates compile- and run-time errors. There is no easy way to make
- Lua errors meaningfully correspond to S‑Lua source code. Only efforts
- can call if there is a sweet spot between S‑Lua trying harder to produce
- corresponding code and restricting its use to a minimum—punctually
- invoking S‑Lua in a source code preprocessor could leave most Lua
- code undisturbed. In any case, it was a fun experiment!
+ Lua errors meaningfully correspond to S‑Lua source code. Only further
+ efforts can tell if there is a sweet spot between S‑Lua trying harder to
+ produce corresponding code and restricting its use to a
+ minimum—punctually invoking S‑Lua in a source code preprocessor could
+ leave most Lua code undisturbed. The mental overhead introduced by S‑Lua
+ might be more than can be justified by the features provided by it. In
+ any case, it was a fun experiment!
 
 >
