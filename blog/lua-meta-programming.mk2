@@ -1,4 +1,4 @@
-My work on [Snabb Switch](https://github.com/snabbco/snabbswitch) has
+Working on [Snabb Switch](https://github.com/snabbco/snabbswitch) has
 made me appreciate the [Lua](http://www.lua.org/) programming language
 quite a bit, and a [JIT compiled](https://en.wikipedia.org/wiki/Just-in-time_compilation)
 implementation of the language, called [LuaJIT](http://luajit.org/),
