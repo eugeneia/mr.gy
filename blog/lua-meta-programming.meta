@@ -1,4 +1,4 @@
-:document (:title "Experimental Meta-Programming in Lua"
+:document (:title "Experimental Meta-Programming for Lua"
            :author "Max Rottenkolber <max@mr.gy>"
            :index-p nil
            :index-headers-p nil)
