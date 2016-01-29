@@ -8,13 +8,16 @@ nav {
     margin: 0;
     padding: 0 1.4em 0 1.4em;
 }
-
-nav > header {
-    margin-top: 1.4em;
+nav ul, nav ol {
+    padding-left: 0.7em;
+}
+nav > ul, nav > ol {
+    padding-left: 1.4em;
+    width: 25.2em;
 }
 
 body {
-    margin: 0 0 0 16.8em;
+    margin: 0 0 0 15.4em;
 }
 
 h3 {
