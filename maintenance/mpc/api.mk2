@@ -98,7 +98,7 @@
   *Description:*
 
   {=eql} consumes the next item and succeeds with that item as its result
-  if the item is {eql} to _object_. Fails if the input is empty.
+  if the item is {eql} to _object_.
 
  >
 
@@ -216,7 +216,7 @@
   *Description:*
 
   {=item} consumes the next item and succeeds with that item as its
-  result unless the input is empty. Fails if the input is empty.
+  result unless the input is empty.
 
  >
 
@@ -297,7 +297,6 @@
 
   {=none-of} consumes the next item and succeeds with that item as its
   result unless the item is {eql} to one of the _objects_ in _list_.
-  Fails if the input is empty.
 
  >
 
@@ -316,7 +315,7 @@
 
   {=not} consumes the next item and succeeds with that item as its result
   if _parser_ would fail. E.g. it negates _parser_. Note that _parser_ is
-  not actually applied to the input. Fails if the input is empty.
+  not actually applied to the input.
 
  >
 
@@ -334,8 +333,7 @@
   *Description:*
 
   {=one-of} consumes the next item and succeeds with that item as its
-  result if the item is {eql} to any _object_ in _list_. Fails if the
-  input is empty.
+  result if the item is {eql} to any _object_ in _list_.
 
  >
 
@@ -482,8 +480,7 @@
 
   {=range} applies _parser_ and, if it succeeds, applies _predicate_ to
   _from_, its results and _to_. {=range} succeeds with the result of
-  _parser_ if _predicate_ is _true_ and fails otherwise. Fails if the
-  input is empty.
+  _parser_ if _predicate_ is _true_ and fails otherwise.
 
  >
 
@@ -541,8 +538,7 @@
   *Description:*
 
   {=satisfies} consumes the next item and succeeds with that item as its
-  result if the result satisfies _predicate_. Fails if the input is
-  empty.
+  result if the result satisfies _predicate_.
 
  >
 
