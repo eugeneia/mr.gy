@@ -8,6 +8,9 @@ nav {
     margin: 0;
     padding: 0 1.4em 0 1.4em;
 }
+nav > header {
+    margin-top: 1.4em;
+}
 nav ul, nav ol {
     padding-left: 0.7em;
 }
