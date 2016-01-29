@@ -66,6 +66,9 @@ header > p {
     font-size: 0.9em;
     margin-top: 0.3888889em;
 }
+header > p > b {
+    font-weight: bold;
+}
 
 nav {
     margin: 1.4em 0;
