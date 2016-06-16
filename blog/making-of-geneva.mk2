@@ -2,15 +2,15 @@
 authoring portable documents. Portable in the sense that they can be
 rendered to different formats, but also in the sense that the document
 structure is agnostic to any given serialization format. Geneva features
-a formally defined document model, an API for building documents, a human
-readable, text based markup language and rendering back ends for HTML,
-LaTeX and plain text. It is now available on
+a formally defined document model, an API for building documents, and a human
+readable, text based markup language. Also included are rendering back ends
+for HTML, LaTeX, and plain text. It is now available on
 [Quicklisp](https://www.quicklisp.org/beta/).
 
 Nothing Geneva does is new, it is predated by many
 solutions to the problems it solves such as
 [DocBook](https://en.wikipedia.org/wiki/DocBook),
-[AsciiDoc](https://en.wikipedia.org/wiki/AsciiDoc) and
+[AsciiDoc](https://en.wikipedia.org/wiki/AsciiDoc), and
 [Markdown](https://en.wikipedia.org/wiki/Markdown).  Heck, even within
 the Common Lisp community Geneva could not possibly be considered
 novel. Fernando Borretti wrote [CommonDoc](https://github.com/CommonDoc)
@@ -43,7 +43,7 @@ Geneva as well as the design decisions I made along the lines.
  documentation is a valuable professional skill. Creative writing has
  become an endeared spare-time activity of mine. Secretly, I want to
  become a journalist one day. Having a typesetting tool, that works
- exactly the way I envisioned it to provides a lot of value to me. It
+ exactly the way I envisioned it to, provides a lot of value to me. It
  goes without saying that I do not intend to persuade others to use
  Geneva.
 
@@ -77,35 +77,34 @@ Geneva as well as the design decisions I made along the lines.
  + Back end programs that produce rendered artifacts from documents
 
  In terms of document features one could easily argue that Geneva is
- underpowered. It has a notion of _rich text_ which is a sequence of text
- that contain bold, italic, fixed-width (typewriter font) and hyperlink
+ underpowered. It has a notion of _rich text_, which is a sequence of text
+ that contain bold, italic, fixed-width (typewriter font), and hyperlink
  segments in addition to plain old text. Combinations of these are not
- supported. E.g. you can not have a text segment be both bold _and_
+ supported. E.g., you can not have a text segment be both bold _and_
  italic. A document can contain paragraphs, listings, three types of
- figures and sections. There is only one type of listing: the
+ figures, and sections. There is only one type of listing: the
  non-enumerated list. The supported types of figures are tables, verbatim
- text and _generic media_. The latter is just a reference to an external
+ text, and _generic media_. The latter is just a reference to an external
  resource, and it is the implementations responsibility to decide what to
  do with it. There is no concept of block quotation yet. Each figure has
  a _description_ which is a paragraph “attached” to the figure. A section
  consists of a title and a sub-document.
 
- This exercise in minimalism yields the tremendous advantage of
- simplicity. The front ends and back ends built around the document
- specification profit from its simplicity by being able to be simpler
- itself. It also means less complexity for document authors to deal with,
- and therefore, simplifies what is the purpose of Geneva: writing. On the
- other hand the lack of features can be limiting for document authors. In
- practice this can mean substituting missing features with combinations
- of available features or avoiding certain typographic elements
- altogether—both can be unsatisfactory. Ultimately I learned to value
- simplicity over feature parity with existing typesetting systems. The
- process of adding features to Geneva has always been insanely
- conservative. For instance, labeled hyperlinks were a very late
- addition—it took me a long time to admit that I really need them.
+ This exercise in minimalism yields the tremendous advantage of simplicity. The
+ front ends and back ends built around the document specification profit from
+ its simplicity by being able to be simpler themselves. It also means there is
+ less complexity for document authors to deal with, and therefore, simplifies
+ what is the purpose of Geneva: writing. On the other hand the lack of features
+ can be limiting for document authors. In practice this can mean substituting
+ missing features with combinations of available features or avoiding certain
+ typographic elements altogether—both can be unsatisfactory. Ultimately I
+ learned to value simplicity over feature parity with existing typesetting
+ systems. The process of adding features to Geneva has always been insanely
+ conservative. For instance, labeled hyperlinks were a very late addition—it
+ took me a long time to admit that I really need them.
 
- Generally, I would prefer to add low level features that can be combined
- to achieve typographic goals over high level features. For instance:
+ Generally, I would prefer to add low level features, that can be combined
+ to achieve typographic goals, over high level features. For instance:
  currently footnotes can be set using listings and manual enumeration.
  While this may seem unsatisfying, a higher level preprocessor could do
  this automatically.
@@ -126,17 +125,16 @@ Geneva as well as the design decisions I made along the lines.
  would have to either support only a subset of Markdown, or introduce
  unnecessary impedance mismatch and technical debt. Starting a new markup
  language from scratch enabled me to gear it towards Geneva
- specifically. It also offered me a blank sheet of paper to draw on, and
- hopefully, improve upon existing language designs.
+ specifically. It also offered me a blank sheet of paper to draw on, and the
+ opportunity to (hopefully) improve upon existing language designs.
 
  Mk2 is formally defined by a context-free grammar.¹ The language is a
  precise representation of a Geneva document, meaning that any Geneva
  document can be serialized using Mk2.² The grammar is intended to be
  easy to read and write for humans, and its design is based on
- considerations of how humans interact with a markup language. The Mk2
- parser will fail loudly instead of ignoring errors silently and
- attempting to “do the right thing”—being forgiving to the user is the
- responsibility of the Mk2 grammar.
+ considerations of how humans interact with a markup language. The Mk2 will not
+ ignore syntactic errors silently and attempt to “do the right thing”—being
+ forgiving to the user is the responsibility of the Mk2 grammar.
 
  When writing using a markup language, the most common error is to
  unintentionally invoke a language construct, because the user forgot to
@@ -167,7 +165,7 @@ Geneva as well as the design decisions I made along the lines.
  + 1. The _string_ axiom in used in Mk2's specification may lead you to
    believe otherwise, but it only serves conciseness and can be
    translated to a context-free grammar for each individual occurrence.
- + 2. Geneva includes both front and a back end programs for Mk2, see
+ + 2. Geneva includes both front and back end programs for Mk2, see
    [Reading and Writing Mk2 Files](http://inters.co/geneva/open-geneva.html#section-2).
 
 >
@@ -187,7 +185,7 @@ Geneva as well as the design decisions I made along the lines.
  tremendous amount of work that went into LaTeX over the years.
 
  TeX manages to automate some aspects of sophisticated typesetting such
- as justification, spacing and hyphenation, but fails to automate others
+ as justification, spacing, and hyphenation, but fails to automate others
  such as table layout. Strictly speaking, TeX is still a manual
  typesetting system—it requires the user to set the document on a word by
  word basis. Even the aspects TeX does automate need to be bypassed in
@@ -199,8 +197,8 @@ Geneva as well as the design decisions I made along the lines.
  Geneva's [LaTeX back end](http://inters.co/geneva/open-geneva-api.html#section-6)
  reflects an uphill battle between two detrimental forces: automation and
  sophistication. It patches over many edge cases that are not properly
- handled by LaTeX while attempting to make as much use of the features
- provided by it as possible. The LaTeX back end accepts a “preamble”
+ handled by LaTeX while attempting to make as much use as possible of the
+ features provided by it. The LaTeX back end accepts a “preamble”
  argument—somewhat analogous to a CSS stylesheet—allowing to insert
  arbitrary (La)TeX code into the output. Depending on the LaTeX
  implementation used to process the resulting TeX files, a preamble might
@@ -211,10 +209,10 @@ Geneva as well as the design decisions I made along the lines.
 
  Ultimately, I think that TeX is not the right target for Geneva's print
  media back end. Achieving fully automatic and yet sophisticated
- typesetting is a very hard problem, and—for me personally—it is not
+ typesetting is a very hard problem, and (for me personally) it is not
  worth solving. A crude and simple system such as HTML provides for
  everything needed to effectively digest written information. Ideally,
- Geneva would have an equally simple PDF back end, which sacrifices the
+ Geneva would have an equally simple PDF back end, that sacrifices the
  fancy aesthetics of TeX for consistent and predictable output. Being
  enthusiastic about high quality typesetting, this realization was quite
  shocking to me at first. In the end I had to admit to myself, that in a
