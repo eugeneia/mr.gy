@@ -1,0 +1,4 @@
+:document (:title "Sam API Documentation")
+:source (:system :sam
+         :api-document (:sam))
+:stylesheets ((:media "screen" :href "/site-assets/api.css"))

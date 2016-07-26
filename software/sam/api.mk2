@@ -1,0 +1,149 @@
+< sam
+
+ Tiny, concurrent sampling profiler for Clozure Common Lisp. Sam peeks
+ into the stack of a running process repeatedly to figure out where time
+ is spent.
+
+ *Example:*
+
+ #code#
+(sam:profile ()
+  (loop for i from 1 to 1e8 sum i))
+▷ 39%  CCL::>-2  <no source>
+▷ 19%  CCL::FIXNUM-SFLOAT-COMPARE  <no source>
+▷ 15%  #<Anonymous Function #x30200B10843F>  <no source>
+▷ 12%  SAM:CALL-WITH-SAMPLING  (defun call-with-sampling (fn ...
+▷ 11%  CCL::INTEGER-DECODE-SHORT-FLOAT  <no source>
+▷  5%  CCL::FIXNUM-DECODE-SHORT-FLOAT  <no source>
+ #
+
+ *Credits:*
+
+ The core functionality of Sam was kindly provided by R. Matthew Emerson.
+
+
+ < call‑with‑sampling \(Function\)
+
+  *Syntax:*
+
+  — Function: *call‑with‑sampling* _fn_ {&key} _interval_
+
+  *Arguments and Values:*
+
+  _fn_—a _function designator_.
+
+  _interval_—a positive _number_ designating a time in seconds. The
+  default is 0.001.
+
+  *Description:*
+
+  {call-with-sampling} profiles _fn_, and returns a _hash table_
+  containing the collected samples. _Interval_ specifies the time between
+  samples collected.
+
+ >
+
+
+ < profile \(Macro\)
+
+  *Syntax:*
+
+  — Macro: *profile* {\(}{&key} {\(}_interval_
+  _\*default‑sample‑interval\*_{\)} {\(}_cutoff_
+  _\*default‑cutoff\*_{\)}{\)} {&body} _forms_
+
+  *Arguments and Values:*
+
+  _interval_—a positive _number_ designating a time in seconds. The
+  default is 0.001.
+
+  _cutoff_—a _number_ of _type_ {\(real 0 100\)} designating a
+  percentage. The default is 3.
+
+  _forms_—_forms_ to be evaluated.
+
+  *Description:*
+
+  {profile} profiles the evaluation of _forms_ and prints a summary of
+  the results, omitting samples that constitute below _cutoff_ percent of
+  the total samples. _Interval_ specifies the time between samples
+  collected.
+
+ >
+
+
+ < profile‑process \(Function\)
+
+  *Syntax:*
+
+  — Function: *profile‑process* _process_ _duration_ {&key} _interval_
+  _cutoff_
+
+  *Arguments and Values:*
+
+  _process_—a {process}.
+
+  _duration_—a positive _number_ designating a time in seconds.
+
+  _interval_—a positive _number_ designating a time in seconds. The
+  default is 0.001.
+
+  _cutoff_—a _number_ of _type_ {\(real 0 100\)} designating a
+  percentage. The default is 3.
+
+  *Description:*
+
+  {profile-process} profiles _process_ for _duration_, and prints a
+  summary of the results, omitting samples that constitute below _cutoff_
+  percent of the total samples. _Interval_ specifies the time between
+  samples collected.
+
+ >
+
+
+ < report‑samples \(Function\)
+
+  *Syntax:*
+
+  — Function: *report‑samples* _h_ {&key} _cutoff_
+
+  *Arguments and Values:*
+
+  _h_—a _hash table_ containing samples.
+
+  _cutoff_—a _number_ of _type_ {\(real 0 100\)} designating a
+  percentage. The default is 3.
+
+  *Description:*
+
+  {report-samples} prints a summary of the samples in _h_, omitting
+  samples that constitute below _cutoff_ percent of the total samples.
+
+ >
+
+
+ < sample‑process \(Function\)
+
+  *Syntax:*
+
+  — Function: *sample‑process* _process_ _duration_ {&key} _interval_
+
+  *Arguments and Values:*
+
+  _process_—a {process}.
+
+  _duration_—a positive _number_ designating a time in seconds.
+
+  _interval_—a positive _number_ designating a time in seconds. The
+  default is 0.001.
+
+  *Description:*
+
+  {sample-process} profiles _process_ for _duration_, and returns a _hash
+  table_ containing the collected samples. _Interval_ is the time between
+  samples collected.
+
+ >
+
+>
+
