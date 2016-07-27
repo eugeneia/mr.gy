@@ -48,9 +48,7 @@
 
   *Syntax:*
 
-  — Macro: *profile* {\(}{&key} {\(}_interval_
-  _\*default‑sample‑interval\*_{\)} {\(}_cutoff_
-  _\*default‑cutoff\*_{\)}{\)} {&body} _forms_
+  — Macro: *profile* {\(}{&key} _interval_ _cutoff_{\)} {&body} _forms_
 
   *Arguments and Values:*
 
