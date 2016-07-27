@@ -1,0 +1,6 @@
+:document (:title "Sam: a tiny, concurrent sampling profiler for
+                   Clozure Common Lisp"
+           :author "Max Rottenkolber <max@mr.gy>"
+           :index-p nil
+           :index-headers-p nil)
+:publication-date "2016-07-27 02:33"

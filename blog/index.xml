@@ -5,6 +5,12 @@
         <link>http://mr.gy/blog/</link>
         <language>en-us</language>
         <item>
+            <title>Sam: a tiny, concurrent sampling profiler for
+                   Clozure&#xA0;Common&#xA0;Lisp</title>
+            <link>http://mr.gy/blog/sam.html</link>
+            <pubDate>Wed, 27 Jul 2016 02:33:00 GMT</pubDate>
+        </item>
+        <item>
             <title>Experimental Meta-Programming for&#xA0;Lua</title>
             <link>http://mr.gy/blog/lua-meta-programming.html</link>
             <pubDate>Fri, 18 Dec 2015 21:08:00 GMT</pubDate>
