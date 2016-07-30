@@ -1,0 +1,5 @@
+:document (:title "MaxPC API Documentation")
+:source (:system :maxpc
+         :api-document (:maxpc :maxpc.char :maxpc.digit
+                        :maxpc.input :maxpc.input.stream))
+:stylesheets ((:media "screen" :href "/site-assets/api.css"))

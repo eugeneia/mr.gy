@@ -1,0 +1,1442 @@
+< maxpc
+
+ _Max’s Parser Combinators_¹ is a simple and pragmatic library for
+ writing parsers and lexers based on combinatory parsing. MaxPC is
+ capable of parsing deterministic, context-free languages, provides
+ powerful tools for parse tree transformation and error handling, and can
+ operate on _sequences_ and _streams_. It supports unlimited
+ backtracking, but does not implement
+ [Packrat Parsing](http://pdos.csail.mit.edu/~baford/packrat/thesis/).
+ Instead, MaxPC achieves good performance through its optimized
+ primitives, and explicit separation of matching and capturing input. In
+ practice, MaxPC parsers perform better on typical computer
+ languages—when compared to Packrat parsers—at the expense of not
+ producing linear-time parsers.²
+
+ + 1. MaxPC is a complete rewrite of
+   [MPC](https://github.com/eugeneia/mpc) with was in turn a fork of
+   Drew Crampsie’s [Smug](http://smug.drewc.ca/).
+ + 2. Unbacked claim: the book keeping costs of Packrat parsing diminish
+   the gain in execution time for typical grammars and workloads.
+ 
+
+ < Basic Concepts
+
+  MaxPC _parsers_ are _functions_ that accept an [input](\#section-4) as
+  their only argument and return three values: the remaining _input_ or
+  {nil}, a _result value_ or {nil}, and a _generalized boolean_ that
+  indicates if a _result value_ is present. The _type_ of a parser is:
+
+  {\(function \(}_input_{\) \(or} _input_ {null\) \* boolean\)}
+
+  A parser can either succeed or fail when applied to an input at a given
+  position. A succeeding parser is said to _match_. When a parser matches
+  it can optionally produce a _result value_, which may be processed by
+  its parent parsers. New parsers can be created by composing existing
+  parsers using built-in or user defined _parser combinators_. A parser
+  combinator is a higher-order _function_ that includes one or more
+  parsers as its arguments and returns a parser.
+
+  By convention, all parsers are defined as higher-order _functions_ that
+  return the respective parser, even if they are nullary. For instance,
+  the {?end} parser is obtained using the form “{\(?end\)}”.
+
+  A lexical convention is used to make three different types of parsers
+  easily distinguishable:
+
+  + Parsers whose names start with a question mark \({?}\) never produce
+    a result value.
+  + Parsers whose names start with an equals sign \({=}\) always produce
+    a result value.
+  + Parsers whose names start with a percent symbol \({%}\) may produce a
+    result value depending on their arguments.
+  
+ >
+
+
+ < Example
+
+  We will define a parser for a simplistic grammar for Email addresses of
+  the form:
+
+  _email‑address_ := _user_ {@} _host_
+
+  First we define a parser for the valid characters in the _user_ and
+  _host_ parts of an address. Just for this example, we choose these to
+  be alphanumeric characters and then some. {?address‑character} uses the
+  {%or} combinator to form the union of two instances of {?satisfies}
+  that match different sets of characters.
+
+  #code#
+(defun ?address-character ()
+  (%or (?satisfies 'alphanumericp)
+       (?satisfies (lambda (c)
+                     (member c '(#\- #\_ #\. #\+))))))
+  #
+
+  Then we use {?address‑character} to implement our address parser which
+  matches two sequences of “address characters” separated by an {@}
+  character, and produces a list of user and host components as its
+  result value. We match {?address‑character} one or more times using
+  {%some}, and produce the matched subsequence as the result value using
+  {=subseq}. Both parts of the address separated by an _@_ character are
+  matched in sequence using {=list}, whose result value is finally
+  transformed by {=destructure}.
+
+  #code#
+(defun =email-address ()
+  (=destructure (user _ host)
+      (=list (=subseq (%some (?address-character)))
+             (?eq #\@)
+             (=subseq (%some (?address-character))))
+    (list user host))))
+  #
+
+  We can now apply {=email‑address} using {parse}:
+
+  #code#
+(parse "foo_bar@example.com" (=email-address))
+ ⇒ ("foo_bar" "example.com"), T, T
+(parse "!!!@@@.com" (=email-address))
+ ⇒ NIL, NIL, NIL
+(parse "foo_bar@example.com@baz" (=email-address))
+ ⇒ ("foo_bar" "example.com"), T, NIL
+  #
+
+ >
+
+
+ < Overview
+
+  {parse} is the entry point of {MaxPC}. It applies a parser to an input
+  and returns the parser’s result value, and two _boolean_ values
+  indicating if the parser matched and if there is unmatched input
+  remaining, respectively.
+
+
+  < Basic Parsers
+
+   + {?end} matches only when there is no further input.
+   + {=element} unconditionally matches the next element of the input
+     _sequence_.
+   + {?satisifies}, {?test}, and {?eq} match input conditionally.
+   + {?not} negates its argument.
+   + {%maybe} matches, even if its argument fails to match.
+   + {=subseq} produces the subsequence matched by its argument as its
+     result value.
+   
+  >
+
+
+  < Logical Combinators
+
+   + {%or} forms the union of its arguments.
+   + {%and} forms the intersection of its arguments.
+   + {%diff} forms the difference of its arguments.
+   
+  >
+
+
+  < Sequence Combinators
+
+   + {?list} matches its arguments in sequence.
+   + {=list} matches its arguments in sequence and produces a list of
+     their result as its result value.
+   + {%any} matches its argument repeatedly any number of times.
+   + {%some} matches its argument repeatedly one or more times.
+   
+  >
+
+
+  < Transformation
+
+   + {=transform} produces the result of applying a _function_ to its
+     argument’s result value and its result value.
+   + {=destructure} is a convenient destructuring _macro_ on top of
+     {=transform}.
+   
+  >
+
+
+  < Error Handling
+
+   + {?fail} never matches and evaluates its body when it is called.
+   + {%handler‑case} and {%restart‑case} allow you to set up _handlers_
+     and _restarts_ across parsers.
+   + {get‑input‑position} can be called in error situations to retrieve
+     the current position in the input.
+   
+  >
+
+ >
+
+
+ < Caveat: Recursive Parsers
+
+  A recursive parser can not refer to itself by its constructor, but must
+  instead call itself by _symbol_—calling its constructor would otherwise
+  result in unbounded recursion. In order to do so the parser _function_
+  needs to be _bound_ in the _function namespace_ using {setf}. The
+  example below implements a parser for recursively matching parentheses,
+  and illustrates how to avoid this common caveat.
+
+  #code#
+(defun ?parens ()
+  (?list (?eq #\() (%maybe '?parens/parser) (?eq #\)))))
+
+(setf (fdefinition '?parens/parser) (?parens))
+
+(parse "((()))" (?parens)) ⇒ NIL, T, T
+  #
+
+ >
+
+
+ < %and \(Function\)
+
+  *Syntax:*
+
+  — Function: *%and* {&rest} _parsers_
+
+  *Arguments and Values:*
+
+  _parsers_—_parsers_.
+
+  *Description:*
+
+  {%and} applies _parsers_, and matches the last _parser_ only if all
+  previous _parsers_ succeed. If the last _parser_ produces a result
+  value then {%and} produces that value as its result value. It can be
+  said that {%and} forms the set intersection of _parsers_.
+
+  *Examples:*
+
+  #code#
+(parse '(:foo) (%and (?satisfies 'symbolp)
+                     (?satisfies 'keywordp)))
+→ NIL, T, T
+(parse '(foo) (%and (?satisfies 'symbolp)
+                    (?satisfies 'keywordp)))
+→ NIL, NIL, NIL
+(parse '(foo) (%and))
+→ NIL, NIL, NIL
+(parse '(foo) (%and (?satisfies 'symbolp)
+                    (=element)))
+→ FOO, T, T
+(parse '() (%and (%maybe (?fail (princ 'foo)))
+                 (%maybe (?fail (princ 'bar)))
+                 (%maybe (?fail (princ 'baz)))))
+▷ FOOBARBAZ
+→ NIL, T, T
+  #
+
+ >
+
+
+ < %any \(Function\)
+
+  *Syntax:*
+
+  — Function: *%any* _parser_
+
+  *Arguments and Values:*
+
+  _parser_—a _parser_.
+
+  *Description:*
+
+  {%any} matches _parser_ in sequence any number of times. If _parser_
+  produces a result value and matches at least once then {%any} produces
+  a _list_ of the values as its result value.
+
+  *Examples:*
+
+  #code#
+(parse '(a b c) (%any (=element))) → (A B C), T, T
+(parse '() (%any (=element))) → NIL, T, T
+  #
+
+ >
+
+
+ < %diff \(Function\)
+
+  *Syntax:*
+
+  — Function: *%diff* _parser_ {&rest} _not‑parsers_
+
+  *Arguments and Values:*
+
+  _parser_—a _parser_.
+
+  _not‑parsers_—_parsers_.
+
+  *Description:*
+
+  {%diff} matches _parser_ only if applying _not‑parsers_ fails. If
+  _parser_ produces a result value then {%diff} produces that value as
+  its result value. It can be said that {%diff} forms the set difference
+  of _parser_ and the union of _not‑parsers_.
+
+  *Examples:*
+
+  #code#
+(parse '(foo) (%diff (?satisfies 'symbolp)
+                     (?satisfies 'keywordp)))
+→ NIL, T, T
+(parse '(:foo) (%diff (?satisfies 'symbolp)
+                      (?satisfies 'keywordp)))
+→ NIL, NIL, NIL
+(parse '(foo) (%diff (?satisfies 'symbolp)))
+→ NIL, T, T
+(parse '(:foo) (%diff (?satisfies 'symbolp)))
+→ NIL, T, T
+  #
+
+ >
+
+
+ < %handler‑case \(Macro\)
+
+  *Syntax:*
+
+  — Macro: *%handler‑case* _parser_ {&body} _clauses_
+
+  _clauses_::= {\{}↓_error‑clause_{\}}\*
+
+  _error‑clause_::= {\(}_typespec_ {\(\[}_var_{\]\)}
+  {\{}_declaration_{\}}\* {\{}_form_{\}}\* _parser‑form_{\)}
+
+  *Arguments and Values:*
+
+  _parser_—a _parser_.
+
+  _typespec_—a _type specifier_.
+
+  _var_—a _variable name_.
+
+  _declaration_—a {declare} _expression_; not evaluated.
+
+  _form_—a _form_.
+
+  _parser‑form_—a _form_ that evaluates to a _parser_.
+
+  *Description:*
+
+  {%handler‑case} executes _parser_ in a _dynamic environment_ where
+  handlers are active as if by {handler‑case}. If a _condition_ is
+  handled by {%handler‑case}, _parser‑form_ is evaluated and the
+  resulting _parser_ is applied.
+
+  *Examples:*
+
+  #code#
+(parse "01x2"
+       (%any (%handler-case
+                 (=transform
+                  (=element)
+                  (lambda (c)
+                    (if (digit-char-p c)
+                        c
+                        (error "Not a digit: ~c" c))))
+               (error (e)
+                 (format t "Error at position ~a: ~a~%"
+                         (get-input-position) e)
+                 (?list (=element))))))
+▷ Error at position 2: Not a digit: x
+→ (#\0 #\1 #\2), T, T
+  #
+
+  *See Also:*
+
+  {handler‑case}.
+
+ >
+
+
+ < %maybe \(Function\)
+
+  *Syntax:*
+
+  — Function: *%maybe* _parser_
+
+  *Arguments and Values:*
+
+  _parser_—a _parser_.
+
+  *Description:*
+
+  {%maybe} matches _parser_ or nothing all, but always succeeds. If
+  _parser_ matched and produced a result value then {%maybe} produces the
+  value as its result value.
+
+  *Examples:*
+
+  #code#
+(parse '() (%maybe (=element))) → NIL, T, T
+  #
+
+ >
+
+
+ < %or \(Function\)
+
+  *Syntax:*
+
+  — Function: *%or* {&rest} _parsers_
+
+  *Arguments and Values:*
+
+  _parsers_—_parsers_.
+
+  *Description:*
+
+  {%or} attempts to successfully apply _parsers_, and matches the first
+  succeeding _parser_, if any. If that _parser_ produces a result value
+  then {%or} produces that value as its result value. It can be said that
+  {%or} forms the set union of _parsers_.
+
+  *Examples:*
+
+  #code#
+(parse '(a) (%or (?eq 'a) (?eq 'b))) → NIL, T, T
+(parse '(b) (%or (?eq 'a) (?eq 'b))) → NIL, T, T
+(parse '(a) (%or)) → NIL, NIL, NIL
+(parse '(a) (%or (=element)
+                 (?fail (format t "No element.~%"))))
+→ A, T, T
+(parse '() (%or (?fail (princ 'foo))
+                (?fail (princ 'bar))
+                (?fail (princ 'baz))))
+▷ FOOBARBAZ
+→ NIL, NIL, T
+  #
+
+ >
+
+
+ < %restart‑case \(Macro\)
+
+  *Syntax:*
+
+  — Macro: *%restart‑case* _parser_ {&rest} _clauses_
+
+  _clauses_::= {\{}↓_restart‑clause_{\}}\*
+
+  _restart‑clause_::= {\(}_case‑name_ {\(\[}_lambda‑list_{\]\)}
+  〚{:interactive} _interactive‑expression_ \| {:report}
+  _report‑expression_ \| {:test} _test‑expression_〛
+  {\{}_declaration_{\}}\* {\{}_form_{\}}\* _parser‑form_{\)}
+
+  *Arguments and Values:*
+
+  _parser_—a _parser_.
+
+  _case‑name_—a _symbol_ or {nil}.
+
+  _lambda‑list_—an _ordinary lambda list_.
+
+  _interactive‑expression_—a _symbol_ or a _lambda expression_.
+
+  _report‑expression_—a _string_, a _symbol_, or a _lambda expression_.
+
+  _test‑expression_—a _symbol or a_lambda expression\_.
+
+  _declaration_—a {declare} _expression_; not evaluated.
+
+  _form_—a _form_.
+
+  _parser‑form_—a _form_ that evaluates to a _parser_.
+
+  *Description:*
+
+  {%restart‑case} executes _parser_ in a _dynamic environment_ where
+  restarts are active as if by {restart‑case}. If control is transferred
+  to a _restart‑clause_, _parser‑form_ is evaluated and the resulting
+  _parser_ is applied.
+
+  *Examples:*
+
+  #code#
+(parse "012x3"
+       (%any (%restart-case
+                 (=transform
+                  (=element)
+                  (lambda (c)
+                    (if (digit-char-p c)
+                        c
+                        (error "Not a digit: ~c" c))))
+               (skip-element ()
+                 :report "Skip character."
+                 (?list (=element))))))
+▷ Error: Not a digit: x
+▷ To continue, type :CONTINUE followed by an option number:
+▷  1: Skip non-digit character.
+▷  2: Return to Lisp Toplevel.
+▷ Debug> :continue 1
+▷ Invoking restart: Skip character.
+→ (#\0 #\1 #\2), T, T
+  #
+
+  *See Also:*
+
+  {restart‑case}.
+
+ >
+
+
+ < %some \(Function\)
+
+  *Syntax:*
+
+  — Function: *%some* _parser_
+
+  *Arguments and Values:*
+
+  _parser_—a _parser_.
+
+  *Description:*
+
+  {%some} matches _parser_ in sequence one or more times. If _parser_
+  produces a result value then {%some} produces a _list_ of the values as
+  its result value.
+
+  *Examples:*
+
+  #code#
+(parse '(a b c) (%some (=element))) → (A B C), T, T
+(parse '() (%some (=element))) → NIL, NIL, T
+  #
+
+ >
+
+
+ < =destructure \(Macro\)
+
+  *Syntax:*
+
+  — Macro: *=destructure* {\(}{&rest} _lambda‑list_{\)} _parser_ {&body}
+  _forms_
+
+  *Arguments and Values:*
+
+  _lambda‑list_—a _destructuring lambda list_.
+
+  _parser_—a _parser_.
+
+  _forms_—an _implicit progn_.
+
+  *Description:*
+
+  {=destructure} matches _parser_ and destructures its result value as if
+  by {destructuring‑bind}. The {\_} \(underscore\) symbol can occur in
+  _lambda‑list_ any number of times, and is substituted with a _fresh_,
+  _uninterned symbol_ and declared {ignorable}. If _parser_ matches
+  {=destructure} evaluates _forms_ and produces the value of the last
+  _form_ as its result value. If no _forms_ are supplied the value of the
+  last, _interned_ variable defined in _lambda‑list_ is produced as the
+  result value instead.
+
+  *Examples:*
+
+  #code#
+(parse "a," (=destructure (x _)
+                  (=list (=element) (?eq #\,))
+                (char-upcase x)))
+→ #\A, T, T
+
+(parse "a," (=destructure (x _)
+                  (=list (=element) (?eq #\,)))
+→ #\a, T, T
+
+(parse "abc" (=destructure (x &rest xs)
+                   (%any (=element)))
+→ '(#\b #\c), T, T
+  #
+
+  *Exceptional Situations:*
+
+  If the result value of _parser_ does not match the destructuring
+  pattern, an _error_ of _type_ {program‑error} is signaled.
+
+  *See Also:*
+
+  {destructuring‑bind}
+
+ >
+
+
+ < =element \(Function\)
+
+  *Syntax:*
+
+  — Function: *=element* _\<no arguments\>_
+
+  *Description:*
+
+  {=element} matches the next element and produces that element it as its
+  result value.
+
+  *Examples:*
+
+  #code#
+(parse '(a) (=element)) → A, T, T
+(parse '() (=element)) → NIL, NIL, T
+  #
+
+ >
+
+
+ < =list \(Function\)
+
+  *Syntax:*
+
+  — Function: *=list* {&rest} _parsers_
+
+  *Arguments and Values:*
+
+  _parsers_—_parsers_.
+
+  *Description:*
+
+  {=list} matches _parsers_ in sequence, and produces a _list_ of the
+  result values of _parsers_ as its result value.
+
+  *Examples:*
+
+  #code#
+(parse '(a) (=list (=element) (?end)))
+→ (A NIL), T, T
+(parse '(a b) (=list (=element) (?end)))
+→ NIL, NIL, NIL
+  #
+
+ >
+
+
+ < =subseq \(Function\)
+
+  *Syntax:*
+
+  — Function: *=subseq* _parser_
+
+  *Arguments and Values:*
+
+  _parser_—a _parser_.
+
+  *Description:*
+
+  {=subseq} matches _parser_, and produces the subsequence matched by
+  _parser_ as its result value.
+
+  *Examples:*
+
+  #code#
+(parse '(1 2 3) (=subseq (%any (?satisfies 'numberp))))
+→ (1 2 3), T, T
+(parse "123" (=subseq (%any (?satisfies 'digit-char-p))))
+→ "123" T, T
+  #
+
+ >
+
+
+ < =transform \(Function\)
+
+  *Syntax:*
+
+  — Function: *=transform* _parser_ _function_
+
+  *Arguments and Values:*
+
+  _parser_—a _parser_.
+
+  _function_—a _designator_ for a _function_ of one argument.
+
+  *Description:*
+
+  {%transform} matches _parser_ and produces the result of applying
+  _function_ to the result value of _parser_ as its result value.
+
+  *Examples:*
+
+  #code#
+(parse '(41) (=transform (=element) '1+)) → 42, T, T
+(parse '() (=transform (=element) '1+)) → NIL, NIL, T
+  #
+
+ >
+
+
+ < ?end \(Function\)
+
+  *Syntax:*
+
+  — Function: *?end* _\<no arguments\>_
+
+  *Description:*
+
+  {?end} matches the end of input.
+
+  *Examples:*
+
+  #code#
+(parse '() (?end)) → NIL, T, T
+(parse '(a) (?end)) → NIL, NIL, NIL
+  #
+
+ >
+
+
+ < ?eq \(Function\)
+
+  *Syntax:*
+
+  — Function: *?eq* _x_ {&optional} _parser_
+
+  *Arguments and Values:*
+
+  _x_—an _object_.
+
+  _parser_—a _parser_. The default is {\(=element\)}.
+
+  *Description:*
+
+  {?eq} matches _parser_ if its result value is {eq} to _x_.
+
+  *Examples:*
+
+  #code#
+(parse '(a) (?eq 'a)) ⇒ NIL, T, T
+(parse '(b) (?eq 'a)) ⇒ NIL, NIL, NIL
+  #
+
+  *See also:*
+
+  {?satisfies}
+
+ >
+
+
+ < ?fail \(Macro\)
+
+  *Syntax:*
+
+  — Macro: *?fail* {&body} _forms_
+
+  *Arguments and Values:*
+
+  _forms_—_forms_.
+
+  *Description:*
+
+  {?fail} always fails to match, and evaluates _forms_ when it is
+  applied.
+
+  *Examples:*
+
+  #code#
+(parse '(a b c) (?fail (format t "Position: ~a~%"
+                               (get-input-position))))
+▷ Position: 0
+→ NIL, NIL, NIL
+  #
+
+ >
+
+
+ < ?list \(Function\)
+
+  *Syntax:*
+
+  — Function: *?list* {&rest} _parsers_
+
+  *Arguments and Values:*
+
+  _parsers_—_parsers_.
+
+  *Description:*
+
+  {=list} matches _parsers_ in sequence.
+
+  *Examples:*
+
+  #code#
+(parse '(a) (?list (=element) (?end)))
+→ NIL, T, T
+(parse '(a b) (?list (=element) (?end)))
+→ NIL, NIL, NIL
+  #
+
+ >
+
+
+ < ?not \(Function\)
+
+  *Syntax:*
+
+  — Function: *?not* _parser_
+
+  *Arguments and Values:*
+
+  _parser_—a _parser_.
+
+  *Description:*
+
+  {%not} matches the next element unless _parser_ matches.
+
+  *Examples:*
+
+  #code#
+(parse '(:foo :baz) (?not (?list (?eq :foo) (?eq :bar))))
+→ NIL, T, NIL
+(parse '() (?not (?eq :baz))
+→ NIL, NIL, NIL
+  #
+
+ >
+
+
+ < ?satisfies \(Function\)
+
+  *Syntax:*
+
+  — Function: *?satisfies* _test_ {&optional} _parser_
+
+  *Arguments and Values:*
+
+  _test_—a _designator_ for a _function_ of one argument that returns a
+  _generalized boolean_.
+
+  _parser_—a _parser_. The default is {\(=element\)}.
+
+  *Description:*
+
+  {?satisfies} matches _parser_ if its result value _satisfies the test_.
+
+  *Examples:*
+
+  #code#
+(parse '(1) (?satisfies 'numberp)) → NIL, T, T
+(parse '(a) (?satisfies 'numberp)) → NIL, NIL, NIL
+(parse '(a b c)
+       (?satisfies (lambda (s)
+                     (intersection s '(b c d)))
+                   (%any (=element))))
+⇒ NIL, T, T
+  #
+
+ >
+
+
+ < ?test \(Macro\)
+
+  *Syntax:*
+
+  — Macro: *?test* {\(}_test_ {&rest} _arguments_{\)} {&optional}
+  _parser_
+
+  *Arguments and Values:*
+
+  _test_—a _designator_ for a _function_ that returns a _generalized
+  boolean_.
+
+  _arguments_—_objects_.
+
+  _parser_—a _parser_. The default is {\(=element\)}.
+
+  *Description:*
+
+  {?test} matches _parser_ if its result value _satisfies the test_ with
+  _arguments_ as additional arguments to _test_.
+
+  *Examples:*
+
+  #code#
+(parse '(a) (?test ('member '(a b)))) ⇒ NIL, T, T
+(flet ((power-of-p (n e) (= (mod n e) 0)))
+  (parse '(42) (?test (#'power-of-p 2)))) ⇒ NIL, T, T
+  #
+
+  *Notes:*
+
+  #code#
+(?test ({fun} {args}*}))
+≡ (?satisfies (lambda (x)
+                (funcall {fun} x {args}*)))
+  #
+
+  *Exceptional Situations:*
+
+  If _test_ accepts less arguments than the number of _arguments_ plus
+  one an _error_ of _type_ {program‑error} is signaled.
+
+  *See also:*
+
+  {?satisfies}
+
+ >
+
+
+ < get‑input‑position \(Function\)
+
+  *Syntax:*
+
+  — Function: *get‑input‑position* _\<no arguments\>_
+
+  → _position_
+
+  → _position_, _line_, _column_
+
+  *Arguments and Values:*
+
+  _position_, _column_—non-negative _integers_.
+
+  _line_—a positive _integer_.
+
+  *Description:*
+
+  {get‑input‑position} returns the number of elements read from the input
+  so far. Additionally, _line_ and _column_ positions are returned if the
+  input's _element type_ is {character}. Lines are counted starting at
+  one while columns are counted starting from zero.
+
+  {get‑input‑position} may only be called from within the body of
+  {?fail}, the handlers of {%handler‑case} or the restarts of
+  {%restart‑case}.
+
+  *Exceptional Situations:*
+
+  If {get‑input‑position} is not evaluated within the dynamic context of
+  {?fail}, {%handler‑case} or {%restart‑case} an _error_ of _type_
+  {simple‑error} is signaled.
+
+ >
+
+
+ < parse \(Function\)
+
+  *Syntax:*
+
+  — Function: *parse* _input‑source_ _parser_
+
+  → _result_, _match‑p_, _end‑p_
+
+  *Arguments and Values:*
+
+  _input-source_—an _input source_.
+
+  _parser_—a parser.
+
+  _result_—an _object_.
+
+  _match‑p_, _end‑p_—_generalized booleans_.
+
+  *Description:*
+
+  {parse} applies _parser_ to the _input_ and returns the parser’s
+  _result value_ or {nil}. _Match‑p_ is _true_ if _parser_ _matched_ the
+  _input-source_. _End‑p_ is _true_ if _parser_ _matched_ the complete
+  _input-source_. _Input_ is derived from _input-source_ by using
+  {maxpc.input:make-input}.
+
+  {parse} accepts _input sources_ of _type_ {sequence} and {stream} out
+  of the box.
+
+  *See Also:*
+
+  [input](\#section-4), [maxpc.input.stream](\#section-5)
+
+ >
+
+>
+
+
+< maxpc.char
+
+ Utility parsers for character inputs.
+
+
+ < %skip‑whitespace \(Function\)
+
+  *Syntax:*
+
+  — Function: *%skip‑whitespace* _parser_
+
+  *Arguments and Values:*
+
+  _parser_—a _parser_.
+
+  *Description:*
+
+  {%skip‑whitespace} matches zero or more elements that are members of
+  {\*whitespace\*} and then matches _parser_. If _parser_ produces a
+  result value then {%skip‑whitespace} produces that value as its result
+  value.
+
+  *Examples:*
+
+  #code#
+(parse "a" (%skip-whitespace (?char #\a))) → NIL, T, T
+(parse "   a" (%skip-whitespace (?char #\a))) → NIL, T, T
+  #
+
+ >
+
+
+ < \*whitespace\* \(Variable\)
+
+  *Initial Value:*
+
+  {\(\#\\Tab \#\\Newline \#\\PageUp \#\\Page \#\\Return \#\\ \)}
+
+  *Value Type:*
+
+  a _list_ of _characters_.
+
+  *Description:*
+
+  The _value_ of {\*whitespace\*} is a _list_ of _characters_ considered
+  to be _whitespace characters_.
+
+ >
+
+
+ < =line \(Function\)
+
+  *Syntax:*
+
+  — Function: *=line* {&optional} _keep‑newline‑p_
+
+  *Arguments and Values:*
+
+  _keep‑newline‑p_—a _generalized boolean_. The default is _false_.
+
+  *Description:*
+
+  {=line} matches zero or more _characters_ in sequence followed by a
+  {\#\\Newline} _character_ or the end of input, and produces the
+  _string_ of _characters_ as its result value. The terminating
+  {\#\\Newline} _character_ is not included in _string_ unless
+  _keep‑newline‑p_ is _true_.
+
+  *Examples:*
+
+  #code#
+(parse (format nil "foo~%bar~%baz") (%any (=line)))
+→ ("foo" "bar" "baz"), T, T
+  #
+
+  *Exceptional Situations:*
+
+  If an element attempted to be matched is not a _character_ an _error_
+  of _type_ {type‑error} is signaled.
+
+ >
+
+
+ < ?char \(Function\)
+
+  *Syntax:*
+
+  — Function: *?char* _char_ {&optional} _case‑sensitive‑p_
+
+  *Arguments and Values:*
+
+  _char_—a _character_.
+
+  _case‑sensitive‑p_—a _generalized boolean_. The default is _true_.
+
+  *Description:*
+
+  {?char} matches _char_. {?char} is case sensitive unless
+  _case‑sensitive‑p_ is _false_.
+
+  *Exceptional Situations:*
+
+  If the next element is not a _character_ an _error_ of _type_
+  {type‑error} is signaled.
+
+ >
+
+
+ < ?newline \(Function\)
+
+  *Syntax:*
+
+  — Function: *?newline* _\<no arguments\>_
+
+  *Description:*
+
+  {?newline} matches the {\#\\Newline} _character_.
+
+ >
+
+
+ < ?string \(Function\)
+
+  *Syntax:*
+
+  — Function: *?string* _string_ {&optional} _case‑sensitive‑p_
+
+  *Arguments and Values:*
+
+  _string_—a _string_.
+
+  _case‑sensitive‑p_—a _generalized boolean_. The default is _true_.
+
+  *Description:*
+
+  {?string} matches the _characters_ in _string_ in sequence. {?string}
+  is case sensitive unless _case‑sensitive‑p_ is _false_.
+
+  *Exceptional Situations:*
+
+  If an element attempted to be matched is not a _character_ an _error_
+  of _type_ {type‑error} is signaled.
+
+ >
+
+
+ < ?whitespace \(Function\)
+
+  *Syntax:*
+
+  — Function: *?whitespace* _\<no arguments\>_
+
+  *Description:*
+
+  {?whitespace} matches an element that is a member of {\*whitespace\*}.
+
+  *Exceptional Situations:*
+
+  If the next element is not a _character_ an _error_ of _type_
+  {type‑error} is signaled.
+
+ >
+
+>
+
+
+< maxpc.digit
+
+ Parsers for digit numerals in character inputs.
+
+
+ < =integer‑number \(Function\)
+
+  *Syntax:*
+
+  — Function: *=integer‑number* {&optional} _radix_
+
+  *Arguments and Values:*
+
+  _radix_—a _number_ of _type_ {\(integer 2 36\)}. The default is {10}.
+
+  *Description:*
+
+  {=integer‑number} matches one or more digit _characters_ in the
+  specified _radix_, optionally lead by a sign character, in sequence,
+  and produces the _integer_ represented by that sequence as its result
+  value. The leading sign can be {\#\\\+} and {\#\\-} for positive and
+  negative values respectively. The default is a positive value.
+
+  *Examples:*
+
+  #code#
+(parse "101010" (=integer-number 2)) → 42, T, T
+(parse "+101010" (=integer-number 2)) → 42, T, T
+(parse "-101010" (=integer-number 2)) → -42, T, T
+(parse "x101010" (=integer-number 2)) → NIL, NIL, NIL
+  #
+
+  *Exceptional Situations:*
+
+  If an element attempted to be matched is not a _character_ an _error_
+  of _type_ {type‑error} is signaled.
+
+ >
+
+
+ < =natural‑number \(Function\)
+
+  *Syntax:*
+
+  — Function: *=natural‑number* {&optional} _radix_
+
+  *Arguments and Values:*
+
+  _radix_—a _number_ of _type_ {\(integer 2 36\)}. The default is {10}.
+
+  *Description:*
+
+  {=natural‑number} matches one or more digit _characters_ in the
+  specified _radix_ in sequence, and produces the natural _number_
+  represented by that digit sequence as its result value.
+
+  *Examples:*
+
+  #code#
+(parse "234" (=natural-number 2)) → NIL, NIL, NIL
+(parse "101010" (=natural-number 2)) → 42, T, T
+  #
+
+  *Exceptional Situations:*
+
+  If an element attempted to be matched is not a _character_ an _error_
+  of _type_ {type‑error} is signaled.
+
+ >
+
+
+ < ?digit \(Function\)
+
+  *Syntax:*
+
+  — Function: *?digit* {&optional} _radix_
+
+  *Arguments and Values:*
+
+  _radix_—a _number_ of _type_ {\(integer 2 36\)}. The default is {10}.
+
+  *Description:*
+
+  {?digit} matches a single digit _character_ in the specified _radix_.
+
+  *Exceptional Situations:*
+
+  If the next element is not a _character_ an _error_ of _type_
+  {type‑error} is signaled.
+
+ >
+
+>
+
+
+< maxpc.input
+
+ The generic _input_ interface allows extensions to parse other _types_
+ of _input sources_. To add a new _input source type_, {make-input} has
+ to be specialized on that _type_. The following methods have to be
+ defined for _inputs_:
+
+ + {input-empty-p}
+ + {input-first}
+ + {input-rest}
+ 
+ The following methods can optionally be defined for _inputs_:
+
+ + {input-position}
+ + {input-element-type}
+ + {input-sequence}
+ 
+
+ < input‑element‑type \(Generic Function\)
+
+  *Syntax:*
+
+  — Generic Function: *input‑element‑type* _input_
+
+  → _typespec_
+
+  *Arguments and Values:*
+
+  _input-_—an _input_.
+
+  _typespec-_—a _type specifier_.
+
+  *Description:*
+
+  {input-element-type} returns a _type specifier_ that designated the
+  _type_ of the elements in _input_.
+
+ >
+
+
+ < input‑empty‑p \(Generic Function\)
+
+  *Syntax:*
+
+  — Generic Function: *input‑empty‑p* _input_
+
+  → _empty-p_
+
+  *Arguments and Values:*
+
+  _input-_—an _input_.
+
+  _empty-p-_—a _generalized boolean_.
+
+  *Description:*
+
+  {input-empty-p} returns _true_ if _input_ is empty.
+
+ >
+
+
+ < input‑first \(Generic Function\)
+
+  *Syntax:*
+
+  — Generic Function: *input‑first* _input_
+
+  *Arguments and Values:*
+
+  _input-_—an _input_.
+
+  *Description:*
+
+  {input-first} returns the first element in _input_.
+
+  *Exceptional Situations:*
+
+  If _input_ is empty an _error_ of _type_ {error} may be signaled.
+
+ >
+
+
+ < input‑position \(Generic Function\)
+
+  *Syntax:*
+
+  — Generic Function: *input‑position* _input_
+
+  → _position_
+
+  *Arguments and Values:*
+
+  _input-_—an _input_.
+
+  _position-_—an _integer_ between 0 and {array-dimension-limit}
+  inclusively.
+
+  *Description:*
+
+  {input-position} returns the _position_ of _input_.
+
+ >
+
+
+ < input‑rest \(Generic Function\)
+
+  *Syntax:*
+
+  — Generic Function: *input‑rest* _input_
+
+  *Arguments and Values:*
+
+  _input-_—an _input_.
+
+  *Description:*
+
+  {input-rest} returns a copy of _input_ with the first element stripped.
+
+  *Exceptional Situations:*
+
+  If _input_ is empty an _error_ of _type_ {error} may be signaled.
+
+ >
+
+
+ < input‑sequence \(Generic Function\)
+
+  *Syntax:*
+
+  — Generic Function: *input‑sequence* _input_ _length_
+
+  → _sequence_
+
+  *Arguments and Values:*
+
+  _input-_—an _input_.
+
+  _length-_—an _integer_ between 0 and {array-dimension-limit}
+  inclusively.
+
+  _sequence-_—a _sequence_.
+
+  *Description:*
+
+  {input-sequence} returns a _sequence_ of the next _length_ elements in
+  _input_.
+
+  *Exceptional Situations:*
+
+  If the number of elements in _input_ are less than _length_ an _error_
+  of _type_ {error} may be signaled.
+
+ >
+
+
+ < make‑input \(Generic Function\)
+
+  *Syntax:*
+
+  — Generic Function: *make‑input* _input‑source_
+
+  *Arguments and Values:*
+
+  _input-source_—an _object_.
+
+  *Description:*
+
+  {make-input} returns an _input_ for _input-source_.
+
+ >
+
+>
+
+
+< maxpc.input.stream
+
+ Implements support for _input sources_ of _type_ {stream}. Input from
+ _streams_ is copied into a temporary buffer lazily as required by the
+ parser. _Streams_ of _type_ {file-stream} are read in as chunks of
+ customizable size.
+
+
+ < \*bound\* \(Variable\)
+
+  *Initial Value:*
+
+  {NIL}
+
+  *Description:*
+
+  {\*bound\*} can be set to limit the number of elements read from
+  _stream inputs_ in a single call to to {parse}.
+
+ >
+
+
+ < \*chunk‑size\* \(Variable\)
+
+  *Initial Value:*
+
+  {1000000}
+
+  *Description:*
+
+  {\*chunk-size\*} controls the size by which the buffer used for _stream
+  inputs_ grows, and the number of elements read at a time when parsing
+  from _streams_ of _type_ {file-stream}.
+
+ >
+
+
+ < \*element‑type\* \(Variable\)
+
+  *Initial Value:*
+
+  {NIL}
+
+  *Description:*
+
+  {\*element-type\*} can be set to enforce a specific stream element type
+  when reading from _stream inputs_. This can be useful when dealing with
+  bivalent streams.
+
+ >
+
+>
+
