@@ -139,9 +139,9 @@
 
   < Sequence Combinators
 
-   + {?list} matches its arguments in sequence.
+   + {?seq} matches its arguments in sequence.
    + {=list} matches its arguments in sequence and produces a list of
-     their result as its result value.
+     their results as its result value.
    + {%any} matches its argument repeatedly any number of times.
    + {%some} matches its argument repeatedly one or more times.
    
@@ -182,7 +182,7 @@
 
   #code#
 (defun ?parens ()
-  (?list (?eq #\() (%maybe '?parens/parser) (?eq #\)))))
+  (?seq (?eq #\() (%maybe '?parens/parser) (?eq #\)))))
 
 (setf (fdefinition '?parens/parser) (?parens))
 
@@ -342,7 +342,7 @@
                (error (e)
                  (format t "Error at position ~a: ~a~%"
                          (get-input-position) e)
-                 (?list (=element))))))
+                 (?seq (=element))))))
 ▷ Error at position 2: Not a digit: x
 → (#\0 #\1 #\2), T, T
   #
@@ -470,7 +470,7 @@
                         (error "Not a digit: ~c" c))))
                (skip-element ()
                  :report "Skip character."
-                 (?list (=element))))))
+                 (?seq (=element))))))
 ▷ Error: Not a digit: x
 ▷ To continue, type :CONTINUE followed by an option number:
 ▷  1: Skip non-digit character.
@@ -542,18 +542,18 @@
   *Examples:*
 
   #code#
-(parse "a," (=destructure (x _)
-                  (=list (=element) (?eq #\,))
-                (char-upcase x)))
-→ #\A, T, T
+(parse '(10 % 3) (=destructure (x _ y)
+                     (=list (=element) (?eq '%) (=element))
+                   (mod x y)))
+→ 1, T, T
 
 (parse "a," (=destructure (x _)
-                  (=list (=element) (?eq #\,)))
+                (=list (=element) (?eq #\,))))
 → #\a, T, T
 
-(parse "abc" (=destructure (x &rest xs)
-                   (%any (=element)))
-→ '(#\b #\c), T, T
+(parse '(a b c) (=destructure (x &rest xs)
+                    (%some (=element))))
+→ '(B C), T, T
   #
 
   *Exceptional Situations:*
@@ -611,6 +611,8 @@
 → (A NIL), T, T
 (parse '(a b) (=list (=element) (?end)))
 → NIL, NIL, NIL
+(parse '(a) (=list))
+→ NIL, T, NIL
   #
 
  >
@@ -747,32 +749,6 @@
  >
 
 
- < ?list \(Function\)
-
-  *Syntax:*
-
-  — Function: *?list* {&rest} _parsers_
-
-  *Arguments and Values:*
-
-  _parsers_—_parsers_.
-
-  *Description:*
-
-  {=list} matches _parsers_ in sequence.
-
-  *Examples:*
-
-  #code#
-(parse '(a) (?list (=element) (?end)))
-→ NIL, T, T
-(parse '(a b) (?list (=element) (?end)))
-→ NIL, NIL, NIL
-  #
-
- >
-
-
  < ?not \(Function\)
 
   *Syntax:*
@@ -790,7 +766,7 @@
   *Examples:*
 
   #code#
-(parse '(:foo :baz) (?not (?list (?eq :foo) (?eq :bar))))
+(parse '(:foo :baz) (?not (?seq (?eq :foo) (?eq :bar))))
 → NIL, T, NIL
 (parse '() (?not (?eq :baz))
 → NIL, NIL, NIL
@@ -826,6 +802,34 @@
                      (intersection s '(b c d)))
                    (%any (=element))))
 ⇒ NIL, T, T
+  #
+
+ >
+
+
+ < ?seq \(Function\)
+
+  *Syntax:*
+
+  — Function: *?seq* {&rest} _parsers_
+
+  *Arguments and Values:*
+
+  _parsers_—_parsers_.
+
+  *Description:*
+
+  {?seq} matches _parsers_ in sequence.
+
+  *Examples:*
+
+  #code#
+(parse '(a) (?seq (=element) (?end)))
+→ NIL, T, T
+(parse '(a b) (?seq (=element) (?end)))
+→ NIL, NIL, NIL
+(parse '(a) (?seq))
+→ NIL, T, NIL
   #
 
  >
@@ -957,33 +961,6 @@
 < maxpc.char
 
  Utility parsers for character inputs.
-
-
- < %skip‑whitespace \(Function\)
-
-  *Syntax:*
-
-  — Function: *%skip‑whitespace* _parser_
-
-  *Arguments and Values:*
-
-  _parser_—a _parser_.
-
-  *Description:*
-
-  {%skip‑whitespace} matches zero or more elements that are members of
-  {\*whitespace\*} and then matches _parser_. If _parser_ produces a
-  result value then {%skip‑whitespace} produces that value as its result
-  value.
-
-  *Examples:*
-
-  #code#
-(parse "a" (%skip-whitespace (?char #\a))) → NIL, T, T
-(parse "   a" (%skip-whitespace (?char #\a))) → NIL, T, T
-  #
-
- >
 
 
  < \*whitespace\* \(Variable\)
