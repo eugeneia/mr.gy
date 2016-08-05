@@ -304,7 +304,7 @@ addresses, and URLs.
   I went on to measure the difference, and was thoroughly disappointed. Cons
   less it did, but to my surprise the impact on realistic situations was
   marginal, at best, even though the optimization was visible in artificially
-  isolated experiments ({maxpc.bench:bench‑=destructure‑bare}). Intrigued by my
+  isolated experiments ({maxpc.bench:bench‑=destructure/bare}). Intrigued by my
   findings, I hacked up the {consfree-input} branch, which replaces MaxPC’s
   consing input abstraction with a garbage-free alternative, to get a better
   idea of the overall impact of consing.
