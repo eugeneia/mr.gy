@@ -1,5 +1,7 @@
 Hi, I'm [Max Rottenkolber](http://mr.gy) and this is my technical Blog.
 
++ [Max’s Parser Combinators: Why?
+  How?](maxpc.html) _Friday, 5 August 2016_
 + [Sam: a tiny, concurrent sampling profiler for
   Clozure Common Lisp](sam.html) _Wednesday, 27 July 2016_
 + [Experimental Meta-Programming

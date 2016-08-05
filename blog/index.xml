@@ -5,6 +5,11 @@
         <link>http://mr.gy/blog/</link>
         <language>en-us</language>
         <item>
+            <title>Max’s&#xA0;Parser&#xA0;Combinators: Why? How?</title>
+            <link>http://mr.gy/blog/maxpc.html</link>
+            <pubDate>Fri, 5 Aug 2016 22:53:00 GMT</pubDate>
+        </item>
+        <item>
             <title>Sam: a tiny, concurrent sampling profiler for Clozure&#xA0;Common&#xA0;Lisp</title>
             <link>http://mr.gy/blog/sam.html</link>
             <pubDate>Wed, 27 Jul 2016 02:33:00 GMT</pubDate>
