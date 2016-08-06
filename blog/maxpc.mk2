@@ -200,9 +200,9 @@ addresses, and URLs.
   kind of gains could I expect from my magical Packrat implementation? I
   [experimented](https://github.com/eugeneia/maxpc/compare/packrat2) briefly
   with the workloads I am interested in, and as it turns out I happen to have
-  whopping cache hit rate of roughly 0.01%. Note that this percentage does
-  not directly translate to possible gains, because a cached result can contain
-  the answer to computations of varying cost. Consider this parser
+  whopping cache hit rate of roughly 1%. Note that this percentage does not
+  directly translate to possible gains, because a cached result can contain the
+  answer to computations of varying cost. Consider this parser
 
   #code#
   (let ((=alpha (=subseq (%any (?satisfies 'alphanumericp)))))
