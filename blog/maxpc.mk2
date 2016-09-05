@@ -1,3 +1,5 @@
+_Update, September 4, 2016: MaxPC is now in Quicklisp._
+
 < Introduction
 
 Years ago, after failing to write a recursive descent parser for the [Mk2](http://inters.co/geneva/mk2.html)
@@ -45,12 +47,12 @@ addresses, and URLs.
 
 < A Sane API
 
- There are five informal [categories](/software/maxpc/api.html#section-1-3)
+ In MaxPC, there are five informal [categories](/software/maxpc/api.html#section-1-3)
  of primitive parsers: basic parsers, logical combinators, sequence
  combinators, transformation, and error handling. Each category consists of
  only a handful of parsers, and it should be obvious which built-in to use in
- a given situation. MaxPC models the input as a _finite_ sequence of
- _elements_, and is aware of the _subsequences_ comprised by a matches ({?end},
+ most situations. MaxPC models the input as a _finite_ sequence of
+ _elements_, and is aware of the _subsequence_ comprised by a match ({?end},
  {=element}, {=subseq}). It supports conditional matches ({?satisfies},
  {?test}, {?eq}), as well as optional matches ({%maybe}). The logical
  combinators ({%or}, {%and}, {%diff}, {%not}) are based on well known
@@ -58,9 +60,9 @@ addresses, and URLs.
  sequence combinators allow for fixed sequences ({?seq}, {=list}) as well as
  unbounded sequences ({%any}, {%some}).
 
- These fifteen primitives provide the core functionality expected of a parsing
- library, but any serious contestant must also cover transformation of matches
- and, of course, error handling. MaxPC features a Lispy destructuring
+ These fifteen primitives provide the core functionality expected from a
+ parsing library, but any serious contestant must also cover transformation of
+ matches and, of course, error handling. MaxPC features a Lispy destructuring
  combinator modeled after Common Lisp’s {destructuring‑bind} ({=destructure}),
  and a generic functional transformation device ({=transform}), for cases where
  the former is not flexible enough. Finally, MaxPC provides a mechanism to fail
@@ -137,7 +139,7 @@ addresses, and URLs.
 
  Many built-in combinators, such as {%any}, exhibit a dualism based on whether
  their arguments produce a result value, or not. This allows them to be used in
- both matching and capturing situations, while keeping the number of required
+ both matching and capturing situations, while keeping the total number of
  built-ins to a minimum.
 
 >
@@ -248,11 +250,11 @@ addresses, and URLs.
  < To Cons, or Not to Cons?
 
   I initially attributed a big portion of the improvement over MPC to reduced
-  consing. My theory was less consing means better performance. After all, the
-  reduced consing from making capture explicit in MaxPC gives it a clear edge
-  over MPC. Following this logic I came up with a smart “optimization” for a
-  common idiom using {=list} together with the macro {=destructure}. See, this
-  pattern is used very often in MaxPC parsers
+  consing. My theory was that less consing means better performance. After all,
+  the reduced consing from making capture explicit in MaxPC gives it a clear
+  edge over MPC. Following this logic I came up with a smart “optimization” for
+  a common idiom using {=list} together with the macro {=destructure}. See,
+  this pattern is used very often in MaxPC parsers
 
   #code#
   (=destructure (a b)
@@ -323,7 +325,7 @@ addresses, and URLs.
   While the {special-case} branch indeed speeds up {=destructure} in isolated
   micro-benchmarks, the gains can hardly justify the increased code complexity.
   Its primary merit is that it proves the optimization indeed works as
-  expected, and avoids creating garbage.
+  expected, and avoids heap allocation.
 
   My theory that less consing means better performance is falsified, we can see
   that neither the total memory allocated or GC time correlate with execution
@@ -332,17 +334,17 @@ addresses, and URLs.
   the heap and marks them, then it frees the objects that are not marked live.
   I have learned on CCL’s IRC channel, that marking is expensive when there are
   lots of pointers in the live space (because it has to follow each pointer to
-  mark the objects it point to), while the actual freeing is cheap. So while
+  mark the objects it points to), while the actual freeing is cheap. So while
   its cheap to generate a lot of garbage, having a lot of live pointers into
   the heap is what kills you.
 
-  This would explain why explicit capturing gives MaxPC an edge (its creates
+  This would explain why explicit capturing gives MaxPC an edge (it creates
   fewer pointers), but {consfree-input} fails to move the needle despite
   consing so much less (thanks to a fast generational GC). Looking at the
-  isolated benchmarks raises more questions, why does {consfree-input} perform
-  so badly in {bench-=destructure}, but okay on {bench-=destructure/bare}?
-  Assuming {master} is triggering the GC more frequently, is that helping
-  somehow by compacting the remaining garbage?
+  isolated benchmarks raises even more questions, why does {consfree-input}
+  perform so badly in {bench-=destructure}, but okay on
+  {bench-=destructure/bare}? Assuming {master} is triggering the GC more
+  frequently, is that helping somehow by compacting the remaining garbage?
 
   Another detail is completely inexplicable to me: the {special-case} branch
   allocates way more memory on the S-expression benchmark than {master}, even
@@ -361,15 +363,10 @@ addresses, and URLs.
  features a public [input interface](/software/maxpc/api.html#section-4) for
  you to implement. The input interface allows you to add support for new input
  sources and specialized implementations. The input interface is unsafe by
- definition, when the documentation says that an error _may_ be signaled the
- behavior is actually undefined, and the implementer can choose how to handle
- or not handle the call. MaxPC adheres to a contract that forbids it to call
- the interface in a way that _could_ signal an error. For instance, the method
- specification for {input-first} says, “if _input_ is empty an _error_ of
- _type_ {error} may be signaled.” It is undefined what happens if {input-first}
- is called on an empty input, but MaxPC will never do that, because doing so
- would violate the contract. An input implementation may signal an error, but
- it may also open a gate to hell.
+ definition. When the specification of a method says that the behavior is
+ “unspecified” in a given situation, the implementer may choose to signal an
+ error or open a gate to hell, at his merit. MaxPC will never use the input
+ interface in a way that is unspecified.
 
  #media Relative performance of input sources (CCL 1.11 on an Intel Xeon E31245
  at 3.30 GHz). Note that MaxPC’s default {maxpc.input.stream:*chunk-size*} is
@@ -379,10 +376,10 @@ addresses, and URLs.
  The built-in implementations for sequences and streams naturally have
  different performance characteristics and trade-offs. The implementations for
  sequences perform better than the implementations for streams, and the
- different types of sequences have practically equal performance. The stream
- implementations show more variation. Both copy the input read from a stream
- into a temporary buffer for fast access and backtracking, and they both grow
- their buffer at the same rate (which is configurable).
+ different types of implementations for sequences perform practically equal.
+ The stream implementations show more variation. Both copy the input read from
+ a stream into a temporary buffer for fast access and backtracking, and they
+ both grow their buffer at the same rate (which is configurable).
 
  The {file-stream} implementation has a substantial advantage over generic
  streams because it reads the input in chunks at the same rate as it extends
@@ -391,7 +388,7 @@ addresses, and URLs.
  for too long. If you look closely, you can see a dent in performance right
  after the 1 MB mark, this is where {read-sequence} is called the second time
  to read the input that did not fit it into the first chunk. The {file-stream}
- implementation is the best choice to parse from files, minus the time spent
+ implementation is the best choice to parse from files. Minus the time spent
  reading, it is on par with the sequence implementations. E.g., if you add the
  time required to read the file into a vector to run time of the the {vector}
  implementation, you will get the run time of the {file-stream} implementation.
@@ -415,10 +412,10 @@ addresses, and URLs.
 
  Overall, I feel like MaxPC turned out well. It hits a satisfying middle ground
  between performance and expressiveness, and its input implementations should
- make it a good fit for many different situations, while the public input
- interface grants extensibility. If you decide to use MaxPC, which I encourage,
- please report any issues you may encounter on GitHub or to me directly. This
- includes any mistakes in this write-up, as well as insights you may have
- regarding my optimization riddles. Thanks for reading!
+ make it a good fit for many different situations—additionally, the public
+ input interface grants extensibility. If you decide to use MaxPC, which I
+ encourage, please report any issues you may encounter on GitHub or to me
+ directly. This includes any mistakes in this write-up, as well as insights you
+ may have regarding my optimization riddles. Thanks for reading!
 
 >
