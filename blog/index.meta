@@ -1,9 +1,9 @@
-:document (:title "Max's Blog")
+:document (:title "Max’s Blog")
 
-:feeds ((:title "Max's Blog"
+:feeds ((:title "Max’s Blog"
          :type "application/rss+xml"
          :href "http://mr.gy/blog/index.xml"))
 
-:blog (:description "Hi, I'm [Max Rottenkolber](http://mr.gy) and this is
+:blog (:description "Hi, I’m [Max Rottenkolber](http://mr.gy) and this is
                      my technical Blog."
        :url "http://mr.gy/blog/")
