@@ -4,7 +4,7 @@
  1738](http://tools.ietf.org/html/rfc1738).
 
 
- < Url designators
+ < URL Designators
 
   A _url designator_ is a value accepted by the {url} _function_. E.g. a
   _url_, a _string_ or a _pathname_.
@@ -12,11 +12,11 @@
  >
 
 
- < make-url \(Function\)
+ < make‑url \(Function\)
 
   *Syntax:*
 
-  — Function: *make-url* _scheme_ {&key} _address_ _user_ _password_
+  — Function: *make‑url* _scheme_ {&key} _address_ _user_ _password_
   _host_ _port_ _path_
 
   *Arguments and Values:*
@@ -85,11 +85,11 @@
  >
 
 
- < url-address \(Function\)
+ < url‑address \(Function\)
 
   *Syntax:*
 
-  — Function: *url-address* _url_
+  — Function: *url‑address* _url_
 
   *Arguments and Values:*
 
@@ -102,11 +102,11 @@
  >
 
 
- < url-decode \(Function\)
+ < url‑decode \(Function\)
 
   *Syntax:*
 
-  — Function: *url-decode* _string_
+  — Function: *url‑decode* _string_
 
   *Arguments and Values:*
 
@@ -124,11 +124,11 @@
  >
 
 
- < url-encode \(Function\)
+ < url‑encode \(Function\)
 
   *Syntax:*
 
-  — Function: *url-encode* _string_
+  — Function: *url‑encode* _string_
 
   *Arguments and Values:*
 
@@ -146,11 +146,11 @@
  >
 
 
- < url-host \(Function\)
+ < url‑host \(Function\)
 
   *Syntax:*
 
-  — Function: *url-host* _url_
+  — Function: *url‑host* _url_
 
   *Arguments and Values:*
 
@@ -163,11 +163,11 @@
  >
 
 
- < url-p \(Function\)
+ < url‑p \(Function\)
 
   *Syntax:*
 
-  — Function: *url-p* _object_
+  — Function: *url‑p* _object_
 
   *Arguments and Values:*
 
@@ -181,11 +181,11 @@
  >
 
 
- < url-password \(Function\)
+ < url‑password \(Function\)
 
   *Syntax:*
 
-  — Function: *url-password* _url_
+  — Function: *url‑password* _url_
 
   *Arguments and Values:*
 
@@ -198,11 +198,11 @@
  >
 
 
- < url-path \(Function\)
+ < url‑path \(Function\)
 
   *Syntax:*
 
-  — Function: *url-path* _url_
+  — Function: *url‑path* _url_
 
   *Arguments and Values:*
 
@@ -215,11 +215,11 @@
  >
 
 
- < url-port \(Function\)
+ < url‑port \(Function\)
 
   *Syntax:*
 
-  — Function: *url-port* _url_
+  — Function: *url‑port* _url_
 
   *Arguments and Values:*
 
@@ -233,11 +233,11 @@
  >
 
 
- < url-scheme \(Function\)
+ < url‑scheme \(Function\)
 
   *Syntax:*
 
-  — Function: *url-scheme* _url_
+  — Function: *url‑scheme* _url_
 
   *Arguments and Values:*
 
@@ -250,11 +250,11 @@
  >
 
 
- < url-string \(Function\)
+ < url‑string \(Function\)
 
   *Syntax:*
 
-  — Function: *url-string* _url_
+  — Function: *url‑string* _url_
 
   *Arguments and Values:*
 
@@ -267,11 +267,11 @@
  >
 
 
- < url-user \(Function\)
+ < url‑user \(Function\)
 
   *Syntax:*
 
-  — Function: *url-user* _url_
+  — Function: *url‑user* _url_
 
   *Arguments and Values:*
 
