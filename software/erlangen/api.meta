@@ -1,0 +1,4 @@
+:document (:title "Erlangen API Documentation")
+:source (:system :erlangen
+         :api-document (:erlangen))
+:stylesheets ((:media "screen" :href "/site-assets/api.css"))
