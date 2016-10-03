@@ -1,0 +1,70 @@
+[Erlangen](https://github.com/eugeneia/erlangen) brings distributed,
+asynchronous message passing to [Clozure CL](http://ccl.clozure.com/). It
+orchestrates Clozure CL _processes_ (native threads) using [message passing](http://c2.com/cgi/wiki?MessagePassingConcurrency), 
+and encourages fault tolerant software architectures using [supervison trees](http://erlang.org/documentation/doc-4.9.1/doc/design_principles/sup_princ.html).
+It is also transparently distributed, all its features work seamlessly across
+IP networks. Thus, it can be used to build applications across multiple
+Clozure CL instances on different hosts. Erlangen borrows many ideas from
+[Erlang/OTP](http://www.erlang.org/), hence the name. (Its a town!)
+
+Clozure CL processes are comparatively heavy weight, preemptively scheduled
+operating system threads, as opposed to Erlang’s cooperatively scheduled green
+threads. As such, processes are a scarce resource on Clozure CL. Erlangen is
+based on the assumption that even with only a limited number of processes
+available, message passing and supervision trees are still desireable features.
+While Erlang’s distribution features are sometimes overlooked, they are meant
+to be a main focus of Erlangen (but not of this article). Besides the overlap
+in features, terminology, and name, Erlangen and Erlang/OTP are completely
+unrelated, incompatible, and fundamentally different.
+
+#media#
+erlangen-intro-send.svg
+
+Erlangen equips each process with a _mailbox_, a list of _links_, and a list of
+_monitors_. These upgraded processes are called _agents_. Agents can [send](http://mr.gy/software/erlangen/api.html#section-1-13)
+messages to the mailboxes of other agents, and [receive](http://mr.gy/software/erlangen/api.html#section-1-9)
+the next message from in its own mailbox. When {send} fails to deliver a
+message it signals an error. Message delivery can fail when the target agent
+exited, the destination _mailbox_ is full (mailboxes are bounded FIFO queues),
+or due to network failure. When {send} returns the message is guaranteed to be
+delivered to the target agent’s mailbox. Agents can supply a timeout argument
+to {receive}, which will then signal an error if no message is received until
+the timeout is exceeded.
+
+#media#
+erlangen-intro-mailbox.svg
+
+Agents can also _exit_ (using [exit](http://mr.gy/software/erlangen/api.html#section-1-6)
+or by returning normally), and send _kill messages_ to other agents. When an
+agent receives a kill message it exits immediately, and the remaining messages
+in its mailbox are discarded. When {exit} fails to deliver the exit message it
+signals an error. The links and monitors of an agent are references to other
+agents. When an agent exits it attempts to send kill messages to all its links,
+and _exit notifications_ to all its monitors. Agents can use [link](http://mr.gy/software/erlangen/api.html#section-1-7)
+and [unlink](http://mr.gy/software/erlangen/api.html#section-1-17) to manage
+links and monitors.
+
+#media#
+erlangen-intro-link.svg
+
+Finally, agents can [spawn](http://mr.gy/software/erlangen/api.html#section-1-15)
+new agents. {spawn} takes a nullary function for the agent’s process to
+execute, and returns a reference to the newly created agent. This reference can
+then be used to communicate or link with the agent. Additionally, {spawn} also
+can also link the caller and the new agent before the new agent’s process
+starts. This is useful to avoid a basic race condition where the child agent
+exits before the parent could link with it.
+
+That covers pretty much all of the core functionality, but Erlangen is an
+asynchronous framework for a synchronous programming language, and that poses
+some problems. Our processes are preemtively scheduled, and it is unsafe to
+stop them asynchronously. Er
+
+ that does not call {receive} periodically
+
+ messages can be lost even though they were delivered successfully
+
+ exit notifications can be lost
+
+ [select](http://mr.gy/software/erlangen/api.html#section-1-12)
+
