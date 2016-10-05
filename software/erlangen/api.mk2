@@ -3,7 +3,7 @@
  Distributed, asychronous message passing system for Clozure Common Lisp.
 
 
- < \*agent‑debug\* \(Variable\)
+ < \*agent-debug\* \(Variable\)
 
   *Initial Value:*
 
@@ -21,7 +21,7 @@
  >
 
 
- < \*default‑mailbox‑size\* \(Variable\)
+ < \*default-mailbox-size\* \(Variable\)
 
   *Initial Value:*
 
@@ -112,11 +112,14 @@
 
   *Description*:
 
-  {exit} kills _agent_ with _reason_ as the _exit reason_ of _agent_.
+  {exit} kills _agent_ with _reason_ as the _exit reason_. Subsequent
+  attempts to send messages to _agent_ will fail. If _agent_ is the
+  _calling agent_ it exits immediately, otherwise {exit} delivers an
+  _exit message_ to _agent_.
 
   *Exceptional Situations:*
 
-  If _agent_ is not the _calling agent_, and the _kill message_ could not
+  If _agent_ is not the _calling agent_, and the _exit message_ could not
   be delivered successfully an _error_ of _type_ {send-error} is
   signaled.
 
@@ -159,7 +162,7 @@
 
   {\(} _status_ {.} _values_ {\)}
 
-  _status_::= {:ok}\|{:exit}
+  _status_::= {:ok} \| {:exit}
 
   The _status_ {:ok} indicates that the _agent_ exited normally, and
   _values_ will be a list of its _return values_.
@@ -215,7 +218,7 @@
 
   *Syntax:*
 
-  — Function: *receive* {&key} _timeout_ _poll‑interval_
+  — Function: *receive* {&key} _timeout_ _poll-interval_
 
   *Arguments and Values:*
 
@@ -224,16 +227,14 @@
   *Description*:
 
   {receive} returns the next message for the _calling agent_. If the
-  _mailbox_ of the _calling agent_ is empty, {receive} will block until a
-  message arrives.
+  message is an _exit message_ the _calling agent_ exits immediately. If
+  the _mailbox_ of the _calling agent_ is empty, {receive} will block
+  until a message arrives.
 
   If _timeout_ is supplied {receive} will block for at most _timeout_
   seconds and poll for a message every _poll-interval_ seconds.
 
   *Exceptional Situations:*
-
-  If the _calling agent_ was killed by another _agent_ by use of {exit} a
-  _serious-condition_ of _type_ {exit} is signaled.
 
   If _timeout_ is supplied and exceeded an _error_ of _type_ {timeout} is
   signaled.
@@ -337,12 +338,12 @@
  >
 
 
- < send‑error \(Condition Type\)
+ < send-error \(Condition Type\)
 
   *Class Precedence List:*
 
-  {send‑error}, {error}, {serious‑condition}, {condition},
-  {standard‑object}, {t}
+  {send-error}, {error}, {serious-condition}, {condition},
+  {standard-object}, {t}
 
   *Description:*
 
@@ -357,7 +358,7 @@
 
   *Syntax:*
 
-  — Function: *spawn* _function_ {&key} _attach_ _mailbox‑size_ _host_
+  — Function: *spawn* _function_ {&key} _attach_ _mailbox-size_ _host_
   _node_
 
   *Arguments and Values:*
@@ -384,8 +385,8 @@
 
   *Class Precedence List:*
 
-  {timeout}, {error}, {serious‑condition}, {condition},
-  {standard‑object}, {t}
+  {timeout}, {error}, {serious-condition}, {condition},
+  {standard-object}, {t}
 
   *Description:*
 
