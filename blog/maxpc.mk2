@@ -349,7 +349,7 @@ addresses, and URLs.
   collection, and doing so might reduce the number of cache lines, pages, and
   other finite resources MaxPC needs to process that data. On the
   {consfree-input} branch, activating the garbage collector less frequently
-  actually might have a negative impact on locality.
+  might actually have a negative impact on locality.
 
   Another detail is completely inexplicable to me: the {special-case} branch
   allocates way more memory on the S-expression benchmark than {master}, even
