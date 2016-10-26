@@ -63,13 +63,13 @@ addresses, and URLs.
  These fifteen primitives provide the core functionality expected from a
  parsing library, but any serious contestant must also cover transformation of
  matches and, of course, error handling. MaxPC features a Lispy destructuring
- combinator modeled after Common Lisp’s {destructuring‑bind} ({=destructure}),
+ combinator modeled after Common Lisp’s {destructuring-bind} ({=destructure}),
  and a generic functional transformation device ({=transform}), for cases where
  the former is not flexible enough. Finally, MaxPC provides a mechanism to fail
  early ({?fail}), and two abstractions for hooking into the Common Lisp
- condition system ({%handler‑case}, {%restart‑case}). Of course, you can
+ condition system ({%handler-case}, {%restart-case}). Of course, you can
  retrieve the input position in failure situations—line position even, for
- character inputs ({get‑input‑position}).
+ character inputs ({get-input-position}).
 
  #media#
  maxpc-api.png
@@ -148,13 +148,13 @@ addresses, and URLs.
 
  #media Performance of (simplistic) S-Expression parsers implemented in MaxPC,
  MPC (Quicklisp/mpc-20160208-git), and Esrap (Quicklisp/esrap-20160531-git)
- compared to {read‑from‑string} (CCL 1.11 on an Intel Xeon E31245 at
+ compared to {read-from-string} (CCL 1.11 on an Intel Xeon E31245 at
  3.30 GHz).#
  maxpc-sexp.png
 
  MaxPC reaches its performance goal, being almost twice as fast as its
  predecessor MPC. There is still a sizable overhead over an optimized
- hand-written parser like {read‑from‑string}. Esrap is looking quite bad here.
+ hand-written parser like {read-from-string}. Esrap is looking quite bad here.
  I only included it to make a point on Packrat parsing later on, but consider
  it as an example of what a reasonably popular parser generator can get away
  with. Of course, this comparison only tests a very specific workload, that can
@@ -305,13 +305,13 @@ addresses, and URLs.
   I went on to measure the difference, and was thoroughly disappointed. Cons
   less it did, but to my surprise the impact on realistic situations was
   marginal, at best, even though the optimization was visible in artificially
-  isolated experiments ({maxpc.bench:bench‑=destructure/bare}). Intrigued by my
+  isolated experiments ({maxpc.bench:bench-=destructure/bare}). Intrigued by my
   findings, I hacked up the {consfree-input} branch, which replaces MaxPC’s
   consing input abstraction with a garbage-free alternative, to get a better
   idea of the overall impact of consing.
 
-  #media Execution time vs GC time of {maxpc.example‑sexp} and {=destructure}
-  (see {maxpc.bench}) on
+  #media Execution time vs garbage collection time of {maxpc.example-sexp} and
+  {=destructure} (see {maxpc.bench}) on
   [master](https://github.com/eugeneia/maxpc/tree/consing-2016-08-04),
   [special-case](https://github.com/eugeneia/maxpc/compare/consing-2016-08-04...050a409),
   [consfree-input](https://github.com/eugeneia/maxpc/compare/consing-2016-08-04...fe2c56c),
@@ -328,23 +328,28 @@ addresses, and URLs.
   expected, and avoids heap allocation.
 
   My theory that less consing means better performance is falsified, we can see
-  that neither the total memory allocated or GC time correlate with execution
-  time. The real story is more delicate than that. On CCL, garbage collection
-  is done in two phases. First, the GC searches the stack for live objects on
-  the heap and marks them, then it frees the objects that are not marked live.
-  I have learned on CCL’s IRC channel, that marking is expensive when there are
-  lots of pointers in the live space (because it has to follow each pointer to
-  mark the objects it points to), while the actual freeing is cheap. So while
-  its cheap to generate a lot of garbage, having a lot of live pointers into
-  the heap is what kills you.
+  that neither the total memory allocated or garbage collection time correlate
+  with execution time. The real story is more delicate than that. On CCL,
+  garbage collection is done in two phases. First, the garbage collector
+  searches the stack for live objects on the heap and marks them, then it frees
+  the objects that are not marked live. I have learned on CCL’s IRC channel,
+  that marking is expensive when there are lots of pointers in the live space
+  (because it has to follow each pointer to mark the objects it points to),
+  while the actual freeing is cheap. So while its cheap to generate a lot of
+  garbage, having a lot of live pointers into the heap is what kills you. This
+  would explain why explicit capturing gives MaxPC an edge (it creates fewer
+  pointers), but {consfree-input} fails to move the needle despite consing so
+  much less (thanks to a fast generational garbage collector).
 
-  This would explain why explicit capturing gives MaxPC an edge (it creates
-  fewer pointers), but {consfree-input} fails to move the needle despite
-  consing so much less (thanks to a fast generational GC). Looking at the
-  isolated benchmarks raises even more questions, why does {consfree-input}
-  perform so badly in {bench-=destructure}, but okay on
-  {bench-=destructure/bare}? Assuming {master} is triggering the GC more
-  frequently, is that helping somehow by compacting the remaining garbage?
+  Looking at the isolated benchmarks raises even more questions. Why does
+  {consfree-input} perform so badly in {bench-=destructure}, but okay on
+  {bench-=destructure/bare}? I assume {master} is triggering garbage collection
+  more frequently, because it allocates more frequently. The garbage collector
+  may compact, or otherwise reorganize the live data that survives garbage
+  collection, and doing so might reduce the number of cache lines, pages, and
+  other finite resources MaxPC needs to process that data. On the
+  {consfree-input} branch, activating the garbage collector less frequently
+  actually might have a negative impact on locality.
 
   Another detail is completely inexplicable to me: the {special-case} branch
   allocates way more memory on the S-expression benchmark than {master}, even
