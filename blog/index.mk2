@@ -1,5 +1,7 @@
 Hi, I’m [Max Rottenkolber](http://mr.gy) and this is my technical Blog.
 
++ [A Debian Package for
+  Clozure Common Lisp](clozure-cl-deb.html) _Thursday, 24 November 2016_
 + [Max’s Parser Combinators: Why?
   How?](maxpc.html) _Friday, 5 August 2016_
 + [Sam: a tiny, concurrent sampling profiler for

@@ -1,0 +1,40 @@
+< Download
+
+ + [clozure-cl_1.11_amd64.deb]
+ + [clozure-cl_1.11_amd64.deb.sig] (PGP Signature)
+
+>
+
+< Installation
+
+ I recommend the following procedure (not recommended if you want to keep using
+ {sbcl} or the Debian/Ubuntu supplied Slime, which is extremely insistent on
+ using SBCL):
+
+ #code#
+ sudo apt purge sbcl slime && sudo apt autoremove
+ dpkg -i clozure-cl_1.11_amd64.deb
+ #
+
+ Clozure Cl can now be invoked as {ccl}. Next you can install
+ [Quicklisp](https://www.quicklisp.org/) and Slime using the instructions on
+ the Quicklisp website.
+
+>
+
+< Background
+
+ I run Ubuntu on my leisure computer, and wanted to get it ready to do some
+ recreational programming, naturally using Clozure CL. I thought about setting
+ up a [PPA](https://help.ubuntu.com/community/PPA), but after following
+ [Getting Set Up](http://packaging.ubuntu.com/html/getting-set-up.html), and
+ [Packaging New Software](http://packaging.ubuntu.com/html/packaging-new-software.html)
+ I decided to go find a simpler path. It was when {pbuilder-dist} invoked
+ invoke {debootstrap} that I decided, “stop right there, old friend,” and hit
+ {C-c}.
+
+ I found a [very reasonable blog post](https://blog.serverdensity.com/how-to-create-a-debian-deb-package/)
+ that outlines a simple procedure to not “get set up”, but instead obtain a
+ {deb} package quickly.
+
+>
