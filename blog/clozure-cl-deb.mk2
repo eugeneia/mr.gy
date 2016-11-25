@@ -1,22 +1,26 @@
+I have created a bare-bones _deb_ package containing Clozure CL 1.11 for use on
+Ubuntu, or other Linux distributions based on Debian. It contains vanilla CCL
+as distributed by [Clozure](http://ccl.clozure.com/), and installs the supplied
+launcher script so it can be invoked as {ccl}.
+
 < Download
 
- + [clozure-cl_1.11_amd64.deb]
- + [clozure-cl_1.11_amd64.deb.sig] (PGP Signature)
+ + [clozure-cl_1.11_amd64.deb]\([.sig](clozure-cl_1.11_amd64.deb.sig))
 
 >
 
 < Installation
 
  I recommend the following procedure (not recommended if you want to keep using
- {sbcl} or the Debian/Ubuntu supplied Slime, which is extremely insistent on
- using SBCL):
+ the Debian/Ubuntu supplied {sbcl} or Slime, the latter being very insistent on
+ using the former):
 
  #code#
  sudo apt purge sbcl slime && sudo apt autoremove
  dpkg -i clozure-cl_1.11_amd64.deb
  #
 
- Clozure Cl can now be invoked as {ccl}. Next you can install
+ Clozure CL can now be invoked as {ccl}. Next you can install
  [Quicklisp](https://www.quicklisp.org/) and Slime using the instructions on
  the Quicklisp website.
 
