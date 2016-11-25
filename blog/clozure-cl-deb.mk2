@@ -5,7 +5,7 @@ launcher script so it can be invoked as {ccl}.
 
 < Download
 
- + [clozure-cl_1.11_amd64.deb]\([.sig](clozure-cl_1.11_amd64.deb.sig))
+ + [clozure-cl_1.11_amd64.deb] ([PGP Signature](clozure-cl_1.11_amd64.deb.sig))
 
 >
 
@@ -20,9 +20,9 @@ launcher script so it can be invoked as {ccl}.
  dpkg -i clozure-cl_1.11_amd64.deb
  #
 
- Clozure CL can now be invoked as {ccl}. Next you can install
- [Quicklisp](https://www.quicklisp.org/) and Slime using the instructions on
- the Quicklisp website.
+ Clozure CL can now be invoked as {ccl}. Next, you can install Quicklisp and
+ Slime using the instructions on the
+ [Quicklisp website](https://www.quicklisp.org/beta/#installation).
 
 >
 
