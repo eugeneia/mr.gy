@@ -33,9 +33,9 @@ launcher script so it can be invoked as {ccl}.
  up a [PPA](https://help.ubuntu.com/community/PPA), but after following
  [Getting Set Up](http://packaging.ubuntu.com/html/getting-set-up.html), and
  [Packaging New Software](http://packaging.ubuntu.com/html/packaging-new-software.html)
- I decided to go find a simpler path. It was when {pbuilder-dist} invoked
- invoke {debootstrap} that I decided, “stop right there, old friend,” and hit
- {C-c}.
+ I was overwhelmed. It was when {pbuilder-dist} invoked {debootstrap} to
+ install a spare copy of the _entire distribution_ that I
+ decided, “stop right there, old friend,” and hit {C-c}.
 
  I found a [very reasonable blog post](https://blog.serverdensity.com/how-to-create-a-debian-deb-package/)
  that outlines a simple procedure to not “get set up”, but instead obtain a
