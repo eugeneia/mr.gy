@@ -119,9 +119,8 @@
 
   *Exceptional Situations:*
 
-  If _agent_ is not the _calling agent_, and the _exit message_ could not
-  be delivered successfully an _error_ of _type_ {send-error} is
-  signaled.
+  If _agent_ is a _keyword_ that is not registered as a name an _error_
+  of _type_ {simple-error} is signaled.
 
  >
 
@@ -136,7 +135,7 @@
 
   _agent_—an _agent_.
 
-  _mode_—a _keyword_. Either {:link} or {:monitor}. Defaults to {:link}.
+  _mode_—either {:link} or {:monitor}. The default is {:link}.
 
   *Description*:
 
@@ -154,13 +153,7 @@
 
   An _exit notification_ is of the form
 
-  {\(} _agent_ {.} _exit-reason_ {\)}
-
-  where _exit-reason_ is the _exit reason_ of _agent_.
-
-  An _exit reason_ has the following from:
-
-  {\(} _status_ {.} _values_ {\)}
+  {\(} _agent_ _status_ . _values_ {\)}
 
   _status_::= {:ok} \| {:exit}
 
@@ -169,18 +162,16 @@
 
   The _status_ {:exit} indicates that the _agent_ was either killed by
   {exit} or aborted because of an unhandled _condition_ of _type_
-  {serious-condition}, and _values_ will be the _reason_ supplied to
-  {exit} or the _condition object_.
-
-  The attempts to kill or notify _linked agents_ will fail if the
-  respective message can not be delivered to the target _agent_. Any
-  error conditions that arise due to the failure will be silently
-  ignored.
+  {serious-condition}, and _values_ will be the _exit reason_ supplied to
+  {exit}, or the _condition object_.
 
   *Exceptional Situations:*
 
   If _agent_ is the _calling agent_ an _error_ of _type_ {simple-error}
   is signaled.
+
+  If _agent_ is a _keyword_ that is not registered as a name an _error_
+  of _type_ {simple-error} is signaled.
 
  >
 
@@ -193,7 +184,9 @@
 
   *Arguments and Values:*
 
-  _host_—a _string_. The default is {"localhost"}.
+  _host_—a _host_ as accepted by
+  [resolve-address](http://ccl.clozure.com/docs/ccl.html\#f\_resolve-address).
+  The default is {"localhost"}.
 
   _name_—a _string_. The default is a unique name.
 
@@ -208,8 +201,15 @@
 
   #code#
 ;; Start talking to remote nodes:
-(spawn '(node))
+(spawn 'node)
   #
+
+  *Exceptional Situations:*
+
+  If _name_ can not be registered \(e.g., because it has already been
+  registered by another node, or because the port mapper is unreachable\)
+  an _error_ of _type_ {error} is signaled, and the node protocol server
+  is killed.
 
  >
 
@@ -218,11 +218,11 @@
 
   *Syntax:*
 
-  — Function: *receive* {&key} _timeout_ _poll-interval_
+  — Function: *receive* {&key} _timeout_
 
   *Arguments and Values:*
 
-  _timeout_, _poll-interval_—positive _numbers_.
+  _timeout_—a positive _number_ denoting a time interval in seconds.
 
   *Description*:
 
@@ -232,12 +232,12 @@
   until a message arrives.
 
   If _timeout_ is supplied {receive} will block for at most _timeout_
-  seconds and poll for a message every _poll-interval_ seconds.
+  seconds.
 
   *Exceptional Situations:*
 
-  If _timeout_ is supplied and exceeded an _error_ of _type_ {timeout} is
-  signaled.
+  If _timeout_ is supplied and the specified time interval exceeded an
+  _error_ of _type_ {timeout} is signaled.
 
  >
 
@@ -328,28 +328,13 @@
 
   *Description*:
 
-  {send} delivers _message_ to _agent_.
+  {send} transmits _message_ to _agent_. There is no guarantee as to
+  whether _message_ could be successfully delivered.
 
   *Exceptional Situations:*
 
-  If _message_ could not be delivered successfully an _error_ of _type_
-  {send-error} is signaled.
-
- >
-
-
- < send-error \(Condition Type\)
-
-  *Class Precedence List:*
-
-  {send-error}, {error}, {serious-condition}, {condition},
-  {standard-object}, {t}
-
-  *Description:*
-
-  Describes an error condition that can occur when calling {send}. It
-  denotes a that {send} was unable to successfully deliver the message to
-  the recepient.
+  If _agent_ is a _keyword_ that is not registered as a name an _error_
+  of _type_ {simple-error} is signaled.
 
  >
 
@@ -358,17 +343,23 @@
 
   *Syntax:*
 
-  — Function: *spawn* _function_ {&key} _attach_ _mailbox-size_ _host_
-  _node_
+  — Function: *spawn* _function_ {&key} _attach_ _mailbox-size_ _node_
+  _host_
 
   *Arguments and Values:*
 
   _function_—a _function designator_ or a _call_.
 
-  _attach_—a _keyword_ or {nil}.
+  _attach_—either {:link}, {:attach}, or {nil}. The default is {nil}.
 
   _mailbox-size_—a positive _unsigned integer_. The default is
   {\*default-mailbox-size\*}.
+
+  _node_—a _node name_ or {nil}. The default is {nil}.
+
+  _host_—a _host_ as accepted by
+  [resolve-address](http://ccl.clozure.com/docs/ccl.html\#f\_resolve-address).
+  The default is the local host name as reported by {machine-instance}.
 
   *Description:*
 
@@ -377,6 +368,14 @@
   agent_ will be linked to the new _agent_ as if by {link} but before the
   _agent_ is started. Once the _agent_ is started it will execute
   _function_.
+
+  If _node_ is _non-nil_ the _agent_ is started on _node_ of _host_
+  instead of the local node.
+
+  *Exceptional Situations:*
+
+  If {spawn} fails to start the _agent_ an an _error_ of _type_ {error}
+  is signaled.
 
  >
 
@@ -392,7 +391,7 @@
 
   Describes an error condition that can occur when using functions with a
   timeout. It denotes a that the operations was unable to successfully
-  complete within a given deadline.
+  complete within a given duration.
 
  >
 
@@ -416,6 +415,9 @@
   If _agent_ is the _calling agent_ an _error_ of _type_ {simple-error}
   is signaled.
 
+  If _agent_ is a _keyword_ that is not registered as a name an _error_
+  of _type_ {simple-error} is signaled.
+
  >
 
 
@@ -437,6 +439,241 @@
 
   If the _name_ is not associated with an _agent_ an _error_ of _type_
   {simple-error} is signaled.
+
+ >
+
+>
+
+
+< erlangen.management \(Package\)
+
+ Management extensions for Erlangen including functions for agent tree
+ introspection, and retrieval of statistics for agents and remote
+ connections.
+
+
+ < agent-stats \(Function\)
+
+  *Syntax:*
+
+  — Function: *agent-stats* _agent_
+
+  → _messages-received_, _messages-dropped_, _birthtime_, _deathtime_
+
+  *Arguments and Values:*
+
+  _agent_—an _agent_.
+
+  _messages-received_—a positive _fixnum_ denoting the number of messages
+  received by _agent_.
+
+  _messages-dropped_—a positive _fixnum_ denoting the number of messages
+  dropped by _agent_ because its mailbox was full.
+
+  _birthtime_—a _universal time_ denoting the time when _agent_ was
+  started.
+
+  _deathtime_—a _universal time_ denoting the time when _agent_ exited,
+  or {nil} if _agent_ has not exited.
+
+  *Description:*
+
+  {agent-stats} returns various current statistics for _agent_.
+
+ >
+
+
+ < agent-tree \(Function\)
+
+  *Syntax:*
+
+  — Function: *agent-tree* _agent_
+
+  → _agent-tree_
+
+  *Arguments and Values:*
+
+  _agent_—an _agent_.
+
+  _agent-tree_—an _instance_ of _class_ {agent-tree}.
+
+  *Description:*
+
+  {agent-tree} returns the current _agent-tree_ whose root is _agent_.
+
+ >
+
+
+ < agent-tree \(Class\)
+
+  *Syntax:*
+
+  — Class: *agent-tree* {&key} _root_ _linked_ _monitored_
+
+  *Class Precedence List:*
+
+  {agent-tree}, {standard-object}, {t}
+
+  *Description:*
+
+  Instances of class {agent-tree} denote views of the _agent_ graph at a
+  specific point in time. Their {print-object} method prints an elaborate
+  description of that view when {\*print-readably\*} is {nil}.
+
+ >
+
+
+ < connection-stats \(Function\)
+
+  *Syntax:*
+
+  — Function: *connection-stats* {&optional} _host_ _node_
+
+  → _stats-for-connections_
+
+  → _errors_, _established_
+
+  *Arguments and Values:*
+
+  _host_—a _string_ denoting a _host name_ or {nil}. The default is
+  {nil}.
+
+  _node_—a _string_ denoting a _node name_ or {nil}. The default is
+  {nil}.
+
+  _stats-for-connections_—a _list_ with one element for each matching
+  connection. Each element is a _list_ of four elements containing the
+  host name, node name, _errors_, and _established_ of the respective
+  connection.
+
+  _errors_—a positive _fixnum_ denoting the number of errors on the
+  matching connection.
+
+  _established_—a _universal time_ denoting the time when the matching
+  connection was initially established, or {nil} denoting that the
+  connection has not been established yet.
+
+  *Description:*
+
+  {connection-stats} returns essential statistics for connections to
+  remote nodes. If called without arguments it returns
+  _stats-for-connections_ to all remote nodes to which connections where
+  established. If _host_ is supplied _stats-for-connections_ includes
+  only connections to _host_. If _node_ is supplied {connection-stats}
+  returns _errors_ and _established_ for the connection to _node_.
+
+ >
+
+
+ < flush-messages \(Function\)
+
+  *Syntax:*
+
+  — Function: *flush-messages* {&key} _print-p_ _stream_
+
+  *Arguments and Values:*
+
+  _print-p_—a _generalized boolean_. The default is _true_.
+
+  _stream_—an _output stream_. The default is {\*standard-output\*}.
+
+  *Description:*
+
+  {flush-messages} dequeues messages from the mailbox of the _calling
+  agent_ until there are no more pending messages. If _print-p_ is _true_
+  each dequeued message is printed to _stream_.
+
+ >
+
+
+ < linked \(Generic Function\)
+
+  *Syntax:*
+
+  — Generic Function: *linked* _agent‑tree_
+
+  → _list_
+
+  *Arguments and Values:*
+
+  _agent-tree_—an _object_ of _type_ {agent-tree}.
+
+  _list_—a _list_ of _agents_.
+
+  *Description*:
+
+  {linked} returns a _list_ of _agents_ that are linked to but not
+  monitored by the root _agent_ of _agent-tree_.
+
+ >
+
+
+ < monitored \(Generic Function\)
+
+  *Syntax:*
+
+  — Generic Function: *monitored* _agent‑tree_
+
+  → _subtrees_
+
+  *Arguments and Values:*
+
+  _agent-tree_—an _object_ of _type_ {agent-tree}.
+
+  _subtrees_—a _list_ of _objects_ of _type_ {agent-tree}.
+
+  *Description*:
+
+  {monitored} returns a _list_ of the _subtrees_ whose root _agents_ are
+  monitored by the root _agent_ of _agent-tree_.
+
+ >
+
+
+ < process-agent \(Function\)
+
+  *Syntax:*
+
+  — Function: *process-agent* _process_ {&key} _timeout_
+
+  → _agent_
+
+  *Arguments and Values:*
+
+  _process_—a _process_.
+
+  _timeout_—a positive _integer_ denoting a time interval in seconds. The
+  default is 1.
+
+  _agent_—an _agent_ or {nil}.
+
+  *Description:*
+
+  {process-agent} interrupts _process_ to retrieve its associated
+  _agent_. It returns the respective _agent_ or {nil}. A return value of
+  {nil} indicates that _process_ could not be interrupted within the
+  duration specified by _timeout_.
+
+ >
+
+
+ < root \(Generic Function\)
+
+  *Syntax:*
+
+  — Generic Function: *root* _x_
+
+  → _agent_
+
+  *Arguments and Values:*
+
+  _agent-tree_—an _object_ of _type_ {agent-tree}.
+
+  _agent_—an _agent_.
+
+  *Description*:
+
+  {root} returns the _agent_ that is the root of _agent-tree_.
 
  >
 
