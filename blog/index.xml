@@ -5,6 +5,11 @@
         <link>http://mr.gy/blog/</link>
         <language>en-us</language>
         <item>
+            <title>Erlangen: Introduction</title>
+            <link>http://mr.gy/blog/erlangen-intro.html</link>
+            <pubDate>Sun, 4 Dec 2016 21:48:00 GMT</pubDate>
+        </item>
+        <item>
             <title>A Debian Package for Clozure&#xA0;Common&#xA0;Lisp</title>
             <link>http://mr.gy/blog/clozure-cl-deb.html</link>
             <pubDate>Thu, 24 Nov 2016 23:37:00 GMT</pubDate>
