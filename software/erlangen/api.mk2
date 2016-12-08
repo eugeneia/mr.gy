@@ -464,10 +464,10 @@
 
   _agent_—an _agent_.
 
-  _messages-received_—a positive _fixnum_ denoting the number of messages
-  received by _agent_.
+  _messages-received_—a positive _integer_ denoting the number of
+  messages received by _agent_.
 
-  _messages-dropped_—a positive _fixnum_ denoting the number of messages
+  _messages-dropped_—a positive _integer_ denoting the number of messages
   dropped by _agent_ because its mailbox was full.
 
   _birthtime_—a _universal time_ denoting the time when _agent_ was
@@ -546,7 +546,7 @@
   host name, node name, _errors_, and _established_ of the respective
   connection.
 
-  _errors_—a positive _fixnum_ denoting the number of errors on the
+  _errors_—a positive _integer_ denoting the number of errors on the
   matching connection.
 
   _established_—a _universal time_ denoting the time when the matching
@@ -661,7 +661,7 @@
 
   *Syntax:*
 
-  — Generic Function: *root* _agent‑tree_
+  — Generic Function: *root* _x_
 
   → _agent_
 
