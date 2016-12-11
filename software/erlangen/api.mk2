@@ -222,7 +222,7 @@
 
   *Arguments and Values:*
 
-  _timeout_—a positive _number_ denoting a time interval in seconds.
+  _timeout_—a non-negative _real_ denoting a time interval in seconds.
 
   *Description*:
 
@@ -464,11 +464,11 @@
 
   _agent_—an _agent_.
 
-  _messages-received_—a positive _integer_ denoting the number of
+  _messages-received_—a non-negative _integer_ denoting the number of
   messages received by _agent_.
 
-  _messages-dropped_—a positive _integer_ denoting the number of messages
-  dropped by _agent_ because its mailbox was full.
+  _messages-dropped_—a non-negative _integer_ denoting the number of
+  messages dropped by _agent_ because its mailbox was full.
 
   _birthtime_—a _universal time_ denoting the time when _agent_ was
   started.
@@ -546,7 +546,7 @@
   host name, node name, _errors_, and _established_ of the respective
   connection.
 
-  _errors_—a positive _integer_ denoting the number of errors on the
+  _errors_—a non-negative _integer_ denoting the number of errors on the
   matching connection.
 
   _established_—a _universal time_ denoting the time when the matching
@@ -642,8 +642,8 @@
 
   _process_—a _process_.
 
-  _timeout_—a positive _integer_ denoting a time interval in seconds. The
-  default is 1.
+  _timeout_—a non-negative _real_ denoting a time interval in seconds.
+  The default is 1.
 
   _agent_—an _agent_ or {nil}.
 
