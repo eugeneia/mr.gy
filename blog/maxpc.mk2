@@ -394,8 +394,8 @@ addresses, and URLs.
  after the 1 MB mark, this is where {read-sequence} is called the second time
  to read the input that did not fit it into the first chunk. The {file-stream}
  implementation is the best choice to parse from files. Minus the time spent
- reading, it is on par with the sequence implementations. E.g., if you add the
- time required to read the file into a vector to run time of the the {vector}
+ reading, it is on par with the sequence implementations. I.e., if you add the
+ time required to read the file into a vector to the run time of the {vector}
  implementation, you will get the run time of the {file-stream} implementation.
  An additional advantage of the stream implementations is that they will only
  read as much input as required for the parser so succeed or fail.
