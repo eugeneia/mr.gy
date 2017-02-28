@@ -108,7 +108,7 @@
 
   _reason_—an _object_.
 
-  _agent_—an _agent_. Default is the _calling agent_.
+  _agent_—an _agent_. The default is the _calling agent_.
 
   *Description*:
 
@@ -186,7 +186,7 @@
 
   _host_—a _host_ as accepted by
   [resolve-address](http://ccl.clozure.com/docs/ccl.html\#f\_resolve-address).
-  The default is {"localhost"}.
+  The default is the local host name as reported by {machine-instance}.
 
   _name_—a _string_. The default is a unique name.
 
@@ -203,6 +203,11 @@
 ;; Start talking to remote nodes:
 (spawn 'node)
   #
+
+  *Side Effects:*
+
+  {node} changes the host name of the local node to _host_, which is
+  subsequently used as a default argument to {spawn}.
 
   *Exceptional Situations:*
 
@@ -359,7 +364,7 @@
 
   _host_—a _host_ as accepted by
   [resolve-address](http://ccl.clozure.com/docs/ccl.html\#f\_resolve-address).
-  The default is the local host name as reported by {machine-instance}.
+  The default is the host name of the local node.
 
   *Description:*
 
@@ -371,6 +376,10 @@
 
   If _node_ is _non-nil_ the _agent_ is started on _node_ of _host_
   instead of the local node.
+
+  *Affected By:*
+
+  {node}
 
   *Exceptional Situations:*
 
@@ -661,7 +670,7 @@
 
   *Syntax:*
 
-  — Generic Function: *root* _x_
+  — Generic Function: *root* _agent‑tree_
 
   → _agent_
 
