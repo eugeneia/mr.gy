@@ -1,5 +1,7 @@
 Hi, I’m [Max Rottenkolber](http://mr.gy) and this is my technical Blog.
 
++ [Erlangen: asynchronous, distributed message passing for Clozure CL
+  \(lightning talk for ELS 2017\)](erlangen-els-2017-lightning-talk.html) _Tuesday, 4 April 2017_
 + [Erlangen:
   Introduction](erlangen-intro.html) _Sunday, 4 December 2016_
 + [A Debian Package for

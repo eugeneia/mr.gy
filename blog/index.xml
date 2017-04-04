@@ -5,6 +5,12 @@
         <link>http://mr.gy/blog/</link>
         <language>en-us</language>
         <item>
+            <title>Erlangen: asynchronous, distributed message&#xA0;passing
+                   for&#xA0;Clozure&#xA0;CL (lightning&#xA0;talk&#xA0;for&#xA0;ELS&#xA0;2017)</title>
+            <link>http://mr.gy/blog/erlangen-els-2017-lightning-talk.html</link>
+            <pubDate>Tue, 4 Apr 2017 12:38:00 GMT</pubDate>
+        </item>
+        <item>
             <title>Erlangen: Introduction</title>
             <link>http://mr.gy/blog/erlangen-intro.html</link>
             <pubDate>Sun, 4 Dec 2016 21:48:00 GMT</pubDate>

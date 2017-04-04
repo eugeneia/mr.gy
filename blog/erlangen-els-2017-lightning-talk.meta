@@ -6,4 +6,4 @@
 :latex (:preamble inters.co.latex:presentation-en
         :index-p nil)
 
-:publication-date nil
+:publication-date "2017-04-04 14:38+0200"
