@@ -107,7 +107,7 @@ figcaption {
 
 pre {
     padding: 0.35em;
-    background: #f9f9f9;
+    border: medium solid grey;
     border-radius: 0.35em;
     margin: 0;
 }
