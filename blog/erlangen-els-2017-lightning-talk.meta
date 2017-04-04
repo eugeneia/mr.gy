@@ -1,0 +1,9 @@
+:document (:title "Erlangen: asynchronous, distributed message passing
+                   for Clozure CL (lightning talk for ELS 2017)"
+           :author "Max Rottenkolber <max@mr.gy>"
+           :index-headers-p nil)
+
+:latex (:preamble inters.co.latex:presentation-en
+        :index-p nil)
+
+:publication-date nil

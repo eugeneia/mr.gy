@@ -1,0 +1,27 @@
+strict digraph {
+    layout=dot; splines=true; overlap=scalexy;
+
+    root_supervisor[label="root-supervisor (one-for-one)",color=blue];
+      service_supervisor[label="service-supervisor (one-for-one)",color=blue];
+        feed_importer[label="feed-importer"];
+        scanner_supervisor[label="scanner-supervisor (one-for-all)",color=blue];
+          scan_timer[label="scan-timer"];
+        socket_supervisor[label="socket-supervisor (one-for-one)",color=blue];
+          http_worker1[label="http-1"];
+          http_worker2[label="http-2"];
+          http_worker3[label="http-3"];
+          http_workern[label="http-…"];
+
+
+    root_supervisor -> logger
+    root_supervisor -> service_supervisor
+      service_supervisor -> feed_importer
+      service_supervisor -> scanner_supervisor
+        scanner_supervisor -> scan_timer
+        scanner_supervisor -> scanner
+      service_supervisor -> socket_supervisor
+        socket_supervisor -> http_worker1
+        socket_supervisor -> http_worker2
+        socket_supervisor -> http_worker3
+        socket_supervisor -> http_workern
+}
