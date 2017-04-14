@@ -13,7 +13,6 @@ p {
 
 code, pre, tt {
     font-family: Inconsolata, monospace;
-    font-size: 1em;
 }
 
 a:link {
@@ -91,6 +90,7 @@ figure audio {
     width: 100%;
     border-radius: 0.175em;
 }
+    
 
 figure img {
     border-radius: 0.35em;
