@@ -203,6 +203,9 @@ article {
         content:"\a";
         white-space: pre;
     }
+    pre {
+        font-size: 0.8em;
+    }
 }
 
 @viewport {
