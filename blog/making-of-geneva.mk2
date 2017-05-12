@@ -132,9 +132,9 @@ Geneva as well as the design decisions I made along the lines.
  precise representation of a Geneva document, meaning that any Geneva
  document can be serialized using Mk2.² The grammar is intended to be
  easy to read and write for humans, and its design is based on
- considerations of how humans interact with a markup language. The Mk2 will not
- ignore syntactic errors silently and attempt to “do the right thing”—being
- forgiving to the user is the responsibility of the Mk2 grammar.
+ considerations of how humans interact with a markup language. The Mk2 parser
+ will not ignore syntactic errors silently and attempt to “do the right
+ thing”—being forgiving to the user is the responsibility of the Mk2 grammar.
 
  When writing using a markup language, the most common error is to
  unintentionally invoke a language construct, because the user forgot to
