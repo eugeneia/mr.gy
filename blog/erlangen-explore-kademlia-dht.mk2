@@ -1,0 +1,827 @@
+Common Lisp is known to lend itself to rapid prototyping, and [Erlangen](https://github.com/eugeneia/erlangen)
+intends to extend these capabilities towards the domain of distributed systems.
+This article documents an exploration of [distributed hash tables](https://en.wikipedia.org/wiki/Distributed_hash_table),
+specifically the [Kademlia](http://www.scs.stanford.edu/~dm/home/papers/kpos.pdf)
+paper, using Erlangen. In an attempt to “boldly go where no one has gone
+before”, I present [mesh-table](https://github.com/eugeneia/erlangen/blob/mesh-table/platform/mesh-table.lisp),
+a distributed hash table design that retains the topology based on the
+XOR metric pioneered by Kademlia, but otherwise deviates in its goals and
+implementation. While Kademlia describes a homogeneous peer-to-peer network for
+exchange of transient data between peers in an untrusted network, mesh-table
+aims to facilitate storage and retrieval of long-lived data in a network of
+dedicated storage and client nodes in a trusted network.
+
+< Distance metric
+
+ Kademlia requires that nodes are assigned identifiers of the same size as the
+ keys used to identify stored values, and relies on the notion of distance
+ between two identifiers. The basic premise is that the value denoted by a key
+ is stored on the node with the identifier closest to the key. The distance
+ between two identifiers is defined as their bit-wise XOR.
+
+ #code#
+ (defun distance (x y)
+   (logxor x y))
+ #
+
+ The {distance} function has some useful properties as a metric of topology.
+ The distance between an identifier and itself is zero
+
+ {(distance} _x_ _x_{)} = 0
+
+ and the distance between two distinct identifiers is positive:
+
+ {(distance} _x_ _y_{)} \> 0 if _x_ ≠ _y_
+
+ Furthermore, the {distance} function is symmetric
+
+ ∀ _x_, _y_ : {(distance} _x_ _y_{)} = {(distance} _y_ _x_{)}
+
+ and unidirectional, meaning for any identifier there exists exactly one
+ identifier at any distance:
+
+ ∀ _x_, _y_, _z_ : {(distance} _x_ _y_{)} ≠ {(distance} _x_ _z_{)}
+ if _x_ ≠ _y_ ≠ _z_
+
+ You can imagine the distance metric as a circular railway with each identifier
+ being a train stop, and trains traveling in only one direction. Using the
+ {distance} function, a node can tell if another node is closer to or further
+ away from a given key, and determine which node is responsible for the key.
+
+ #media#
+ erlangen-explore-kademlia-dht-railway.svg
+
+>
+
+< Routes and buckets
+
+ Each Kademlia node maintains a set of _routes_ that contain the identifiers
+ and contact details of other nodes. Since our nodes are implemented as
+ [Erlangen agents](http://mr.gy/blog/erlangen-intro.html), we don’t need to
+ deal with network protocols such as UDP. Instead, we can use the provided
+ message passing facility to send messages between nodes. Hence, our routes
+ store a reference to an agent as the contact information for another node.
+ Finally, we want to replace routes to nodes that have become inactive with
+ routes to nodes that have more recently contacted us, and so we keep a
+ timestamp with each route to track when we last heard from the node it points
+ to.
+
+ #code#
+ (defstruct (route (:constructor route (id agent)))
+   id agent (ctime (get-internal-real-time)))
+ #
+
+ These routes form the edges of a partial mesh network of nodes. Just like keys
+ are stored in the closest node, the mesh is organized by distance. We strive
+ for a network topology that enables efficient lookup and redundancy.
+
+ By comparing the identifier in a route to the identifier of the node we can
+ determine the distance of a route. What does that mean, though? After all, our
+ distance metric is not related to geographic distance, or any other “real”
+ metric. Quite the opposite is true: our metric allows us to create a virtual,
+ spatial space in which we can arrange our nodes.
+
+ #media#
+ erlangen-explore-kademlia-dht-mesh.svg
+
+ In this space, nodes keep many routes to nodes close to them and few routes to
+ distant nodes. If a node receives a request for a given key, and it has a
+ route to a node closer to the key than itself, it forwards the request via the
+ route to the node closest to the key. We can see that a request eventually
+ reaches the closest node in the network, and that the path is optimal with
+ respect to the number of hops.
+
+ We implement this by sorting the routes of a node into a fixed number of
+ _buckets_—one for each bit of the identifier—of equally limited capacity, but
+ assign to them exponentially growing ranges of the identifier space. For each
+ 1 ≤ _n_ ≤ _keysize_, where _keysize_ is the number of bits in an identifier,
+ the respective bucket bucket holds routes to nodes of distance between 2_ⁿ_
+ and 2_ⁿ_⁻¹.
+
+ #media#
+ erlangen-explore-kademlia-dht-buckets.svg
+
+ A bucket consists of a bound denoting its assigned range (previously _n_), a
+ free-counter to indicate how much capacity is left, and a list of
+ {*replication*} − _free_ routes for 0 ≤ _free_ ≤ {*replication*}. Also, let’s
+ define some of the global constants of our network:
+
+ + {*key-size*}—the number of bits that comprise an identifier
+ + {*replication*}—a positive integer denoting the replication level of our
+   network (controls the number of routes kept by nodes, as well as how many
+   copies of each stored value we maintain)
+
+ #code#
+ (defstruct (bucket (:constructor bucket (&optional (bound *key-size*))))
+   bound (free *replication*) routes)
+
+ (defun bucket-key-p (bucket distance)
+   (< distance (expt 2 (bucket-bound bucket))))
+
+ (defun bucket-add (bucket route)
+   (push route (bucket-routes bucket))
+   (decf (bucket-free bucket)))
+
+ (defun bucket-delete (bucket route)
+   (setf #1=(bucket-routes bucket) (delete route #1#))
+   (incf (bucket-free bucket)))
+ #
+
+ You might notice that {bucket-key-p} doesn’t implement what I have described,
+ it checks against the upper bound of the bucket range only. That’s because a
+ node starts out with a single bucket initially and then allocates further
+ buckets on demand. It keeps a list of buckets sorted by increasing bound. The
+ first bucket in that list keeps routes of distance between 0 and 2ⁿ⁻¹, with
+ _n_ being the bucket’s bound. Thus, the first bucket contains all routes that
+ don’t fall into any other bucket. To search for a route’s bucket, we can
+ iterate over the bucket list to find the first bucket with an upper bound
+ greater than the distance of the route.
+
+ A node also keeps a local mapping from keys to values, as well as a ring of
+ callbacks for outstanding requests, but more on that later.
+
+ #code#
+ (defstruct node
+   id (buckets (list (bucket))) values (requests (ring *response-backlog*)))
+
+ (defun find-bucket (key node)
+   (find-if (let ((distance (distance key (node-id node))))
+              (lambda (bucket)
+                (bucket-key-p bucket distance)))
+            (node-buckets node)))
+ #
+
+ When a new route is to be added to the node’s first bucket and that bucket is
+ full, the next lower bucket is split off the first bucket, and put in front of
+ the bucket list. This allocation strategy makes sense because—depending on the
+ size of our mesh—the lower buckets are increasingly unlikely to be populated,
+ since they hold decreasingly smaller ranges of the identifier space.
+
+ #code#
+ (defun split-bucket (node)
+   (let* ((bucket (first (node-buckets node)))
+          (new (bucket (1- (bucket-bound bucket)))))
+     (dolist (route (bucket-routes bucket))
+       (when (bucket-key-p new (distance (route-id route) (node-id node)))
+         (bucket-delete bucket route)
+         (bucket-add new route)))
+     (push new (node-buckets node))))
+ #
+
+ So, when is a bucket full? A bucket is full when its capacity is reached, and
+ none of its routes are _stale_. We consider a route stale once its timestamp
+ exceeds a global timeout constant:
+
+ + {*timeout*}—the duration of route validity after the last contact with the
+   route’s node
+
+ #code#
+ (defun route-stale-p (route)
+   (> (- (get-internal-real-time) (route-ctime route))
+      *timeout*))
+
+ (defun bucket-delete-stale (bucket)
+   (let ((stale-route (find-if 'route-stale-p (bucket-routes bucket))))
+     (when stale-route
+       (bucket-delete bucket stale-route))))
+ #
+
+ With that out of the way, we can formalize how routes are added. First, we
+ find the bucket suitable for the new route, if it has spare capacity, or a
+ stale route can be deleted, we add the route and are done. If it doesn’t fit,
+ we consider if the bucket in question is the first bucket, in which case it
+ can be split. If it’s not, we simply discard the new route—we’re already
+ well-connected at that distance. Otherwise, we split the first bucket to make
+ room for those close routes, and repeat the process.
+
+ #code#
+ (defun add-route (node route)
+   (let ((bucket (find-bucket (route-id route) node)))
+     (cond ((or (plusp (bucket-free bucket))
+                (bucket-delete-stale bucket))
+            (bucket-add bucket route))
+           ((eq bucket (first (node-buckets node)))
+            (split-bucket node)
+            (add-route node route)))))
+ #
+
+ Whenever a node receives a message from another node it already has a route
+ to, it will update that route’s contact information (in case it has changed)
+ and timestamp (preventing it from becoming stale). If the message is from a
+ previously uncontacted node, a new route is added instead. The {update-route}
+ function below also acts as a predicate that tests whether a matching route
+ exists, and only returns a true when such a route was updated.
+
+ #code#
+ (defun update-route (node id agent)
+   (find-if (lambda (route)
+              (when (= (route-id route) id)
+                (setf (route-agent route) agent
+                      (route-ctime route) (get-internal-real-time))))
+            (bucket-routes (find-bucket id node))))
+ #
+
+ Finally, we need to be able to find routes to nodes closest to a given
+ identifier. To that end, we sort our routes by distance to said identifier—in
+ descending order because we will select the _n_ best routes using [last](http://mr.gy/ansi-common-lisp/last.html).
+ I know, horribly inefficient, but it’s a simple and correct implementation,
+ and that’s all we need right now.
+
+ #code#
+ (defun find-routes (key node)
+   (sort (loop for bucket in (node-buckets node)
+            append (bucket-routes bucket))
+         '> :key (lambda (route)
+                   (distance (route-id route) key))))
+ #
+
+>
+
+< Disclaimer
+
+ Towards the end of the previous section I began deviating from the Kademlia
+ paper, and started doing things my own way. From here on, it’s all improvised.
+ Don’t expect particularily good ideas or a breakthrough, and by no means
+ production quality code. I’ll just be toying around for fun and insight. But
+ do recap the goals of the system to be constructed one more time:
+
+ _“Mesh-table aims to facilitate storage and retrieval of long-lived data in a
+ network of dedicated storage and client nodes in a trusted network.”_
+
+ + long-lived data implies long-lived storage nodes (that can partition)
+ + a trusted network means we do not have to defend against (or even account
+   for) malevolent nodes
+
+ The first aspect presents an additional burdern, we really have to go to
+ lengths to avoid permanent loss of data availability, and unlike Kademlia, it
+ won’t be feasible for us to periodically re-publish all keys (because they
+ never expire). The latter aspect, on the other hand, permits us lots of
+ additional liberties that we can use to benefit the former. Keep this
+ environment in mind when evaluating the design choices I made.
+
+ #media#
+ erlangen-explore-kademlia-dht-merge3.svg
+
+>
+
+< Callback rings
+
+ We previously defined a node to have a “ring” of callbacks, what’s that about?
+ During their lifetime, nodes send requests to other nodes, and when they do,
+ they include a unique sequence number with each request. When a node responds
+ to a request, it includes the request’s sequence number in its reply. Via the
+ sequence number, the requesting node can then associate the reply with one of
+ its previous requests.
+
+ While most of our protocol is stateless, some parts of it do require us to
+ keep track. A node’s requests ring consists of a sequence counter, as well as
+ a buffer of callbacks for a fixed number of requests.
+
+ + {*response-backlog*}—the number of callbacks for outstanding requests we
+   keep track of
+
+ The requests ring is implemented as a ring-buffer of virtually unlimited
+ capacity, that overwrites old elements when it wraps around its actual size,
+ and its access function makes sure to return {nil} instead of the elements
+ that have been overwritten.
+
+ #code#
+ (defstruct ring
+   (sequence 0) buffer)
+
+ (defun ring (size)
+   (make-ring :buffer (make-array size :initial-element nil)))
+
+ (defun ring-position (ring sequence)
+   (mod sequence (length (ring-buffer ring))))
+
+ (defun ring-push (ring value)
+   (prog1 #1=(ring-sequence ring)
+     (setf (aref (ring-buffer ring) (ring-position ring #1#)) value)
+     (incf #1#)))
+
+ (defun exceeds-ring-p (ring sequence)
+   (> (- (ring-sequence ring) sequence) (length (ring-buffer ring))))
+
+ (defun ring-get (ring sequence)
+   (unless (exceeds-ring-p ring sequence)
+     (aref (ring-buffer ring) (ring-position ring sequence))))
+
+ (defun ring-delete (ring sequence)
+   (unless (exceeds-ring-p ring sequence)
+     (setf (aref (ring-buffer ring) (ring-position ring sequence)) nil)))
+ #
+
+ The {ring} data structure has some very desireable properties, as well as a
+ few questionable trade-offs. The callback ring is of fixed size, thus we avoid
+ the risk of overflow due to excessive outstanding requests. Additionally, we
+ forgo complicated timeout handling, the timeout for outstanding requests is
+ implicitly adjusted relative to the load of the system. The node discards a
+ callback (effectively a timeout of the request) only when it needs to reclaim
+ its buffer slot for a new request. Hence, the effective timeout duration of
+ requests decreases with the request throughput of a node (high load).
+
+ #media#
+ erlangen-explore-kademlia-dht-callback-ring.svg
+
+ One glaring trade-off is the node’s implied behavior on excessive load. When
+ requests are issued so quickly in succession that the callback ring wraps
+ around before a responding node can reply, the ensuing responses are ignored,
+ causing no progess to be made. Thus, it is up to the client to detect
+ backpressure and throttle accordingly.
+
+ Also noteworthy is how this scheme affects the generational garbage collector.
+ On a system with low load, callbacks can be retained much longer than
+ technically required, possibly causing them to be [tenured](http://ccl.clozure.com/docs/ccl.html#ephemeral-gc)
+ into an old generation. While this increases GC pressure, I project that this
+ phenomenon is actually amortized, since it is unlikely to occur on medium to
+ high loads—where the additional pressure would actually hurt us.
+
+ Importantly, the value of {*response-backlog*} must be choosen deliberately
+ with these properties in mind, as it governs both the effective timeout
+ duration as well as the peak congestion of the system.
+
+>
+
+< Protocol messages
+
+ Our nodes communicate by exchanging and routing messages through the mesh.
+ Usually, this would be the time when we define a wire encoding, but Erlangen
+ implicitly does that for us, so we can simply define structure classes to
+ represent our messages. Each message contains some metadata to facilitate
+ routing, namely the senders node and agent identifiers, in addition to the
+ parameters specific to a particular message type.
+
+ + {*node*}—special variable bound to the node’s state, a {node} structure
+
+ Furthermore, messages are divided into requests and replies. Using
+ [defstruct](http://mr.gy/ansi-common-lisp/defstruct.html)’s {:include}
+ option—which amounts to single-inheritance—we define our different types of
+ messages in a type hierarchy. All types of requests and replies are of type
+ {message}, but the types {request} and {reply} are disjoint.
+
+ #media#
+ erlangen-explore-kademlia-dht-messages.svg
+
+ Requests are treated specially because they are subject to being forwarded to
+ the next closer node. They feature two extra flags: _forward-p_ and _trace-p_.
+ The former is used for explicit replication by inhibiting forwarding,
+ effectively preventing the receiver from delegating the request. The latter is
+ a debugging feature that allows us to trace how requests travel through the
+ mesh. Replies to requests are always sent directly to the node that originally
+ issued it.
+
+ #code#
+ (defstruct message
+   (id (and *node* (node-id *node*))) (agent (agent)) sequence)
+
+ (defstruct (request (:include message))
+   (forward-p t) trace-p)
+
+ (defstruct (reply (:include message)))
+ #
+
+ The semantics for each type of request are expressed as a {handle} method on
+ the respective type. As mentioned before, nodes shall update or add routes to
+ nodes they are contacted by. To implement this we use CLOS method combination
+ to add a {:before} method to {handle} that does just this. Note that since
+ this method is specified on the type {message}, it is also run when we handle
+ replies.
+
+ The body of the method is straight forward, we update the route to the
+ requesting node unless it doesn’t already exist, in which case we add a new
+ route. There is one peculiarity though: some messages won’t have a node
+ identifier, namely the ones issued by client nodes that don’t want to become
+ part of the storage mesh. Client nodes send anonymous requests, and are not
+ interned into the routing tables of other nodes.
+
+ #code#
+ (defmethod handle :before ((message message))
+   (with-slots (id agent) message
+     (when id
+       (or (update-route *node* id agent)
+           (add-route *node* (route id agent))))))
+ #
+
+ To help nodes deal with replies we define a function {reply-bind} that assigns
+ a unique sequence number to a request to be issued, and optionally stores a
+ function in the node’s callback ring under that sequence number. The callback
+ function can then call {finalize-request} to delete itself, signaling that the
+ request is completed, and preventing further replies to the same request from
+ being accepted. Finaly we define a {handle} method on the {reply} type to call
+ a respective callback function if applicable.
+
+ #code#
+ (defun reply-bind (request &optional callback-function)
+   (setf (message-sequence request)
+         (ring-push (node-requests *node*) callback-function))
+   request)
+
+ (defun finalize-request (reply)
+   (ring-delete (node-requests *node*) (message-sequence reply)))
+
+ (defmethod handle ((reply reply))
+   (let ((callback (when #1=(message-sequence reply)
+                     (ring-get (node-requests *node*) #1#))))
+     (when callback
+       (funcall callback reply))))
+ #
+
+ Before a request is answered with a reply, it is usually routed forward
+ through the mesh until it arrives at the node responsible for it. Forwarding
+ also plays a role in replication, when a request is forwarded to a set of
+ neighbors to solicit redundancy. For that purpose we define a function
+ {forward} that sends a request via a list of routes, logging the event when a
+ trace is requested.
+
+ #code#
+ (defun forward (request routes)
+   (dolist (route routes routes)
+     (when (request-trace-p request)
+       (write-log `(:forward ,request ,route)))
+     (send request (route-agent route))))
+ #
+
+ When a request has reached its final destination, the respective node responds
+ with a message of type {reply}, which includes the request’s sequence number.
+ The {respond} function takes a reply and a request, sets the sequence number
+ of the reply accordingly, and sends it to the agent that initiated the
+ request. When the _trace-p_ flag of the request is true the reply is logged.
+
+ #code#
+ (defun respond (reply request)
+   (setf (message-sequence reply) (message-sequence request))
+   (when (request-trace-p request)
+     (write-log `(:respond ,request ,reply)))
+   (send reply (message-agent request)))
+ #
+
+ We also define a function {replicate-request} that creates a copy (or replica)
+ of an request, but overwrites its metadata. It also accepts two optional
+ parameters: _id_ and _forward-p_. The _id_ parameter sets the node identifier
+ slot of the created replica, and defaults to the calling node’s identifier.
+ Client nodes use this parameter to create anonymous requests by supplying
+ {nil}. The _forward-p_ parameter sets the _forward-p_ flag in the replicated
+ request, and defaults to _true_. Its used by storage nodes to explicitly
+ solicit replication, and when they do so they ensure the redundant request
+ isn’t routed by supplying {nil}.
+
+ #code#
+ (defun replicate-request (request &key (id (node-id *node*)) (forward-p t))
+   (let ((replica (copy-structure request)))
+     (setf (message-id replica) id
+           (message-agent replica) (agent)
+           (message-sequence replica) nil
+           (request-forward-p replica) forward-p)
+     replica))
+ #
+
+ Finally, we define structures for our set of protocol messages. These are
+ going to be instantiated, as opposed to the previous abstract structure types.
+ Each is a subtype of either {request} or {reply}, and may contain one ore more
+ additional slots based on the message’s semantics. These messages include
+ request/reply pairs for discovering new nodes as well as retrieving, storing,
+ and deleting key/value pairs from the mesh.
+
+ #code#
+ (defstruct (discover-request (:include request)) key)
+ (defstruct (discover-reply (:include reply)))
+ #
+
+ A request of type {discover-request} includes an extra slot _key_ which holds
+ an identifier close to the nodes to be discovered. It is responded to with a
+ reply of type {discover-reply}, which has no additional slots (the desired
+ information, namely the identifier and agent of the replying node, is already
+ inherited from the {message} type).
+
+ #code#
+ (defstruct (get-request (:include request)) key)
+ (defstruct (get-reply (:include reply)) value)
+ #
+
+ A request of type {get-request} includes an extra slot _key_ which holds an
+ identifier used as the key of a value to be retrieved. It is responded to with
+ a reply of type {get-reply}, which includes an extra slot _value_ that holds
+ the value associated with the specified key.
+
+ #code#
+ (defstruct (put-request (:include request)) key value)
+ (defstruct (put-reply (:include reply)))
+ #
+
+ A request of type {put-request} includes two extra slots _key_ and _value_,
+ which holds an identifier used as a key and a value to be associated with that
+ key. It is repsonded to with a reply of type {put-reply}, which merely
+ signifies acknowledgement of the request, and thus has no additional slots.
+
+ #code#
+ (defstruct (delete-request (:include request)) key)
+ (defstruct (delete-reply (:include reply)))
+ #
+
+ Finally, a request of type {delete-request} includes an extra slot _key_,
+ which holds an identifier used as a key associated with the value to be
+ deleted. It is repsonded to with a reply of type {delete-reply}, which merely
+ signifies acknowledgement of the request, and thus has no additional slots.
+
+>
+
+< Pluggable stores
+
+ By default, we use Common Lisp’s built-in [hash tables](http://mr.gy/ansi-common-lisp/Hash-Tables.html#Hash-Tables)
+ to store key/value pairs in nodes. This suffices for initial testing and
+ experimentation, but eventually we want to use a persistent storage backend.
+ To that end, we wrap our hash table accesses in methods, implicitly defining a
+ set of generic functions that represents an abstract storage interface.
+
+ #code#
+ (defmethod values-get ((values hash-table) key)
+   (gethash key values))
+
+ (defmethod values-put ((values hash-table) key value)
+   (setf (gethash key values) value))
+
+ (defmethod values-delete ((values hash-table) key)
+   (remhash key values))
+ #
+
+ By implementing methods for the generic functions {values-get}, {values-put},
+ and {values-delete} that specialize on the _values_ parameter (the store
+ object), we can plug-in alternative storage back-ends later on.
+
+>
+
+< Protocol logic
+
+ A central operation during routing is for one node to determine the next hop,
+ if any, for a given request. We define a function {routes} to be called by a
+ node to find any routes to nodes closer to a given identifier than itself. It
+ accepts a node identifier of the node that initiated the request, and the
+ target identifier of the request (which might be an identifer associated with
+ a value or node), and returns no more than a specified number of relevant
+ routes. By default, up to one route is returned, which will be the best
+ route, if any.
+
+ It uses {find-routes} to get a list of all of the calling node’s routes
+ sorted by distance to the target identifier, and removes from that list all
+ routes that either lead to the node from which the request originated (to
+ prevent routing cycles), are stale, or lead to nodes farther away from the
+ target identifier than the calling node itself. When the calling node has no
+ routes to closer nodes (meaning that its the closest node), {routes} returns
+ {nil}.
+
+ #code#
+ (defun routes (from to &optional (max-routes 1))
+   (let ((own-distance (distance (node-id *node*) to)))
+     (last (delete-if (lambda (route)
+                        (or (eql (route-id route) from)
+                            (route-stale-p route)
+                            (<= own-distance (distance (route-id route) to))))
+                      (find-routes to *node*))
+           max-routes)))
+ #
+
+ The only slightly different function {neighbors} takes a target identifier
+ and returns up to {*replication*} routes closest to the identifier, and an
+ optional boolean parameter controls whether stale routes are excluded.
+
+ #code#
+ (defun neighbors (key &optional include-stale-p)
+   (last (if include-stale-p
+             #1=(find-routes key *node*)
+             (delete-if 'route-stale-p #1#))
+         *replication*))
+ #
+
+ In order to discover routes to other nodes, and to optionally announce their
+ own existence, nodes send messages of type {discover-request}. The {discover}
+ function sends a discover request to its neighbors closest to the identifier
+ _key_. It includes stale routes to eventually reestablish connectivity
+ between temporarily partitioned nodes. The request will include the origin’s
+ identity when _announce-p_ is true, effectively announcing its existence to
+ the receiving nodes.
+
+ #code#
+ (defun discover (key &optional announce-p)
+   (forward (if announce-p
+                (make-discover-request :key key)
+                (make-discover-request :key key :id nil))
+            (neighbors key :include-stale)))
+ #
+
+ A node receiving a discover request responds with a message including its
+ identity of type {discover-reply}, thereby acknowledging its existance. It
+ then forwards the request via up to {*replication*} routes to nodes closer to
+ the requests _key_ identifier.
+
+ #code#
+ (defmethod handle ((request discover-request))
+   (with-slots (id key) request
+     (respond (make-discover-reply) request)
+     (forward request (routes id key *replication*))))
+ #
+
+ Discover requests are redundantly routed through the mesh until they reach
+ the node closest to its target. In the process, the request initiatior
+ discovers routes to the closest node and any node along the path. Storage
+ nodes also announce themselves via discover requests, inserting themselves
+ into the mesh by adding or updating routes to themselves. The level of
+ redundancy is controlled by the global {*replication*} parameter.
+
+ #media Discover request routed through a mesh of ten nodes with
+ {*replication*} = 2 (dotted lines represent stale routes).#
+ erlangen-explore-kademlia-dht-discover.svg
+
+ The structure of the mesh (see “Routes and buckets”) implies that the paths
+ taken by discover requests are likely to be the shortest possible in terms of
+ the routes available to all nodes, and the number of hops needed to reach a
+ destination does not increase significantly with the size of the identifier
+ space or the size of the network.
+
+ To retrieve the value associated with an identfier, nodes send messages of
+ type {get-request}. The handling node forwards the request to the node
+ closest to the requested key it knows about unless it has no such route
+ (meaning its the closest node), or forwarding is explicitly forbidden (i.e.
+ the _forward-p_ flag is false). Once a node is unable to forward a get
+ request, it attempts to retrieve the requested value, and it it exists
+ responds to the initiaing node with a message of type {get-reply}.
+
+ If a node can’t satisfy the request because it doesn’t have the requested
+ value, and _forward-p_ is true, it will replicate the request, set the
+ _forward-p_ flag to false, and forward it to its neighbors closest to the
+ value’s key. When any of the neighbors replies with the value, the node
+ copies it into its own store before replying to the original request with the
+ retrieved value.
+
+ #code#
+ (defmethod handle ((request get-request))
+   (with-slots (id key forward-p) request
+     (unless (and forward-p (forward request (routes id key)))
+       (multiple-value-bind (value exists-p)
+           (values-get #1=(node-values *node*) key)
+         (cond (exists-p
+                (respond #2=(make-get-reply :value value) request))
+               (forward-p
+                (forward (reply-bind (replicate-request request :forward-p nil)
+                                     (lambda (reply)
+                                       (with-slots (value) reply
+                                         (values-put #1# key value)
+                                         (respond #2# request))
+                                       (finalize-request reply)))
+                         (neighbors key))))))))
+ #
+
+ The last phase represents somewhat of a failover. If a node can’t satisfy a
+ get request, which it presumably should be able to handle, it calls out to
+ its peers for help as a last resort. Since it will copy any value retrieved
+ this way into its own store, this behavior has a regenerating effect. When a
+ new node joins the mesh, for instance, its store might be empty, but it will
+ receive the subset of get requests closest to its indentifer. By calling out
+ to the closest neigbors, of which one must have been responsible for the key
+ before the new node entered the mesh, it will over time accumulate all the
+ values its responsible for.
+
+ #media Unsuccessful get request routed through a mesh of ten nodes with
+ {*replication*} = 2. The request is replicated at the destination because no
+ value associated with the key is present.#
+ erlangen-explore-kademlia-dht-get.svg
+
+ Because of how the mesh is structured, the handling node should be in a good
+ position to coordinate with the next closest nodes. It it more likely than
+ any other node to have routes to any nodes that store values for keys close
+ to its identifier.
+
+ In order to store values in the mesh, nodes send messages of type
+ {put-request} that contain the key identifier and the value to be associated
+ with it. Put requests are forwarded through the mesh just like get requests
+ are. Finally, the handling node records the key/value pair and additionally
+ replicates the requests to its neighbors closest to the key.
+
+ #code#
+ (defmethod handle ((request put-request))
+   (unless (and forward-p (forward request (routes id key)))
+     (values-put (node-values *node*) key value)
+     (respond (make-put-reply) request)
+     (when forward-p
+       (forward (replicate-request request :forward-p nil)
+                (neighbors key)))))
+ #
+
+ By forwarding copies of the request, the handling node distributes the
+ key/value pair redundantly to the next closer nodes. If all goes well, a
+ successful put requests leaves _n_+1 copies of the pair in the mesh, where
+ _n_ = {*replication*}. Just as with get requests, the handling node’s affinity
+ to other nodes close to the key identifier ensures that it will be able to
+ replicate the value to relevant nodes.
+
+ #media Put request routed through a mesh of ten nodes with
+ {*replication*} = 2. The request is replicated at the destination to store
+ the value redundantly.#
+ erlangen-explore-kademlia-dht-put.svg
+
+ Finally, nodes can delete values associated with a key by issuing messages of
+ type {delete-request}. It works almost exactly like a put request, except
+ that it removes key/value pairs from node’s records.
+
+ #code#
+ (defmethod handle ((request delete-request))
+   (with-slots (id key forward-p) request
+     (unless (and forward-p (forward request (routes id key)))
+       (values-delete (node-values *node*) key)
+       (respond (make-delete-reply) request)
+       (when forward-p
+         (forward (replicate-request request :forward-p nil)
+                  (neighbors key))))))
+ #
+
+ Note that a successful delete request doesn’t actually guarantee that all
+ copies of a record have been wiped. As a side effect of 
+
+ #media Delete request routed through a mesh of ten nodes with
+ {*replication*} = 2. The request is replicated at the destination in an
+ effort to delete any redundant copies of the value.#
+ erlangen-explore-kademlia-dht-delete.svg
+
+ #code#
+ (defun gen-id (&optional (start 0) (end (expt 2 *key-size*)))
+   (+ start (random (- end start))))
+
+ (defun random-bucket-id (bucket)
+   (gen-id (expt 2 (1- (bucket-bound bucket)))
+           (expt 2 (bucket-bound bucket))))
+
+ (defun refresh-routes (&optional announce-p)
+   (when announce-p
+     (discover (node-id *node*) :announce))
+   (dolist (bucket (node-buckets *node*))
+     (when (or (plusp (bucket-free bucket))
+               (find-if 'route-stale-p (bucket-routes bucket)))
+       (discover (random-bucket-id bucket) announce-p))))
+ #
+
+ #code#
+ (defun initialize-node (initial-routes &optional announce-p)
+   (loop for (id agent) in initial-routes do
+        (add-route *node* (route id agent)))
+   (discover (node-id *node*) announce-p))
+ #
+
+ #code#
+ (defun deadline (timeout)
+   (+ (get-internal-real-time) timeout))
+
+ (defun deadline-exceeded-p (deadline)
+   (>= (get-internal-real-time) deadline))
+
+ (defun seconds-until-deadline (deadline)
+   (/ (max (- deadline (get-internal-real-time)) 0)
+      internal-time-units-per-second))
+
+ (defun receive-until (deadline)
+   (handler-case (receive :timeout (seconds-until-deadline deadline))
+     (timeout (timeout) (declare (ignore timeout)))))
+ #
+
+>
+
+< Storage nodes and clients
+
+ #code#
+ (defun node (&key (id (gen-id)) initial-routes (values (make-hash-table)))
+   (let ((*node* (make-node :id id :values values))
+         (*random-state* (make-random-state t))
+         (refresh-deadline #1=(deadline (/ *timeout* 2))))
+     (initialize-node initial-routes :announce)
+     (loop for message = (receive-until refresh-deadline) do
+          (unless (null message)
+            (handle message))
+          (when (deadline-exceeded-p refresh-deadline)
+            (refresh-routes :announce)
+            (setf refresh-deadline #1#)))))
+ #
+
+ #code#
+ (defun proxy (request)
+   (forward (reply-bind (replicate-request request :id nil)
+                        (lambda (reply)
+                          (finalize-request reply)
+                          (respond reply request)))
+            (routes nil (slot-value request 'key))))
+
+ (defun client (&key initial-routes)
+   (let ((*node* (make-node :id (gen-id)))
+         (*random-state* (make-random-state t))
+         (refresh-deadline #1=(deadline *timeout*)))
+     (initialize-node initial-routes)
+     (loop for message = (receive-until refresh-deadline) do
+          (typecase message
+            (request (proxy message))
+            (reply   (handle message)))
+          (when (deadline-exceeded-p refresh-deadline)
+            (refresh-routes)
+            (setf refresh-deadline #1#)))))
+ #
+
+>
+
+{~/git/mr.gy/blog/erlangen-explore-kademlia-dht.mk2}
