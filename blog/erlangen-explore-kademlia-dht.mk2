@@ -2,19 +2,26 @@ Common Lisp is known to lend itself to rapid prototyping, and [Erlangen](https:
 intends to extend these capabilities towards the domain of distributed systems.
 This article documents an exploration of [distributed hash tables](https://en.wikipedia.org/wiki/Distributed_hash_table),
 specifically the [Kademlia](http://www.scs.stanford.edu/~dm/home/papers/kpos.pdf)
-paper, using Erlangen. In an attempt to “boldly go where no one has gone
-before”, I present [mesh-table](https://github.com/eugeneia/erlangen/blob/mesh-table/platform/mesh-table.lisp),
+paper, using Erlangen.
+
+In an attempt to “boldly go where no one has gone before” (not me at least),
+I present [mesh-table](https://github.com/eugeneia/erlangen/blob/mesh-table/platform/mesh-table.lisp),
 a distributed hash table design that retains the topology based on the
 XOR metric pioneered by Kademlia, but otherwise deviates in its goals and
-implementation. While Kademlia describes a homogeneous peer-to-peer network for
-exchange of transient data between peers in an untrusted network, mesh-table
-aims to facilitate storage and retrieval of long-lived data in a network of
-dedicated storage and client nodes in a trusted network.
+implementation. While Kademlia describes a homogeneous peer-to-peer overlay
+network for exchange of transient data between peers in an untrusted network,
+mesh-table aims to facilitate storage and retrieval of long-lived, immutable
+data in a network of dedicated storage and client nodes in a trusted network.
+
+I cover what I perceive to be the core principles of the Kademlia paper (the
+XOR metric and _k_-buckets), but go astray otherwise, often for simplicity's
+sake. Don’t expect particularly good ideas that are my own, and by no means
+production quality code. I’ll just be toying around for fun and insight.
 
 < Distance metric
 
  Kademlia requires that nodes are assigned identifiers of the same size as the
- keys used to identify stored values, and relies on the notion of distance
+ keys used to identify stored values, and relies on the notion of _distance_
  between two identifiers. The basic premise is that the value denoted by a key
  is stored on the node with the identifier closest to the key. The distance
  between two identifiers is defined as their bit-wise XOR.
@@ -56,11 +63,14 @@ dedicated storage and client nodes in a trusted network.
 < Routes and buckets
 
  Each Kademlia node maintains a set of _routes_ that contain the identifiers
- and contact details of other nodes. Since our nodes are implemented as
- [Erlangen agents](http://mr.gy/blog/erlangen-intro.html), we don’t need to
- deal with network protocols such as UDP. Instead, we can use the provided
- message passing facility to send messages between nodes. Hence, our routes
- store a reference to an agent as the contact information for another node.
+ and contact details of other nodes, effectively forming an [overlay network](https://en.wikipedia.org/wiki/Overlay_network).
+ Since our nodes are implemented as [Erlangen agents](http://mr.gy/blog/erlangen-intro.html),
+ we don’t need to deal with network protocols such as UDP, on which Kademlia is
+ traditionally layered upon. Instead, we can use the message passing
+ functionality provided by Erlangen as the underlying network. Hence, our
+ routes store a reference to an agent as the contact information for another
+ node.
+
  Finally, we want to replace routes to nodes that have become inactive with
  routes to nodes that have more recently contacted us, and so we keep a
  timestamp with each route to track when we last heard from the node it points
@@ -84,8 +94,8 @@ dedicated storage and client nodes in a trusted network.
  #media#
  erlangen-explore-kademlia-dht-mesh.svg
 
- In this space, nodes keep many routes to nodes close to them and few routes to
- distant nodes. If a node receives a request for a given key, and it has a
+ In this space, nodes keep many routes to nodes close to them, and few routes
+ to distant nodes. If a node receives a request for a given key, and it has a
  route to a node closer to the key than itself, it forwards the request via the
  route to the node closest to the key. We can see that a request eventually
  reaches the closest node in the network, and that the path is optimal with
@@ -129,7 +139,7 @@ dedicated storage and client nodes in a trusted network.
 
  You might notice that {bucket-key-p} doesn’t implement what I have described,
  it checks against the upper bound of the bucket range only. That’s because a
- node starts out with a single bucket initially and then allocates further
+ node starts out with a single bucket initially, and then allocates further
  buckets on demand. It keeps a list of buckets sorted by increasing bound. The
  first bucket in that list keeps routes of distance between 0 and 2ⁿ⁻¹, with
  _n_ being the bucket’s bound. Thus, the first bucket contains all routes that
@@ -188,7 +198,7 @@ dedicated storage and client nodes in a trusted network.
 
  With that out of the way, we can formalize how routes are added. First, we
  find the bucket suitable for the new route, if it has spare capacity, or a
- stale route can be deleted, we add the route and are done. If it doesn’t fit,
+ stale route can be deleted, we add the route, and are done. If it doesn’t fit,
  we consider if the bucket in question is the first bucket, in which case it
  can be split. If it’s not, we simply discard the new route—we’re already
  well-connected at that distance. Otherwise, we split the first bucket to make
@@ -206,7 +216,7 @@ dedicated storage and client nodes in a trusted network.
  #
 
  Whenever a node receives a message from another node it already has a route
- to, it will update that route’s contact information (in case it has changed)
+ to, it updates that route’s contact information (in case it has changed)
  and timestamp (preventing it from becoming stale). If the message is from a
  previously uncontacted node, a new route is added instead. The {update-route}
  function below also acts as a predicate that tests whether a matching route
@@ -234,33 +244,6 @@ dedicated storage and client nodes in a trusted network.
          '> :key (lambda (route)
                    (distance (route-id route) key))))
  #
-
->
-
-< Disclaimer
-
- Towards the end of the previous section I began deviating from the Kademlia
- paper, and started doing things my own way. From here on, it’s all improvised.
- Don’t expect particularily good ideas or a breakthrough, and by no means
- production quality code. I’ll just be toying around for fun and insight. But
- do recap the goals of the system to be constructed one more time:
-
- _“Mesh-table aims to facilitate storage and retrieval of long-lived data in a
- network of dedicated storage and client nodes in a trusted network.”_
-
- + long-lived data implies long-lived storage nodes (that can partition)
- + a trusted network means we do not have to defend against (or even account
-   for) malevolent nodes
-
- The first aspect presents an additional burdern, we really have to go to
- lengths to avoid permanent loss of data availability, and unlike Kademlia, it
- won’t be feasible for us to periodically re-publish all keys (because they
- never expire). The latter aspect, on the other hand, permits us lots of
- additional liberties that we can use to benefit the former. Keep this
- environment in mind when evaluating the design choices I made.
-
- #media#
- erlangen-explore-kademlia-dht-merge3.svg
 
 >
 
@@ -312,7 +295,7 @@ dedicated storage and client nodes in a trusted network.
      (setf (aref (ring-buffer ring) (ring-position ring sequence)) nil)))
  #
 
- The {ring} data structure has some very desireable properties, as well as a
+ The {ring} data structure has some very desirable properties, as well as a
  few questionable trade-offs. The callback ring is of fixed size, thus we avoid
  the risk of overflow due to excessive outstanding requests. Additionally, we
  forgo complicated timeout handling, the timeout for outstanding requests is
@@ -327,8 +310,8 @@ dedicated storage and client nodes in a trusted network.
  One glaring trade-off is the node’s implied behavior on excessive load. When
  requests are issued so quickly in succession that the callback ring wraps
  around before a responding node can reply, the ensuing responses are ignored,
- causing no progess to be made. Thus, it is up to the client to detect
- backpressure and throttle accordingly.
+ causing no progress to be made. Thus, it is up to the client to detect
+ backpressure, and throttle accordingly.
 
  Also noteworthy is how this scheme affects the generational garbage collector.
  On a system with low load, callbacks can be retained much longer than
@@ -337,7 +320,7 @@ dedicated storage and client nodes in a trusted network.
  phenomenon is actually amortized, since it is unlikely to occur on medium to
  high loads—where the additional pressure would actually hurt us.
 
- Importantly, the value of {*response-backlog*} must be choosen deliberately
+ Importantly, the value of {*response-backlog*} must be chosen deliberately
  with these properties in mind, as it governs both the effective timeout
  duration as well as the peak congestion of the system.
 
@@ -347,7 +330,7 @@ dedicated storage and client nodes in a trusted network.
 
  Our nodes communicate by exchanging and routing messages through the mesh.
  Usually, this would be the time when we define a wire encoding, but Erlangen
- implicitly does that for us, so we can simply define structure classes to
+ does that for us already, so we can simply define structure classes to
  represent our messages. Each message contains some metadata to facilitate
  routing, namely the senders node and agent identifiers, in addition to the
  parameters specific to a particular message type.
@@ -408,8 +391,8 @@ dedicated storage and client nodes in a trusted network.
  function in the node’s callback ring under that sequence number. The callback
  function can then call {finalize-request} to delete itself, signaling that the
  request is completed, and preventing further replies to the same request from
- being accepted. Finaly we define a {handle} method on the {reply} type to call
- a respective callback function if applicable.
+ being accepted. Finally we define a {handle} method on the {reply} type to
+ call a respective callback function if applicable.
 
  #code#
  (defun reply-bind (request &optional callback-function)
@@ -511,8 +494,8 @@ dedicated storage and client nodes in a trusted network.
 
  A request of type {put-request} includes two extra slots _key_ and _value_,
  which holds an identifier used as a key and a value to be associated with that
- key. It is repsonded to with a reply of type {put-reply}, which merely
- signifies acknowledgement of the request, and thus has no additional slots.
+ key. It is responded to with a reply of type {put-reply}, which merely
+ signifies acknowledgment of the request, and thus has no additional slots.
 
  #code#
  (defstruct (delete-request (:include request)) key)
@@ -521,8 +504,8 @@ dedicated storage and client nodes in a trusted network.
 
  Finally, a request of type {delete-request} includes an extra slot _key_,
  which holds an identifier used as a key associated with the value to be
- deleted. It is repsonded to with a reply of type {delete-reply}, which merely
- signifies acknowledgement of the request, and thus has no additional slots.
+ deleted. It is responded to with a reply of type {delete-reply}, which merely
+ signifies acknowledgment of the request, and thus has no additional slots.
 
 >
 
@@ -557,7 +540,7 @@ dedicated storage and client nodes in a trusted network.
  if any, for a given request. We define a function {routes} to be called by a
  node to find any routes to nodes closer to a given identifier than itself. It
  accepts a node identifier of the node that initiated the request, and the
- target identifier of the request (which might be an identifer associated with
+ target identifier of the request (which might be an identifier associated with
  a value or node), and returns no more than a specified number of relevant
  routes. By default, up to one route is returned, which will be the best
  route, if any.
@@ -571,46 +554,46 @@ dedicated storage and client nodes in a trusted network.
  {nil}.
 
  #code#
- (defun routes (from to &optional (max-routes 1))
+ (defun routes (from to &key (limit 1))
    (let ((own-distance (distance (node-id *node*) to)))
      (last (delete-if (lambda (route)
                         (or (eql (route-id route) from)
                             (route-stale-p route)
                             (<= own-distance (distance (route-id route) to))))
                       (find-routes to *node*))
-           max-routes)))
+           limit)))
  #
 
- The only slightly different function {neighbors} takes a target identifier
- and returns up to {*replication*} routes closest to the identifier, and an
+ A similar function {neighbors} takes a target identifier, and returns _n_
+ routes closest to the identifier, where _n_ defaults to {*replication*}. An
  optional boolean parameter controls whether stale routes are excluded.
 
  #code#
- (defun neighbors (key &optional include-stale-p)
+ (defun neighbors (key &key include-stale-p (limit *replication*))
    (last (if include-stale-p
              #1=(find-routes key *node*)
              (delete-if 'route-stale-p #1#))
-         *replication*))
+         limit))
  #
 
  In order to discover routes to other nodes, and to optionally announce their
  own existence, nodes send messages of type {discover-request}. The {discover}
  function sends a discover request to its neighbors closest to the identifier
- _key_. It includes stale routes to eventually reestablish connectivity
- between temporarily partitioned nodes. The request will include the origin’s
- identity when _announce-p_ is true, effectively announcing its existence to
- the receiving nodes.
+ _key_. It includes stale routes to eventually reestablish connectivity between
+ temporarily partitioned nodes. The request includes the origin’s identity when
+ _announce-p_ is true, effectively announcing its existence to the receiving
+ nodes.
 
  #code#
  (defun discover (key &optional announce-p)
    (forward (if announce-p
                 (make-discover-request :key key)
                 (make-discover-request :key key :id nil))
-            (neighbors key :include-stale)))
+            (neighbors key :include-stale-p t)))
  #
 
  A node receiving a discover request responds with a message including its
- identity of type {discover-reply}, thereby acknowledging its existance. It
+ identity of type {discover-reply}, thereby acknowledging its existence. It
  then forwards the request via up to {*replication*} routes to nodes closer to
  the requests _key_ identifier.
 
@@ -618,11 +601,11 @@ dedicated storage and client nodes in a trusted network.
  (defmethod handle ((request discover-request))
    (with-slots (id key) request
      (respond (make-discover-reply) request)
-     (forward request (routes id key *replication*))))
+     (forward request (routes id key :limit *replication*))))
  #
 
  Discover requests are redundantly routed through the mesh until they reach
- the node closest to its target. In the process, the request initiatior
+ the node closest to its target. In the process, the request initiator
  discovers routes to the closest node and any node along the path. Storage
  nodes also announce themselves via discover requests, inserting themselves
  into the mesh by adding or updating routes to themselves. The level of
@@ -638,19 +621,19 @@ dedicated storage and client nodes in a trusted network.
  destination does not increase significantly with the size of the identifier
  space or the size of the network.
 
- To retrieve the value associated with an identfier, nodes send messages of
+ To retrieve the value associated with an identifier, nodes send messages of
  type {get-request}. The handling node forwards the request to the node
  closest to the requested key it knows about unless it has no such route
  (meaning its the closest node), or forwarding is explicitly forbidden (i.e.
  the _forward-p_ flag is false). Once a node is unable to forward a get
  request, it attempts to retrieve the requested value, and it it exists
- responds to the initiaing node with a message of type {get-reply}.
+ responds to the initiating node with a message of type {get-reply}.
 
  If a node can’t satisfy the request because it doesn’t have the requested
- value, and _forward-p_ is true, it will replicate the request, set the
- _forward-p_ flag to false, and forward it to its neighbors closest to the
- value’s key. When any of the neighbors replies with the value, the node
- copies it into its own store before replying to the original request with the
+ value, and _forward-p_ is true, it replicates the request, sets its
+ _forward-p_ flag to false, and forwards it to its neighbors closest to the
+ value’s key. When any of the neighbors replies with the value, the node copies
+ it into its own store before replying to the original request with the
  retrieved value.
 
  #code#
@@ -676,8 +659,8 @@ dedicated storage and client nodes in a trusted network.
  its peers for help as a last resort. Since it will copy any value retrieved
  this way into its own store, this behavior has a regenerating effect. When a
  new node joins the mesh, for instance, its store might be empty, but it will
- receive the subset of get requests closest to its indentifer. By calling out
- to the closest neigbors, of which one must have been responsible for the key
+ receive the subset of get requests closest to its identifier. By calling out
+ to the closest neighbors, of which one must have been responsible for the key
  before the new node entered the mesh, it will over time accumulate all the
  values its responsible for.
 
@@ -694,7 +677,7 @@ dedicated storage and client nodes in a trusted network.
  In order to store values in the mesh, nodes send messages of type
  {put-request} that contain the key identifier and the value to be associated
  with it. Put requests are forwarded through the mesh just like get requests
- are. Finally, the handling node records the key/value pair and additionally
+ are. Finally, the handling node records the key/value pair, and additionally
  replicates the requests to its neighbors closest to the key.
 
  #code#
@@ -721,7 +704,7 @@ dedicated storage and client nodes in a trusted network.
 
  Finally, nodes can delete values associated with a key by issuing messages of
  type {delete-request}. It works almost exactly like a put request, except
- that it removes key/value pairs from node’s records.
+ that it removes key/value pairs from a node’s records.
 
  #code#
  (defmethod handle ((request delete-request))
@@ -734,37 +717,79 @@ dedicated storage and client nodes in a trusted network.
                   (neighbors key))))))
  #
 
- Note that a successful delete request doesn’t actually guarantee that all
- copies of a record have been wiped. As a side effect of 
+ Since routes become stale over time, a period of low or no traffic might leave
+ a node without fresh routes. To avoid this situation, nodes periodically
+ refresh buckets that are not full or contain stale routes. A bucket is
+ refreshed by performing discover requests on a random identifier that falls
+ within that bucket.
 
- #media Delete request routed through a mesh of ten nodes with
- {*replication*} = 2. The request is replicated at the destination in an
- effort to delete any redundant copies of the value.#
- erlangen-explore-kademlia-dht-delete.svg
+ The function {refresh-routes} performs the procedure outlined above. It
+ accepts a boolean parameter _announce-p_ that controls whether the calling
+ node should announce itself to its peers.
+
+ The inner workings of {refresh-routes} are a bit tricky. Remember that the
+ first bucket contains all routes that don’t fall into any other bucket, so the
+ first bucket spans the range of identifiers starting at distance _d_ = 1 (the
+ identifier at distance _d_ = 0 is the node’s own identifier). For each bucket
+ to refresh, we generate a random distance within its range, and attempt to
+ discover the node with the identifier at that distance.
+
+ Remember that our distance function is unidirectional: for any identifier
+ there exists exactly one identifier at any distance. Since our {distance}
+ function is defined as {logxor}, the following holds true
+
+ {(distance} _x_ _y_{)} = _d_ → {(distance} _x_ _d_{)} = _y_
+
+ and we can obtain an identifier within the bucket by computing the distance
+ between the calling node’s identifier and the distance selected at random.
 
  #code#
- (defun gen-id (&optional (start 0) (end (expt 2 *key-size*)))
-   (+ start (random (- end start))))
-
- (defun random-bucket-id (bucket)
-   (gen-id (expt 2 (1- (bucket-bound bucket)))
-           (expt 2 (bucket-bound bucket))))
-
  (defun refresh-routes (&optional announce-p)
-   (when announce-p
-     (discover (node-id *node*) :announce))
-   (dolist (bucket (node-buckets *node*))
-     (when (or (plusp (bucket-free bucket))
-               (find-if 'route-stale-p (bucket-routes bucket)))
-       (discover (random-bucket-id bucket) announce-p))))
+   (loop for bucket in (node-buckets *node*)
+         for start = 1 then end
+         for end = (expt 2 (bucket-bound bucket))
+      do (when (or (plusp (bucket-free bucket))
+                   (find-if 'route-stale-p (bucket-routes bucket)))
+           (discover (distance (+ start (random (- end start)))
+                               (node-id *node*))
+            announce-p))))
  #
 
+ When a node is first started it is supplied a set of initial peers. The
+ function {initialize-node} takes a list of identifier/agent pairs, and adds a
+ new route for each entry. It then performs discover requests on the node’s own
+ identifier using the initial routes. The optional parameter _announce-p_
+ controls whether the calling node should announce itself to its peers.
+
  #code#
- (defun initialize-node (initial-routes &optional announce-p)
-   (loop for (id agent) in initial-routes do
+ (defun initialize-node (initial-peers &optional announce-p)
+   (loop for (id agent) in initial-peers do
         (add-route *node* (route id agent)))
    (discover (node-id *node*) announce-p))
  #
+
+ In order to perform periodic actions (like refreshing routes in our case) we
+ need to keep track of time and time intervals. For this we use
+ {get-internal-real-time}¹ to get a [monotonic time](https://www.softwariness.com/articles/monotonic-clocks-windows-and-posix/).
+ Monotony is important in this context because we care about stable intervals
+ specifically, and want them to be strictly dependent on elapsed time—as
+ opposed to global time. {Get-internal-real-time} returns a time in “internal
+ time units”, which can be converted to seconds using the constant
+ {internal-time-units-per-second}.
+
+ The function {deadline} accepts a timeout in internal time units, and returns
+ a deadline (a time in the future at which the timeout will be exceeded).
+ Analogous, the function {deadline-exceeded-p} is a predicate that accepts a
+ deadline, and tests whether it is exceeded.
+
+ The function {receive-until} accepts a deadline, and waits to receive a
+ message until the deadline is exceeded. It returns either a message received
+ by the calling agent, or signals an error of type {timeout} if the deadline
+ was exceeded. It uses the function {seconds-until-deadline} which returns the
+ seconds left until a time in internal time units will pass. {Receive-until}
+ lets us multitask between handling incoming messages and performing our
+ periodic duties on time by ensuring that we don’t miss a deadline while we
+ wait for incoming messages.
 
  #code#
  (defun deadline (timeout)
@@ -778,27 +803,74 @@ dedicated storage and client nodes in a trusted network.
       internal-time-units-per-second))
 
  (defun receive-until (deadline)
-   (handler-case (receive :timeout (seconds-until-deadline deadline))
-     (timeout (timeout) (declare (ignore timeout)))))
+   (if (deadline-exceeded-p deadline)
+       (error 'timeout))
+       (receive :timeout (seconds-until-deadline deadline)))
  #
+
+ + 1. At the time of writing CCL’s {get-internal-real-time} is undocumented,
+      and even [broken](https://github.com/Clozure/ccl/issues/20). Erlangen
+      includes a [fixed version](https://github.com/eugeneia/erlangen/blob/b3c440d2104883893b82e3372a5447d4f55ca013/ccl.lisp#L26)
+      of this function for the meantime, at least for platforms other than
+      MS Windows.
 
 >
 
 < Storage nodes and clients
 
+ Now we have assembled all the pieces needed to express the life cycle of a
+ node. The functions {node} and {client}, that implement the behavior of a
+ storage node and a client respectively, are intended to be used as top-level
+ functions for agents (i.e. as the first argument to [spawn](http://mr.gy/software/erlangen/api.html#section-1-14)).
+
+ A storage node is initialized with an identifier, a set of initial peers, and
+ a store object that maps keys to values. First, it binds [*random-state*](http://mr.gy/ansi-common-lisp/_002arandom_002dstate_002a.html)
+ to a fresh random state object that has been randomly initialized to get its
+ own independently seeded random source to generate random identifiers. It then
+ binds the special variable {*node*} to a fresh {node} structure which is
+ initialized as follows: unless specified, the identifier is selected at random
+ using {gen-id}, and an empty hash table is used for storing values.
+
+ Additionally, an interval at half of the duration of {*timeout*} is set, to be
+ used as the refresh deadline. The deadline is selected at halfway to the
+ expiry date of fresh routes, so that newly added routes can be pinged at least
+ once before they become stale. The first deadline is set to expire after a
+ random duration up to the interval in order to avoid a [thundering herd](https://en.wikipedia.org/wiki/Thundering_herd_problem)
+ situation.
+
+ The node then initializes routes to its initial peers, and announces itself
+ before entering its event loop. If a message is received before the refresh
+ deadline expires it is processed according to protocol by {handle}. When the
+ refresh deadline is met it is reset, and the node’s routes are refreshed.
+
  #code#
- (defun node (&key (id (gen-id)) initial-routes (values (make-hash-table)))
-   (let ((*node* (make-node :id id :values values))
-         (*random-state* (make-random-state t))
-         (refresh-deadline #1=(deadline (/ *timeout* 2))))
-     (initialize-node initial-routes :announce)
-     (loop for message = (receive-until refresh-deadline) do
-          (unless (null message)
-            (handle message))
-          (when (deadline-exceeded-p refresh-deadline)
-            (refresh-routes :announce)
-            (setf refresh-deadline #1#)))))
+ (defun gen-id ()
+   (random (expt 2 *key-size*)))
+
+ (defun node (&key id initial-peers values)
+   (let* ((*random-state* (make-random-state t))
+          (*node* (make-node :id (or id (gen-id))
+                             :values (or values (make-hash-table))))
+          (refresh-interval (/ *timeout* 2))
+          (refresh-deadline (deadline (random refresh-interval))))
+     (initialize-node initial-peers :announce)
+     (loop do (handler-case (handle (receive-until refresh-deadline))
+                (timeout (refresh-deadline-exceeded)
+                  (declare (ignore refresh-deadline-exceeded))
+                  (setf refresh-deadline (deadline refresh-interval))
+                  (refresh-routes :announce))))))
  #
+
+ Clients behave very similar to storage nodes, except they always use a
+ randomly generated identifier, and do not use a store object. A client doesn’t
+ announce itself, and proxies incoming requests instead of handling them. As
+ such, it serves as a gateway into the mesh that can be used by one or more
+ agents.
+
+ The function {proxy} takes a request, and forwards an anonymous replica of the
+ request via its route to the node closest to the request key. It installs a
+ callback to handle the eventual response, which causes the client to respond
+ to the request issuer with the reply.
 
  #code#
  (defun proxy (request)
@@ -806,22 +878,306 @@ dedicated storage and client nodes in a trusted network.
                         (lambda (reply)
                           (finalize-request reply)
                           (respond reply request)))
-            (routes nil (slot-value request 'key))))
+            (neighbors (slot-value request 'key) :limit 1)))
 
- (defun client (&key initial-routes)
-   (let ((*node* (make-node :id (gen-id)))
-         (*random-state* (make-random-state t))
-         (refresh-deadline #1=(deadline *timeout*)))
-     (initialize-node initial-routes)
-     (loop for message = (receive-until refresh-deadline) do
-          (typecase message
-            (request (proxy message))
-            (reply   (handle message)))
-          (when (deadline-exceeded-p refresh-deadline)
-            (refresh-routes)
-            (setf refresh-deadline #1#)))))
+ (defun client (&key initial-peers)
+   (let* ((*random-state* (make-random-state t))
+          (*node* (make-node :id (gen-id)))
+          (refresh-interval (/ *timeout* 2))
+          (refresh-deadline (deadline (random refresh-interval))))
+     (initialize-node initial-peers)
+     (loop do (handler-case (let ((message (receive-until refresh-deadline)))
+                              (etypecase message
+                                ((cons agent request) (proxy (cdr message)))
+                                (reply (handle message))))
+                (timeout (refresh-deadline-exceeded)
+                  (declare (ignore refresh-deadline-exceeded))
+                  (setf refresh-deadline (deadline refresh-interval))
+                  (refresh-routes))))))
  #
+
+ If you are wondering why {client} accepts messages of the form
+ {(}_agent_ {.} _request_{)} even though it never looks at the agent value, and
+ sends replies back to the agent noted in the request structure, wonder no
+ more. This way, clients implement the {erlangen-plaform.server} protocol, and
+ can be can be queried using {cast} and {call}.
 
 >
 
-{~/git/mr.gy/blog/erlangen-explore-kademlia-dht.mk2}
+< Taking the mesh for a spin
+
+ Let’s go for a test drive. If you want to follow along, make sure to check out
+ the {mesh-table} branch, and load {erlangen-platform}. First, we define a
+ fresh package to experiment in, with all the goodies we need.
+
+ #code#
+ (ql:quickload :erlangen-platform)
+
+ (defpackage mesh-table-user
+   (:use :cl
+         :erlangen
+         :erlangen-platform.log
+         :erlangen-platform.server
+         :erlangen-platform.mesh-table)
+   (:shadowing-import-from :erlangen-platform.server :call)
+   (:shadowing-import-from :erlangen-platform.mesh-table :node))
+
+ (in-package :mesh-table-user)
+ #
+
+ To bootstrap the mesh, we generate a random identifier, and use it to spawn
+ our first node—the root node. So far it’s a lone wolf, but at least now we
+ have an initial peer we can use to initialize further nodes with.
+
+ #code#
+ (defparameter *root-id* (gen-id))
+ (defparameter *root-node* (spawn `(node :id ,*root-id*)))
+ #
+
+ Now we can populate the mesh with a bunch of nodes. Initially, they will only
+ have one peer (the root node), but it won’t be long until they discover each
+ other.
+
+ #code#
+ (defparameter *nodes* ())
+ (dotimes (i 20)
+   (push (spawn `(node :initial-peers ((,*root-id* ,*root-node*))))
+         *nodes*))
+ #
+
+ #media On the left: the mesh right after we spawned the majority of nodes, the
+ root node is clearly discernible. On the right: after a while, nodes discover
+ more relevant routes, and seldom used routes become stale.#
+ erlangen-explore-kademlia-dht-spin.svg
+
+ Of course we want to interact with the mesh, so let’s spawn a client node, and
+ put some data into the network. We generate a few random keys, and call the
+ client with put requests to insert some values. Each put request yields a put
+ reply acknowledging the operation.
+
+ #code#
+ (defparameter *client*
+   (spawn `(client :initial-peers ((,*root-id* ,*root-node*)))))
+
+ (defparameter *keys* (list (gen-id) (gen-id) (gen-id)))
+
+ (call *client* (make-put-request :key (first *keys*) :value 1))
+ → #S(ERLANGEN-PLATFORM.MESH-TABLE::PUT-REPLY
+      :ID 293999586930477495619460952165128733173
+      :AGENT #<AGENT ERLANGEN-PLATFORM.MESH-TABLE:NODE #x30200349411D>
+      :SEQUENCE NIL)
+
+ (call *client* (make-put-request :key (second *keys*) :value 2))
+ → …
+
+ (call *client* (make-put-request :key (third *keys*) :value 3))
+ → …
+ #
+
+ #media Our three put requests routed through the mesh, and stored
+ redundantly.#
+ erlangen-explore-kademlia-dht-spin-put.svg
+
+ To get more insight into what happens behind the scenes, we can trace requests
+ through the mesh. But first, we need to spawn a logging agent to log the
+ trace. We register the name {:log} for our logger, which is the default
+ destination for {write-log} (on top of which our tracing is built on).
+
+ #code#
+ (register :log :agent (spawn 'logger))
+ #
+
+ With a log present, we can trace our requests using the {:trace-p} flag. Let’s
+ trace a get request, and see what happens. The client forwards the request to
+ the node closest to the key. Since the client just handled a put request to
+ the same key, it still has a direct route to the node closest to the key, and
+ that node happens to be final destination for the request. The node responds
+ with a get reply to the client, which then responds to the caller.
+
+ #code#
+ (call *client* (make-get-request :key (first *keys*) :trace-p t))
+ ▷ ("2017-05-24 13:00:57"
+ ▷  #<AGENT ERLANGEN-PLATFORM.MESH-TABLE:CLIENT #x3020034FAA5D> :FORWARD
+ ▷  #S(ERLANGEN-PLATFORM.MESH-TABLE::GET-REQUEST
+ ▷     :ID NIL
+ ▷     :AGENT #<AGENT ERLANGEN-PLATFORM.MESH-TABLE:CLIENT #x3020034FAA5D>
+ ▷     :SEQUENCE 3
+ ▷     :FORWARD-P T
+ ▷     :TRACE-P T
+ ▷     :KEY 155130510100689072426815715566014896677)
+ ▷  #S(ERLANGEN-PLATFORM.MESH-TABLE::ROUTE
+ ▷     :ID 132185931380890600385825626482768187951
+ ▷      :AGENT #<AGENT ERLANGEN-PLATFORM.MESH-TABLE:NODE #x30200349EB8D>
+ ▷      :CTIME 1702536187961))
+ ▷ ("2017-05-24 13:00:57"
+ ▷  #<AGENT ERLANGEN-PLATFORM.MESH-TABLE:NODE #x30200349EB8D> :RESPOND
+ ▷  #S(ERLANGEN-PLATFORM.MESH-TABLE::GET-REQUEST
+ ▷     :ID NIL
+ ▷     :AGENT #<AGENT ERLANGEN-PLATFORM.MESH-TABLE:CLIENT #x3020034FAA5D>
+ ▷     :SEQUENCE 3
+ ▷     :FORWARD-P T
+ ▷     :TRACE-P T
+ ▷     :KEY 155130510100689072426815715566014896677)
+ ▷  #S(ERLANGEN-PLATFORM.MESH-TABLE::GET-REPLY
+ ▷     :ID 132185931380890600385825626482768187951
+ ▷     :AGENT #<AGENT ERLANGEN-PLATFORM.MESH-TABLE:NODE #x30200349EB8D>
+ ▷     :SEQUENCE NIL
+ ▷     :VALUE 1))
+ ▷ ("2017-05-24 13:00:57"
+ ▷  #<AGENT ERLANGEN-PLATFORM.MESH-TABLE:CLIENT #x3020034FAA5D> :RESPOND
+ ▷  #S(ERLANGEN-PLATFORM.MESH-TABLE::GET-REQUEST
+ ▷     :ID NIL
+ ▷     :AGENT #<AGENT #x30200337635D>
+ ▷     :SEQUENCE NIL
+ ▷     :FORWARD-P T
+ ▷     :TRACE-P T
+ ▷     :KEY 155130510100689072426815715566014896677)
+ ▷  #S(ERLANGEN-PLATFORM.MESH-TABLE::GET-REPLY
+ ▷     :ID 132185931380890600385825626482768187951
+ ▷     :AGENT #<AGENT ERLANGEN-PLATFORM.MESH-TABLE:NODE #x30200349EB8D>
+ ▷     :SEQUENCE NIL
+ ▷     :VALUE 1))
+ → #S(ERLANGEN-PLATFORM.MESH-TABLE::GET-REPLY
+      :ID 132185931380890600385825626482768187951
+      :AGENT #<AGENT ERLANGEN-PLATFORM.MESH-TABLE:NODE #x30200349EB8D>
+      :SEQUENCE NIL
+      :VALUE 1)
+ #
+
+ So far so good, let’s kill half of our nodes to see how the mesh deals with
+ that. Imagine a whole data center burns down to the ground, and no backups can
+ be found. In distributed speak this situation is called a partition, which
+ implies that the nodes could come back up at a later time, but in our case
+ they won’t.
+
+ #code#
+ (dotimes (i 10)
+   (exit :kill (pop *nodes*)))
+ #
+
+ #media On the left: the mesh right after the disaster. On the right: routes to
+ dead nodes become stale, and the get request finds its way to a redundant
+ node.#
+ erlangen-explore-kademlia-dht-spin-partition.svg
+
+ We can still make requests, but we might not get back an reply—half of our
+ mesh went dark after all. We can supply a timeout to {call} to give an upper
+ bound to the time we wait to a reply. The request might be forwarded through a
+ seemingly fine route, to a node that won’t reply no matter what. After a while
+ though, the routes to dead nodes will become stale. A live node will take
+ over, and chances are high that it will be able to yield the correct value.
+
+ #code#
+ (call *client* (make-get-request :key (first *keys*))
+       :timeout 1)
+ → #S(ERLANGEN-PLATFORM.MESH-TABLE::GET-REPLY
+      :ID 119982038210290876000818395666614461298
+      :AGENT #<AGENT ERLANGEN-PLATFORM.MESH-TABLE:NODE #x3020034A570D>
+      :SEQUENCE NIL
+      :VALUE 1)
+ #
+
+ To make up for our losses, we spawn ten fresh nodes to take over. New routes
+ are established, and some stale are routes forgotten. Soon enough the mesh
+ will look just as healthy as it did before.
+
+ #code#
+ (dotimes (i 10)
+   (push (spawn `(node :initial-peers ((,*root-id* ,*root-node*))))
+         *nodes*))
+ #
+
+ #media On the left: the mesh right after we added the fresh nodes. On the
+ left: a little while later, a new node asks its neighbors for a record it
+ should have.#
+ erlangen-explore-kademlia-dht-spin-regenerate.svg
+
+ Over time, the new nodes will even regenerate records previously owned by now
+ dead nodes. When a node receives a get request for a key to which it is
+ closest, but doesn’t have a value for the key, it forwards the request to its
+ neighbors with the {forward-p} flag set to {nil}. If it gets a reply it copies
+ the value into its own store, and replies as if it had always been present.
+
+ #code#
+ (call *client* (make-get-request :key (first *keys*) :trace-p t))
+ ▷ …
+ ▷ ("2017-05-24 13:59:35"
+ ▷  #<AGENT ERLANGEN-PLATFORM.MESH-TABLE:NODE #x3020035127FD> :FORWARD
+ ▷  #S(ERLANGEN-PLATFORM.MESH-TABLE::GET-REQUEST
+ ▷     :ID 106415979122184563321987569594398713625
+ ▷     :AGENT #<AGENT ERLANGEN-PLATFORM.MESH-TABLE:NODE #x3020035127FD>
+ ▷     :SEQUENCE 0
+ ▷     :FORWARD-P NIL
+ ▷     :TRACE-P T
+ ▷     :KEY 155130510100689072426815715566014896677)
+ ▷  #S(ERLANGEN-PLATFORM.MESH-TABLE::ROUTE
+ ▷     :ID 411292742280498946490320458060617158
+ ▷     :AGENT #<AGENT ERLANGEN-PLATFORM.MESH-TABLE:NODE #x3020034933AD>
+ ▷     :CTIME 1706058833487))
+ ▷ ("2017-05-24 13:59:35"
+ ▷  #<AGENT ERLANGEN-PLATFORM.MESH-TABLE:NODE #x3020035127FD> :FORWARD
+ ▷  #S(ERLANGEN-PLATFORM.MESH-TABLE::GET-REQUEST
+ ▷     :ID 106415979122184563321987569594398713625
+ ▷     :AGENT #<AGENT ERLANGEN-PLATFORM.MESH-TABLE:NODE #x3020035127FD>
+ ▷     :SEQUENCE 0
+ ▷     :FORWARD-P NIL
+ ▷     :TRACE-P T
+ ▷     :KEY 155130510100689072426815715566014896677)
+ ▷  #S(ERLANGEN-PLATFORM.MESH-TABLE::ROUTE
+ ▷     :ID 43349484706135223247500409734337076500
+ ▷     :AGENT #<AGENT ERLANGEN-PLATFORM.MESH-TABLE:NODE #x30200352189D>
+ ▷     :CTIME 1706033691806))
+ ▷ …
+ ▷ ("2017-05-24 13:59:35"
+ ▷  #<AGENT ERLANGEN-PLATFORM.MESH-TABLE:NODE #x3020034A570D> :RESPOND
+ ▷  #S(ERLANGEN-PLATFORM.MESH-TABLE::GET-REQUEST
+ ▷     :ID 106415979122184563321987569594398713625
+ ▷     :AGENT #<AGENT ERLANGEN-PLATFORM.MESH-TABLE:NODE #x3020035127FD>
+ ▷     :SEQUENCE 0
+ ▷     :FORWARD-P NIL
+ ▷     :TRACE-P T
+ ▷     :KEY 155130510100689072426815715566014896677)
+ ▷  #S(ERLANGEN-PLATFORM.MESH-TABLE::GET-REPLY
+ ▷     :ID 119982038210290876000818395666614461298
+ ▷     :AGENT #<AGENT ERLANGEN-PLATFORM.MESH-TABLE:NODE #x3020034A570D>
+ ▷     :SEQUENCE 0
+ ▷     :VALUE 1))
+ ▷ …
+ → #S(ERLANGEN-PLATFORM.MESH-TABLE::GET-REPLY
+      :ID 106415979122184563321987569594398713625
+      :AGENT #<AGENT ERLANGEN-PLATFORM.MESH-TABLE:NODE #x3020035127FD>
+      :SEQUENCE NIL
+      :VALUE 1)
+ #
+
+ That’s it for out little tour through the mesh. I hope I could show some
+ weaknesses (like reduced availability right after partition), and some
+ strengths (like effective durability) of the design. Most importantly, I hope
+ I could convince you of Common Lisp and Erlangen as a good platform for
+ developing distributed designs.
+
+>
+
+< Appendix: graphing the mesh
+
+ You might have guessed that the visual graphs of meshes found in this article
+ were not created by hand. The {mesh-table} branch comes with some [extra code](https://github.com/eugeneia/erlangen/blob/mesh-table/platform/mesh-table-graphviz.lisp)
+ for rendering live mesh networks using [Graphviz](http://graphviz.org/),
+ specifically a [DOT](https://en.wikipedia.org/wiki/DOT_%28graph_description_language%29)
+ emitter.
+
+ Identifiers are encoded in the color space, which can sometimes be misleading,
+ but gives a fairly accurate sense of distance most of the time. Edge length
+ and thickness also relate to the distance between two nodes connected by a
+ route. Additionally, it adds visual cues for stale routes, dead nodes, and can
+ even overlay request traces onto the graph.
+
+ Besides generating visual graphs for this article, the DOT emitter also proved
+ to be an invaluable debugging tool. Bugs that might otherwise be subtle,
+ become very prominent, if not obvious, when you can see them affect the live
+ system. In fact, as the visualization improved, I found more and more bugs. I
+ can’t stress enough, how (even more) embarrassingly bug ridden this article
+ would’ve been, if the little {graphviz} function hadn’t saved the day.
+
+>
+

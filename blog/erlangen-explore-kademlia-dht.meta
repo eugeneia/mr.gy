@@ -1,4 +1,5 @@
 :document (:title "Exploring distributed designs with Erlangen: Kademlia"
            :author "Max Rottenkolber <max@mr.gy>"
-           :index-headers-p nil)
+           :index-headers-p nil
+           :index-p nil)
 :publication-date nil
