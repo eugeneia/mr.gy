@@ -1,0 +1,24 @@
+strict digraph {
+    layout=dot; splines=true;
+
+    node [fontname="Lato"];
+
+    message[color=blue];
+    request[color=blue];
+    reply[color=blue];
+    discover_request[label="discover-request"];
+    get_request[label="get-request"];
+    other_request[label="…", shape=plaintext];
+    discover_reply[label="discover-reply"];
+    get_reply[label="get-reply"];
+    other_reply[label="…", shape=plaintext];
+
+    message -> request
+      request -> discover_request
+      request -> get_request
+      request -> other_request[style=dotted]
+    message -> reply
+      reply -> discover_reply
+      reply -> get_reply
+      reply -> other_reply[style=dotted]
+}
