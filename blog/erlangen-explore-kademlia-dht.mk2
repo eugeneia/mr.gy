@@ -612,7 +612,7 @@ production quality code. I’ll just be toying around for fun and insight.
  redundancy is controlled by the global {*replication*} parameter.
 
  #media Discover request routed through a mesh of ten nodes with
- {*replication*} = 2 (dotted lines represent stale routes).#
+ {*replication*} = 2.#
  erlangen-explore-kademlia-dht-discover.svg
 
  The structure of the mesh (see “Routes and buckets”) implies that the paths
