@@ -153,25 +153,19 @@ aside.meta {
 
 aside.meta p {
     font-size: 0.9em;
-    color: #a6a6a6;
     line-height: 1.5;
-}
-
-aside.meta a {
-    font-size: 0.9em;
-    color: #a6a6a6;
-    border: 1px solid;
-    border-radius: 0.2em;
-    padding: 0 0.2em;
-}
-
-aside.meta a:hover {
-    color: #88f;
-    text-decoration: none;
 }
 
 aside.meta span {
     margin-right: 0.7em;
+}
+
+aside.meta a + a::before {
+    color: black;
+    content: "/ ";
+    display: inline-block;
+    text-decoration:none;
+    white-space: pre;
 }
 
 article {
