@@ -612,7 +612,7 @@ production quality code. I’ll just be toying around for fun and insight.
  redundancy is controlled by the global {*replication*} parameter.
 
  #media Discover request routed through a mesh of ten nodes with
- {*replication*} = 2 (dotted lines represent stale routes).#
+ {*replication*} = 2.#
  erlangen-explore-kademlia-dht-discover.svg
 
  The structure of the mesh (see “Routes and buckets”) implies that the paths
@@ -736,7 +736,7 @@ production quality code. I’ll just be toying around for fun and insight.
 
  Remember that our distance function is unidirectional: for any identifier
  there exists exactly one identifier at any distance. Since our {distance}
- function is defined as {logxor}, the following holds true
+ function is defined as XOR, which is reversible, the following holds true
 
  {(distance} _x_ _y_{)} = _d_ → {(distance} _x_ _d_{)} = _y_
 
@@ -945,9 +945,10 @@ production quality code. I’ll just be toying around for fun and insight.
          *nodes*))
  #
 
- #media On the left: the mesh right after we spawned the majority of nodes, the
- root node is clearly discernible. On the right: after a while, nodes discover
- more relevant routes, and seldom used routes become stale.#
+ #media *On the left:* the mesh right after we spawned the majority of nodes,
+ the root node is clearly discernible. *On the right:* after a while, nodes
+ discover more relevant routes, and seldom used routes become stale (dotted
+ edges).#
  erlangen-explore-kademlia-dht-spin.svg
 
  Of course we want to interact with the mesh, so let’s spawn a client node, and
@@ -974,8 +975,7 @@ production quality code. I’ll just be toying around for fun and insight.
  → …
  #
 
- #media Our three put requests routed through the mesh, and stored
- redundantly.#
+ #media Traces of the three put requests being routed through the mesh.#
  erlangen-explore-kademlia-dht-spin-put.svg
 
  To get more insight into what happens behind the scenes, we can trace requests
@@ -1055,9 +1055,9 @@ production quality code. I’ll just be toying around for fun and insight.
    (exit :kill (pop *nodes*)))
  #
 
- #media On the left: the mesh right after the disaster. On the right: routes to
- dead nodes become stale, and the get request finds its way to a redundant
- node.#
+ #media *On the left:* the mesh right after the disaster. *On the right:*
+ routes to dead nodes become stale, and the get request finds its way to a
+ redundant node.#
  erlangen-explore-kademlia-dht-spin-partition.svg
 
  We can still make requests, but we might not get back an reply—half of our
@@ -1087,8 +1087,8 @@ production quality code. I’ll just be toying around for fun and insight.
          *nodes*))
  #
 
- #media On the left: the mesh right after we added the fresh nodes. On the
- left: a little while later, a new node asks its neighbors for a record it
+ #media *On the left:* the mesh right after we added the fresh nodes. *On the
+ right:* a little while later, a new node asks its neighbors for a record it
  should have.#
  erlangen-explore-kademlia-dht-spin-regenerate.svg
 
