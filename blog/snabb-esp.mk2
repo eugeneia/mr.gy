@@ -1,1 +1,35 @@
-XXX — Write about ESP in Snabb.
+XXX - Introduction
+
+< Mixing high and low level code with ease
+
+ XXX - LuaJIT FFI
+
+>
+
+< Reusing the Intel reference implementation of AES 128 GCM
+
+ XXX - Intel AES to DynASM
+
+>
+
+< Sequence numbers
+
+>
+
+< Replay protection
+
+>
+
+< Resynchronization
+
+>
+
+< Testing
+
+ XXX - profile
+
+ XXX - Snabb NFV CI
+
+ XXX - Linux interop testing using Nix
+
+>

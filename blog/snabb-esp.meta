@@ -1,4 +1,5 @@
-:document (:title "RFC 4303: “IP Encapsulating Security Payload” in Snabb"
+:document (:title "Implementing RFC 4303: “IP Encapsulating Security Payload”
+                   in Snabb"
            :author "Timo Buhrmester <van.fstd@gmail.com>, Max Rottenkolber <max@mr.gy>"
            :index-p nil
            :index-headers-p nil)
