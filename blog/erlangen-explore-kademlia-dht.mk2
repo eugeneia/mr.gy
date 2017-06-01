@@ -455,8 +455,7 @@ production quality code. I’ll just be toying around for fun and insight.
  isn’t routed by supplying _false_.
 
  #code#
- (defun replicate-request (request &key (id (node-id *node*))
-                                        (forward-p t))
+ (defun replicate-request (request &key (id (node-id *node*)) (forward-p t))
    (let ((replica (copy-structure request)))
      (setf (message-id replica) id
            (message-agent replica) (agent)
