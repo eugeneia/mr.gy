@@ -743,7 +743,7 @@ production quality code. I’ll just be toying around for fun and insight.
  there exists exactly one identifier at any distance. Since our {distance}
  function is defined as XOR, which is reversible, the following holds true
 
- {(distance} _x_ _y_{)} = _d_ → {(distance} _x_ _d_{)} = _y_
+ {(distance} _x_ _y_{)} = _d_ → {(distance} _x_ _d_{)} = _y_
 
  and we can obtain an identifier within the bucket by computing the distance
  between the calling node’s identifier and the distance selected at random.
