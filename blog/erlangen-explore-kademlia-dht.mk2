@@ -565,8 +565,7 @@ production quality code. I’ll just be toying around for fun and insight.
      (last (delete-if (lambda (route)
                         (or (eql (route-id route) from)
                             (route-stale-p route)
-                            (<= own-distance
-                                (distance (route-id route) to))))
+                            (<= own-distance (distance (route-id route) to))))
                       (find-routes to *node*))
            limit)))
  #
@@ -652,13 +651,12 @@ production quality code. I’ll just be toying around for fun and insight.
          (cond (exists-p
                 (respond #2=(make-get-reply :value value) request))
                (forward-p
-                (forward (reply-bind
-                          (replicate-request request :forward-p nil)
-                          (lambda (reply)
-                            (with-slots (value) reply
-                              (values-put #1# key value)
-                              (respond #2# request))
-                              (finalize-request reply)))
+                (forward (reply-bind (replicate-request request :forward-p nil)
+                                     (lambda (reply)
+                                       (with-slots (value) reply
+                                         (values-put #1# key value)
+                                         (respond #2# request))
+                                       (finalize-request reply)))
                          (neighbors key))))))))
  #
 
@@ -894,11 +892,10 @@ production quality code. I’ll just be toying around for fun and insight.
           (refresh-interval (/ *timeout* 2))
           (refresh-deadline (deadline (random refresh-interval))))
      (initialize-node initial-peers)
-     (loop do (handler-case
-                  (let ((message (receive-until refresh-deadline)))
-                    (etypecase message
-                      ((cons agent request) (proxy (cdr message)))
-                      (reply (handle message))))
+     (loop do (handler-case (let ((message (receive-until refresh-deadline)))
+                              (etypecase message
+                                ((cons agent request) (proxy (cdr message)))
+                                (reply (handle message))))
                 (timeout (refresh-deadline-exceeded)
                   (declare (ignore refresh-deadline-exceeded))
                   (setf refresh-deadline (deadline refresh-interval))
