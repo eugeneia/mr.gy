@@ -114,7 +114,7 @@ production quality code. I’ll just be toying around for fun and insight.
  A bucket consists of a bound denoting its assigned range (previously _n_), a
  free-counter to indicate how much capacity is left, and a list of
  {*replication*} − _free_ routes for 0 ≤ _free_ ≤ {*replication*}. Also, let’s
- define some of the global constants of our network:
+ define some of the global parameters of our network:
 
  + {*key-size*}—the number of bits that comprise an identifier
  + {*replication*}—a positive integer denoting the replication level of our
@@ -180,7 +180,7 @@ production quality code. I’ll just be toying around for fun and insight.
 
  So, when is a bucket full? A bucket is full when its capacity is reached, and
  none of its routes are _stale_. We consider a route stale once its timestamp
- exceeds a global timeout constant:
+ exceeds a network-global timeout parameter:
 
  + {*timeout*}—the duration of route validity after the last contact with the
    route’s node
@@ -198,7 +198,7 @@ production quality code. I’ll just be toying around for fun and insight.
 
  With that out of the way, we can formalize how routes are added. First, we
  find the bucket suitable for the new route, if it has spare capacity, or a
- stale route can be deleted, we add the route, and are done. If it doesn’t fit,
+ stale route can be deleted, we simply add the route. If it doesn’t fit,
  we consider if the bucket in question is the first bucket, in which case it
  can be split. If it’s not, we simply discard the new route—we’re already
  well-connected at that distance. Otherwise, we split the first bucket to make
@@ -220,7 +220,7 @@ production quality code. I’ll just be toying around for fun and insight.
  and timestamp (preventing it from becoming stale). If the message is from a
  previously uncontacted node, a new route is added instead. The {update-route}
  function below also acts as a predicate that tests whether a matching route
- exists, and only returns a true when such a route was updated.
+ exists, and only returns _true_ when such a route was updated.
 
  #code#
  (defun update-route (node id agent)
@@ -249,16 +249,21 @@ production quality code. I’ll just be toying around for fun and insight.
 
 < Callback rings
 
- We previously defined a node to have a “ring” of callbacks, what’s that about?
+ We previously defined a node to have a “ring” of callbacks—what’s that about?
  During their lifetime, nodes send requests to other nodes, and when they do,
  they include a unique sequence number with each request. When a node responds
  to a request, it includes the request’s sequence number in its reply. Via the
- sequence number, the requesting node can then associate the reply with one of
- its previous requests.
+ sequence number, the requesting node can associate the reply with one of its
+ previous requests.
 
  While most of our protocol is stateless, some parts of it do require us to
- keep track. A node’s requests ring consists of a sequence counter, as well as
- a buffer of callbacks for a fixed number of requests.
+ keep track. Specifically, we sometimes need to remember actions to take if one
+ of our previous requests is eventually met with a reply. These actions are
+ stored as closures in a callback ring, and are executed when a reply to the
+ outstanding request associated with the callback is received.
+
+ A node’s requests ring consists of a sequence counter, as well as a buffer of
+ callbacks for a fixed number of requests.
 
  + {*response-backlog*}—the number of callbacks for outstanding requests we
    keep track of
@@ -309,20 +314,20 @@ production quality code. I’ll just be toying around for fun and insight.
 
  One glaring trade-off is the node’s implied behavior on excessive load. When
  requests are issued so quickly in succession that the callback ring wraps
- around before a responding node can reply, the ensuing responses are ignored,
- causing no progress to be made. Thus, it is up to the client to detect
- backpressure, and throttle accordingly.
+ around before a responding node can reply, the ensuing replies are ignored,
+ and no progress is made. Thus, it is up to the client to detect backpressure,
+ and throttle accordingly.
 
- Also noteworthy is how this scheme affects the generational garbage collector.
+ It is noteworthy how this scheme affects the generational garbage collector.
  On a system with low load, callbacks can be retained much longer than
  technically required, possibly causing them to be [tenured](http://ccl.clozure.com/docs/ccl.html#ephemeral-gc)
- into an old generation. While this increases GC pressure, I project that this
- phenomenon is actually amortized, since it is unlikely to occur on medium to
- high loads—where the additional pressure would actually hurt us.
+ into an old generation. While this increases GC pressure, I conjecture that
+ this phenomenon is actually amortized, since it is unlikely to occur on medium
+ to high loads—where the additional pressure would actually hurt us.
 
  Importantly, the value of {*response-backlog*} must be chosen deliberately
  with these properties in mind, as it governs both the effective timeout
- duration as well as the peak congestion of the system.
+ duration and the peak congestion of the system.
 
 >
 
@@ -347,12 +352,12 @@ production quality code. I’ll just be toying around for fun and insight.
  erlangen-explore-kademlia-dht-messages.svg
 
  Requests are treated specially because they are subject to being forwarded to
- the next closer node. They feature two extra flags: _forward-p_ and _trace-p_.
- The former is used for explicit replication by inhibiting forwarding,
- effectively preventing the receiver from delegating the request. The latter is
- a debugging feature that allows us to trace how requests travel through the
- mesh. Replies to requests are always sent directly to the node that originally
- issued it.
+ increasingly closer nodes before reaching their final destination. They
+ feature two extra flags: _forward-p_ and _trace-p_. The former is used for
+ explicit replication by inhibiting forwarding, effectively preventing the
+ receiver from delegating the request. The latter is a debugging feature that
+ allows us to trace how requests travel through the mesh. Replies to requests
+ are always sent directly to the node that originally issued it.
 
  #code#
  (defstruct message
@@ -371,7 +376,7 @@ production quality code. I’ll just be toying around for fun and insight.
  this method is specified on the type {message}, it is also run when we handle
  replies.
 
- The body of the method is straight forward, we update the route to the
+ The body of the method is straightforward, we update the route to the
  requesting node unless it doesn’t already exist, in which case we add a new
  route. There is one peculiarity though: some messages won’t have a node
  identifier, namely the ones issued by client nodes that don’t want to become
@@ -414,8 +419,8 @@ production quality code. I’ll just be toying around for fun and insight.
  through the mesh until it arrives at the node responsible for it. Forwarding
  also plays a role in replication, when a request is forwarded to a set of
  neighbors to solicit redundancy. For that purpose we define a function
- {forward} that sends a request via a list of routes, logging the event when a
- trace is requested.
+ {forward} that sends a request via a list of routes, logging the event when
+ tracing is enabled.
 
  #code#
  (defun forward (request routes)
@@ -429,7 +434,7 @@ production quality code. I’ll just be toying around for fun and insight.
  with a message of type {reply}, which includes the request’s sequence number.
  The {respond} function takes a reply and a request, sets the sequence number
  of the reply accordingly, and sends it to the agent that initiated the
- request. When the _trace-p_ flag of the request is true the reply is logged.
+ request. When the _trace-p_ flag of the request is _true_ the reply is logged.
 
  #code#
  (defun respond (reply request)
@@ -440,17 +445,18 @@ production quality code. I’ll just be toying around for fun and insight.
  #
 
  We also define a function {replicate-request} that creates a copy (or replica)
- of an request, but overwrites its metadata. It also accepts two optional
+ of a request, but overwrites its metadata. It also accepts two optional
  parameters: _id_ and _forward-p_. The _id_ parameter sets the node identifier
  slot of the created replica, and defaults to the calling node’s identifier.
  Client nodes use this parameter to create anonymous requests by supplying
- {nil}. The _forward-p_ parameter sets the _forward-p_ flag in the replicated
+ _false_. The _forward-p_ parameter sets the _forward-p_ flag in the replicated
  request, and defaults to _true_. Its used by storage nodes to explicitly
  solicit replication, and when they do so they ensure the redundant request
- isn’t routed by supplying {nil}.
+ isn’t routed by supplying _false_.
 
  #code#
- (defun replicate-request (request &key (id (node-id *node*)) (forward-p t))
+ (defun replicate-request (request &key (id (node-id *node*))
+                                        (forward-p t))
    (let ((replica (copy-structure request)))
      (setf (message-id replica) id
            (message-agent replica) (agent)
@@ -461,7 +467,7 @@ production quality code. I’ll just be toying around for fun and insight.
 
  Finally, we define structures for our set of protocol messages. These are
  going to be instantiated, as opposed to the previous abstract structure types.
- Each is a subtype of either {request} or {reply}, and may contain one ore more
+ Each is a subtype of either {request} or {reply}, and may contain one or more
  additional slots based on the message’s semantics. These messages include
  request/reply pairs for discovering new nodes as well as retrieving, storing,
  and deleting key/value pairs from the mesh.
@@ -511,7 +517,7 @@ production quality code. I’ll just be toying around for fun and insight.
 
 < Pluggable stores
 
- By default, we use Common Lisp’s built-in [hash tables](http://mr.gy/ansi-common-lisp/Hash-Tables.html#Hash-Tables)
+ By default we use Common Lisp’s built-in [hash tables](http://mr.gy/ansi-common-lisp/Hash-Tables.html#Hash-Tables)
  to store key/value pairs in nodes. This suffices for initial testing and
  experimentation, but eventually we want to use a persistent storage backend.
  To that end, we wrap our hash table accesses in methods, implicitly defining a
@@ -550,7 +556,7 @@ production quality code. I’ll just be toying around for fun and insight.
  routes that either lead to the node from which the request originated (to
  prevent routing cycles), are stale, or lead to nodes farther away from the
  target identifier than the calling node itself. When the calling node has no
- routes to closer nodes (meaning that its the closest node), {routes} returns
+ routes to closer nodes (meaning that it is the closest node), {routes} returns
  {nil}.
 
  #code#
@@ -578,10 +584,10 @@ production quality code. I’ll just be toying around for fun and insight.
 
  In order to discover routes to other nodes, and to optionally announce their
  own existence, nodes send messages of type {discover-request}. The {discover}
- function sends a discover request to its neighbors closest to the identifier
+ function sends a _discover_ request to its neighbors closest to the identifier
  _key_. It includes stale routes to eventually reestablish connectivity between
  temporarily partitioned nodes. The request includes the origin’s identity when
- _announce-p_ is true, effectively announcing its existence to the receiving
+ _announce-p_ is _true_, effectively announcing its existence to the receiving
  nodes.
 
  #code#
@@ -592,10 +598,10 @@ production quality code. I’ll just be toying around for fun and insight.
             (neighbors key :include-stale-p t)))
  #
 
- A node receiving a discover request responds with a message including its
+ A node receiving a _discover_ request responds with a message including its
  identity of type {discover-reply}, thereby acknowledging its existence. It
  then forwards the request via up to {*replication*} routes to nodes closer to
- the requests _key_ identifier.
+ the request’s _key_ identifier.
 
  #code#
  (defmethod handle ((request discover-request))
@@ -604,34 +610,34 @@ production quality code. I’ll just be toying around for fun and insight.
      (forward request (routes id key :limit *replication*))))
  #
 
- Discover requests are redundantly routed through the mesh until they reach
+ _Discover_ requests are redundantly routed through the mesh until they reach
  the node closest to its target. In the process, the request initiator
  discovers routes to the closest node and any node along the path. Storage
- nodes also announce themselves via discover requests, inserting themselves
+ nodes also announce themselves via _discover_ requests, inserting themselves
  into the mesh by adding or updating routes to themselves. The level of
- redundancy is controlled by the global {*replication*} parameter.
+ redundancy is controlled by the network-global {*replication*} parameter.
 
- #media Discover request routed through a mesh of ten nodes with
+ #media _Discover_ request routed through a mesh of ten nodes with
  {*replication*} = 2.#
  erlangen-explore-kademlia-dht-discover.svg
 
  The structure of the mesh (see “Routes and buckets”) implies that the paths
- taken by discover requests are likely to be the shortest possible in terms of
- the routes available to all nodes, and the number of hops needed to reach a
+ taken by _discover_ requests are likely to be the shortest in terms of the
+ routes available to all nodes, and the number of hops needed to reach a
  destination does not increase significantly with the size of the identifier
  space or the size of the network.
 
  To retrieve the value associated with an identifier, nodes send messages of
- type {get-request}. The handling node forwards the request to the node
- closest to the requested key it knows about unless it has no such route
- (meaning its the closest node), or forwarding is explicitly forbidden (i.e.
- the _forward-p_ flag is false). Once a node is unable to forward a get
- request, it attempts to retrieve the requested value, and it it exists
- responds to the initiating node with a message of type {get-reply}.
+ type {get-request}. The handling node forwards the request to the node closest
+ to the requested key it knows about unless it has no such route (meaning it is
+ the closest node), or forwarding is explicitly forbidden (i.e. the _forward-p_
+ flag is _false_). Once a node is unable to forward a _get_ request, it
+ attempts to retrieve the requested value, and it it exists responds to the
+ initiating node with a message of type {get-reply}.
 
  If a node can’t satisfy the request because it doesn’t have the requested
- value, and _forward-p_ is true, it replicates the request, sets its
- _forward-p_ flag to false, and forwards it to its neighbors closest to the
+ value, and _forward-p_ is _true_, it replicates the request, sets its
+ _forward-p_ flag to _false_, and forwards it to its neighbors closest to the
  value’s key. When any of the neighbors replies with the value, the node copies
  it into its own store before replying to the original request with the
  retrieved value.
@@ -655,30 +661,30 @@ production quality code. I’ll just be toying around for fun and insight.
  #
 
  The last phase represents somewhat of a failover. If a node can’t satisfy a
- get request, which it presumably should be able to handle, it calls out to
+ _get_ request, which it presumably should be able to handle, it calls out to
  its peers for help as a last resort. Since it will copy any value retrieved
  this way into its own store, this behavior has a regenerating effect. When a
  new node joins the mesh, for instance, its store might be empty, but it will
- receive the subset of get requests closest to its identifier. By calling out
+ receive the subset of _get_ requests closest to its identifier. By calling out
  to the closest neighbors, of which one must have been responsible for the key
  before the new node entered the mesh, it will over time accumulate all the
- values its responsible for.
+ values it is responsible for.
 
- #media Unsuccessful get request routed through a mesh of ten nodes with
+ #media Unsuccessful _get_ request routed through a mesh of ten nodes with
  {*replication*} = 2. The request is replicated at the destination because no
  value associated with the key is present.#
  erlangen-explore-kademlia-dht-get.svg
 
  Because of how the mesh is structured, the handling node should be in a good
- position to coordinate with the next closest nodes. It it more likely than
+ position to coordinate with the next closest nodes. It is more likely than
  any other node to have routes to any nodes that store values for keys close
  to its identifier.
 
  In order to store values in the mesh, nodes send messages of type
  {put-request} that contain the key identifier and the value to be associated
- with it. Put requests are forwarded through the mesh just like get requests
- are. Finally, the handling node records the key/value pair, and additionally
- replicates the requests to its neighbors closest to the key.
+ with it. _Put_ requests are forwarded through the mesh just like _get_
+ requests are. Finally, the handling node records the key/value pair, and
+ additionally replicates the requests to its neighbors closest to the key.
 
  #code#
  (defmethod handle ((request put-request))
@@ -691,19 +697,19 @@ production quality code. I’ll just be toying around for fun and insight.
  #
 
  By forwarding copies of the request, the handling node distributes the
- key/value pair redundantly to the next closer nodes. If all goes well, a
- successful put requests leaves _n_+1 copies of the pair in the mesh, where
- _n_ = {*replication*}. Just as with get requests, the handling node’s affinity
- to other nodes close to the key identifier ensures that it will be able to
- replicate the value to relevant nodes.
+ key/value pair redundantly to its neighbors closest to the key. If all goes
+ well, a successful _put_ requests leaves _n_+1 copies of the pair in the mesh,
+ where _n_ = {*replication*}. Just as with _get_ requests, the handling node’s
+ affinity to other nodes close to the key identifier ensures that it will be
+ able to replicate the value to relevant nodes.
 
- #media Put request routed through a mesh of ten nodes with
+ #media _Put_ request routed through a mesh of ten nodes with
  {*replication*} = 2. The request is replicated at the destination to store
  the value redundantly.#
  erlangen-explore-kademlia-dht-put.svg
 
  Finally, nodes can delete values associated with a key by issuing messages of
- type {delete-request}. It works almost exactly like a put request, except
+ type {delete-request}. It works almost exactly like a _put_ request, except
  that it removes key/value pairs from a node’s records.
 
  #code#
@@ -720,7 +726,7 @@ production quality code. I’ll just be toying around for fun and insight.
  Since routes become stale over time, a period of low or no traffic might leave
  a node without fresh routes. To avoid this situation, nodes periodically
  refresh buckets that are not full or contain stale routes. A bucket is
- refreshed by performing discover requests on a random identifier that falls
+ refreshed by performing _discover_ requests on a random identifier that falls
  within that bucket.
 
  The function {refresh-routes} performs the procedure outlined above. It
@@ -757,8 +763,8 @@ production quality code. I’ll just be toying around for fun and insight.
 
  When a node is first started it is supplied a set of initial peers. The
  function {initialize-node} takes a list of identifier/agent pairs, and adds a
- new route for each entry. It then performs discover requests on the node’s own
- identifier using the initial routes. The optional parameter _announce-p_
+ new route for each entry. It then performs _discover_ requests on the node’s
+ own identifier using the initial routes. The optional parameter _announce-p_
  controls whether the calling node should announce itself to its peers.
 
  #code#
@@ -900,7 +906,7 @@ production quality code. I’ll just be toying around for fun and insight.
  {(}_agent_ {.} _request_{)} even though it never looks at the agent value, and
  sends replies back to the agent noted in the request structure, wonder no
  more. This way, clients implement the {erlangen-plaform.server} protocol, and
- can be can be queried using {cast} and {call}.
+ can be queried using {cast} and {call}.
 
 >
 
@@ -953,8 +959,8 @@ production quality code. I’ll just be toying around for fun and insight.
 
  Of course we want to interact with the mesh, so let’s spawn a client node, and
  put some data into the network. We generate a few random keys, and call the
- client with put requests to insert some values. Each put request yields a put
- reply acknowledging the operation.
+ client with _put_ requests to insert some values. Each _put_ request yields a
+ put reply acknowledging the operation.
 
  #code#
  (defparameter *client*
@@ -975,7 +981,7 @@ production quality code. I’ll just be toying around for fun and insight.
  → …
  #
 
- #media Traces of the three put requests being routed through the mesh.#
+ #media Traces of the three _put_ requests being routed through the mesh.#
  erlangen-explore-kademlia-dht-spin-put.svg
 
  To get more insight into what happens behind the scenes, we can trace requests
@@ -988,11 +994,11 @@ production quality code. I’ll just be toying around for fun and insight.
  #
 
  With a log present, we can trace our requests using the {:trace-p} flag. Let’s
- trace a get request, and see what happens. The client forwards the request to
- the node closest to the key. Since the client just handled a put request to
- the same key, it still has a direct route to the node closest to the key, and
- that node happens to be final destination for the request. The node responds
- with a get reply to the client, which then responds to the caller.
+ trace a _get_ request, and see what happens. The client forwards the request
+ to the node closest to the key. Since the client just handled a _put_ request
+ to the same key, it still has a direct route to the node closest to the key,
+ and that node happens to be final destination for the request. The node
+ responds with a _get_ reply to the client, which then responds to the caller.
 
  #code#
  (call *client* (make-get-request :key (first *keys*) :trace-p t))
@@ -1056,11 +1062,11 @@ production quality code. I’ll just be toying around for fun and insight.
  #
 
  #media *On the left:* the mesh right after the disaster. *On the right:*
- routes to dead nodes become stale, and the get request finds its way to a
+ routes to dead nodes become stale, and the _get_ request finds its way to a
  redundant node.#
  erlangen-explore-kademlia-dht-spin-partition.svg
 
- We can still make requests, but we might not get back an reply—half of our
+ We can still make requests, but we might not get back a reply—half of our
  mesh went dark after all. We can supply a timeout to {call} to give an upper
  bound to the time we wait to a reply. The request might be forwarded through a
  seemingly fine route, to a node that won’t reply no matter what. After a while
@@ -1078,7 +1084,7 @@ production quality code. I’ll just be toying around for fun and insight.
  #
 
  To make up for our losses, we spawn ten fresh nodes to take over. New routes
- are established, and some stale are routes forgotten. Soon enough the mesh
+ are established, and some stale routes are forgotten. Soon enough the mesh
  will look just as healthy as it did before.
 
  #code#
@@ -1093,10 +1099,11 @@ production quality code. I’ll just be toying around for fun and insight.
  erlangen-explore-kademlia-dht-spin-regenerate.svg
 
  Over time, the new nodes will even regenerate records previously owned by now
- dead nodes. When a node receives a get request for a key to which it is
+ dead nodes. When a node receives a _get_ request for a key to which it is
  closest, but doesn’t have a value for the key, it forwards the request to its
- neighbors with the {forward-p} flag set to {nil}. If it gets a reply it copies
- the value into its own store, and replies as if it had always been present.
+ neighbors with the {forward-p} flag set to _false_. If it gets a reply it
+ copies the value into its own store, and replies as if it had always been
+ present.
 
  #code#
  (call *client* (make-get-request :key (first *keys*) :trace-p t))
