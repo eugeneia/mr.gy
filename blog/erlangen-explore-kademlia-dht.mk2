@@ -950,10 +950,10 @@ production quality code. I’ll just be toying around for fun and insight.
          *nodes*))
  #
 
- #media *On the left:* the mesh right after we spawned the majority of nodes,
- the root node is clearly discernible. *On the right:* after a while, nodes
- discover more relevant routes, and seldom used routes become stale (dotted
- edges).#
+ #media *On the left:* the mesh ({*replication*} = 4) right after we spawned
+ the majority of nodes, the root node being clearly discernible.
+ *On the right:* after a while, nodes discover more relevant routes, and seldom
+ used routes become stale (dotted edges).#
  erlangen-explore-kademlia-dht-spin.svg
 
  Of course we want to interact with the mesh, so let’s spawn a client node, and
