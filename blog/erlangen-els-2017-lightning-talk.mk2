@@ -1,0 +1,89 @@
+< Erlangen
+
+ + asynchronous message passing
+ + reliable (supervision trees)
+ + inherently distributed
+ + inspired by Erlang, yet very different
+
+>
+
+< “You can’t do that, it won’t be like Erlang!”
+
+ + uses native OS threads (can’t have 10,000)
+ + does not enforce strict isolation (within the boundary of a node)
+ + Common Lisp is synchronous (blocking I/O)
+
+ …there are also many reasons to prefer CL/Erlangen over Erlang
+
+ + for instance, Erlangen’s message queues are bounded and never leak memory
+
+>
+
+< I did it, its amazing: lessons learned
+
+ + _uses native OS threads_
+
+ even if processes are heavy, supervision trees are worth their weight in gold
+
+ + _does not enforce strict isolation_
+
+ just don’t modify objects you send (send = free)
+
+ + _Common Lisp is synchronous (blocking I/O)_
+
+ tempted to look at asynchronous I/O (IOLib): complete dead end, no tasteful
+ way to write code
+
+ blocking is fine as long as you always supply a timeout
+
+>
+
+< Write reliable services in Common Lisp
+
+ #media Supervision tree of a real-life application
+ (processes can be spread on remote nodes)#
+ erlangen-els-2017-lightning-talk-supervision-tree.svg
+
+>
+
+< Research: explore distributed designs
+
+ #media live visualization of 300 SLOC Kademlia DHT implementation on Erlangen#
+ erlangen-explore-kademlia-dht-merge1.svg
+
+>
+
+< Numbers (on Intel Xeon E31245 3.30GHz)
+
+ + 5us for message delivery, 10x more than erts 7.3
+   (that’s not even bad, actually)
+ + up to 2 million messages per second
+ + you can have 1,000 processes easily
+
+ …no serious optimization work done so far!
+
+>
+
+< No SBCL, … support because
+
+ + portability layers are boring
+ + portability layers are boring
+ + portability layers are boring
+ + I won’t write one _or_ maintain one
+ + Erlangen already includes modifications to CCL
+ + …maybe I want to swap out CCL’s threading, GC, I/O, … implementations?
+ + {erlangen-kernel} is distributed as an executable that includes Quicklisp
+
+>
+
+< Hack it!
+
+ + {github.com/eugeneia/erlangen} AGPL-3.0
+ + branch, fork all you like
+ + nothing is set in stone yet, wild ideas welcome
+ + mail me at {max@mr.gy}
+
+ #media#
+ ../site-assets/inters-centered.svg
+
+>

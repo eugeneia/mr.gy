@@ -1,5 +1,11 @@
 Hi, I’m [Max Rottenkolber](http://mr.gy) and this is my technical Blog.
 
++ [Erlangen: asynchronous, distributed message passing for Clozure CL
+  \(lightning talk for ELS 2017\)](erlangen-els-2017-lightning-talk.html) _Tuesday, 4 April 2017_
++ [Erlangen:
+  Introduction](erlangen-intro.html) _Sunday, 4 December 2016_
++ [A Debian Package for
+  Clozure Common Lisp](clozure-cl-deb.html) _Thursday, 24 November 2016_
 + [Max’s Parser Combinators: Why?
   How?](maxpc.html) _Friday, 5 August 2016_
 + [Sam: a tiny, concurrent sampling profiler for

@@ -1,0 +1,5 @@
+:document (:title "A Debian Package for Clozure Common Lisp"
+           :author "Max Rottenkolber <max@mr.gy>"
+           :index-p nil
+           :index-headers-p nil)
+:publication-date "2016-11-25 00:37+0100"

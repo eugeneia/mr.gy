@@ -2,7 +2,6 @@ html {
     background: white;
     color: black;
     font-family: Helvetica Neue, Helvetica, Lato, Arial, sans-serif;
-    font-weight: medium;
     line-height: 1.4;
     margin: 0 1.4em 0 1.4em;
     padding: 0;
@@ -83,7 +82,8 @@ figure {
 }
 
 figure > pre {
-    min-width: 37.3em;
+    min-width: 100%;
+    box-sizing: border-box;
     display: inline-block;
 }
 
@@ -91,7 +91,6 @@ figure audio {
     width: 100%;
     border-radius: 0.175em;
 }
-    
 
 figure img {
     border-radius: 0.35em;
@@ -107,9 +106,6 @@ figcaption {
 }
 
 pre {
-    padding: 0.35em;
-    background: #f9f9f9;
-    border-radius: 0.35em;
     margin: 0;
 }
 
@@ -157,25 +153,19 @@ aside.meta {
 
 aside.meta p {
     font-size: 0.9em;
-    color: #a6a6a6;
     line-height: 1.5;
-}
-
-aside.meta a {
-    font-size: 0.9em;
-    color: #a6a6a6;
-    border: 1px solid;
-    border-radius: 0.2em;
-    padding: 0 0.2em;
-}
-
-aside.meta a:hover {
-    color: #88f;
-    text-decoration: none;
 }
 
 aside.meta span {
     margin-right: 0.7em;
+}
+
+aside.meta a + a::before {
+    color: black;
+    content: "/ ";
+    display: inline-block;
+    text-decoration:none;
+    white-space: pre;
 }
 
 article {
@@ -203,6 +193,9 @@ article {
     aside.meta span:after {
         content:"\a";
         white-space: pre;
+    }
+    pre {
+        font-size: 0.6em;
     }
 }
 

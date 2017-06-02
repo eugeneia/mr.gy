@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg id="svg2" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="133.72mm" width="252.58mm" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="0 0 894.97505 473.80405">
+ <defs id="defs4">
+  <marker id="Arrow2Mend" refY="0" refX="0" orient="auto" overflow="visible">
+   <path id="path4213" stroke-linejoin="round" d="m8.7186 4.0337-10.926-4.0177 10.926-4.0177c-1.7455 2.3721-1.7354 5.6175-6e-7 8.0354z" fill-rule="evenodd" transform="scale(-.6)" stroke="#3edcea" stroke-width=".625" fill="#3edcea"/>
+  </marker>
+ </defs>
+ <metadata id="metadata7">
+  <rdf:RDF>
+   <cc:Work rdf:about="">
+    <dc:format>image/svg+xml</dc:format>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:title/>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <g id="layer1" transform="translate(45.177 -226.59)">
+  <g fill="none">
+   <g stroke="#3edcea" stroke-dasharray="8, 8" stroke-width="2">
+    <path id="path4176" d="m158.22 265.51 21.998 126.91"/>
+    <path id="path4178" d="m192.91 409.34 160.75 150.6"/>
+    <path id="path4180" marker-end="url(#Arrow2Mend)" d="m362.12 565.87 79.531 37.227"/>
+   </g>
+   <g stroke="#979797" stroke-width="3">
+    <path id="path4172" d="m190.37 393.27 105.76-81.23"/>
+    <path id="path4170" d="m641.33 316.27-78.685 71.071"/>
+    <path id="path4168" d="m359.58 556.56 118.45 54.995 87.992-225.06-268.21-74.455-133.68-55.841 23.69 137.91 172.6 163.29-40.612 114.22 157.37-58.379"/>
+   </g>
+  </g>
+  <g fill-rule="evenodd">
+   <circle id="path4140" cx="191.21" cy="392.42" r="31.305" fill="#ff87c8"/>
+   <circle id="circle4142" cy="312.04" cx="296.97" r="31.305" fill="#ffa887"/>
+   <circle id="circle4144" cx="163.29" cy="257.89" r="31.305" fill="#ff879c"/>
+   <circle id="circle4146" cy="669.09" cx="323.2" r="31.305" fill="#879aff"/>
+   <circle id="circle4148" cx="361.28" cy="559.94" r="31.305" fill="#ca87ff"/>
+   <circle id="circle4150" cy="612.4" cx="477.19" r="31.305" fill="#87edff"/>
+   <circle id="circle4152" cx="563.49" cy="387.34" r="31.305" fill="#c3ff87"/>
+   <circle id="circle4154" cy="315.43" cx="641.33" r="31.305" fill="#87ffb8"/>
+  </g>
+ </g>
+</svg>
