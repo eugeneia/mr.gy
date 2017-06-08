@@ -778,12 +778,13 @@ production quality code. I’ll just be toying around for fun and insight.
 
  In order to perform periodic actions (like refreshing routes in our case) we
  need to keep track of time and time intervals. For this we use
- {get-internal-real-time}¹ to get a [monotonic time](https://www.softwariness.com/articles/monotonic-clocks-windows-and-posix/). 
+ [get-internal-real-time](http://mr.gy/ansi-common-lisp/get_002dinternal_002dreal_002dtime.html)¹
+ to get a [monotonic time](https://www.softwariness.com/articles/monotonic-clocks-windows-and-posix/). 
  Monotonicity is important in this context because we care about stable
  intervals specifically, and want them to be strictly dependent on elapsed
  time—as opposed to global time. {Get-internal-real-time} returns a time in
  “internal time units”, which can be converted to seconds using the constant
- {internal-time-units-per-second}.
+ [internal-time-units-per-second](http://mr.gy/ansi-common-lisp/internal_002dtime_002dunits_002dper_002dsecond.html).
 
  The function {deadline} accepts a timeout in internal time units, and returns
  a deadline (a time in the future at which the timeout will be exceeded).
@@ -816,9 +817,9 @@ production quality code. I’ll just be toying around for fun and insight.
        (receive :timeout (seconds-until-deadline deadline)))
  #
 
- + 1. At the time of writing CCL’s {get-internal-real-time} is undocumented,
-      and even [broken](https://github.com/Clozure/ccl/issues/20). Erlangen
-      includes a [fixed version](https://github.com/eugeneia/erlangen/blob/b3c440d2104883893b82e3372a5447d4f55ca013/ccl.lisp#L26)
+ + 1. At the time of writing CCL’s implementation of {get-internal-real-time}
+      is [broken](https://github.com/Clozure/ccl/issues/20). Erlangen includes
+      a [fixed version](https://github.com/eugeneia/erlangen/blob/b3c440d2104883893b82e3372a5447d4f55ca013/ccl.lisp#L26)
       of this function for the meantime, at least for platforms other than
       MS Windows.
 
