@@ -388,7 +388,7 @@ addresses, and URLs.
 
  The {file-stream} implementation has a substantial advantage over generic
  streams because it reads the input in chunks at the same rate as it extends
- the buffer. It also relies on the fact that latency for file I/O is usually
+ the buffer. It relies on the fact that latency for file I/O is usually
  low, and reading continuous sequences using {read-sequence} will seldom block
  for too long. If you look closely, you can see a dent in performance right
  after the 1 MB mark, this is where {read-sequence} is called the second time
@@ -398,7 +398,7 @@ addresses, and URLs.
  time required to read the file into a vector to the run time of the {vector}
  implementation, you will get the run time of the {file-stream} implementation.
  An additional advantage of the stream implementations is that they will only
- read as much input as required for the parser so succeed or fail.
+ read as much input as required for the parser to either succeed or fail.
 
  The generic {stream} implementation reads the input one element at a time
  because it has no way of telling if more than a single element can be read
