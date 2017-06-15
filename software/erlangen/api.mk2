@@ -18,6 +18,13 @@
   operation except that the exit reason will be the _agent_ instead of
   the fatal _condition_.
 
+  When an _agent_ is started it _binds_ this variable to its value in the
+  environment where it was spawned, effectively inheriting the _binding_.
+
+  *Affected By:*
+
+  {spawn}
+
  >
 
 
@@ -31,6 +38,13 @@
 
   {\*default-mailbox-size\*} is the default value of the {:mailbox-size}
   parameter to {spawn}.
+
+  When an _agent_ is started it _binds_ this variable to its value in the
+  environment where it was spawned, effectively inheriting the _binding_.
+
+  *Affected By:*
+
+  {spawn}
 
  >
 
