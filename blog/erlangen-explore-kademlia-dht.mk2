@@ -1,3 +1,6 @@
+#media#
+tong-fuk-beach.jpg
+
 Common Lisp is known to lend itself to rapid prototyping, and [Erlangen](https://github.com/eugeneia/erlangen)
 intends to extend these capabilities towards the domain of distributed systems.
 This article documents an exploration of [distributed hash tables](https://en.wikipedia.org/wiki/Distributed_hash_table),
