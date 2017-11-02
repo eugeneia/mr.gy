@@ -1,5 +1,5 @@
-:document (:title "Implementing IPsec Encapsulating Security Payload for Snabb"
-           :author "Timo Buhrmester <van.fstd@gmail.com>, Max Rottenkolber <max@mr.gy>"
+:document (:title "Notes on implementing IPsec ESP for Snabb"
+           :author "Max Rottenkolber <max@mr.gy>"
            :index-p nil
            :index-headers-p nil)
 :publication-date nil
