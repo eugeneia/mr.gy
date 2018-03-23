@@ -1,0 +1,72 @@
+#media#
+hongkong-cafe.jpg
+
+Last year, I began prototyping a fast, IPsec-based VPN endpoint based on the
+[Snabb](https://github.com/snabbco/snabb) user-space networking toolkit. The
+result was named [Vita](https://github.com/inters/vita#-), and the [NLnet](https://nlnet.nl)
+foundation has agreed to support further development on Vita in 2018/2019.
+
+< What is the project about?
+
+ Vita exploits the fabulous comforts of the Snabb toolkit together with modern
+ [AES‑NI](https://en.wikipedia.org/wiki/AES_instruction_set) capable commodity
+ hardware to provide \>10 Gbps [IMIX](https://en.wikipedia.org/wiki/Internet_Mix)
+ IPsec tunneling. Being mainly written in Lua, Vita sports a compact code base
+ that should be easy to understand, maintain, extend, and audit. This is
+ important, as the ultimate goal is to put high-quality, low-cost traffic
+ confidentiality in the hands of the many.
+
+ The original use-case I had in mind was simple, but common: you have two (or
+ more) private networks in different geographic locations, like many
+ universities and research campuses do, and wish to bridge them via the public
+ Internet. To do that, you need to ensure your traffic is protected on its way
+ through wires and pipes that, ultimately, you do not own. You might end up
+ purchasing a box from a vendor to do that (and, possibly, many other things).
+ Chances are it is going to cost you, and maybe it will be proprietary, meaning
+ you do not have access to source code or hardware specifications, and are
+ stuck with whatever management interface the vendor provides.
+
+ #media#
+ vita-detail.svg
+
+ Vita is on its way to become an affordable, open, stand-alone solution to that
+ problem. It is designed to play well with your existing routers, and can be
+ deployed in a bump-in-the-wire or on-a-stick configuration. You can probably
+ throw together a Vita box that handles 1‑Gigabit Ethernet line rate at 64‑byte
+ packets for well under 500 Euro in parts (efficient software implementations
+ go both ways!)
+
+>
+
+< Further steps
+
+ I have established a basic [road map](https://github.com/inters/vita/projects/1)
+ that I will chip away at until mid-2019. Though, if all goes well that will
+ only be the start of things.
+
+ Thanks to the Snabb framework, Vita is inherently modular, and waiting to be
+ embedded by service providers as part of their offerings, say in an NFV
+ setting. It already uses a YANG configuration model internally, and being able
+ to drive the Vita data plane via YANG is on the road map. A related,
+ low-hanging fruit, that seems nice to have, is to let Vita consume a tunnel
+ configuration negotiated by the Linux IKEv2 stack.
+
+ All things considered, my first and foremost priority is to connect with as
+ many potential Vita users and contributors as possible. I want further
+ development to be driven by would-be user requirements. So, if you have any
+ questions, or Vita sounds in any way useful or interesting to you, please
+ engage in a dialogue with me via [Email](mailto:max@mr.gy), on [GitHub](https://github.com/inters/vita)
+ or on [Twitter](https://twitter/eugeneia_).
+
+>
+
+< Thanks
+
+ Vita is supported by NLnet foundation through the [Internet Hardening Fund](https://nlnet.nl/internethardening/).
+ I would like to personally thank NLnet for their generous contributions to
+ open source projects, and their support to independent hackers like myself.
+
+ #media#
+ nlnet.png
+
+>
