@@ -1,0 +1,6 @@
+:document (:title "Announcing Vita: a high-performance IPsec VPN endpoint that
+                   runs on commodity hardware"
+           :author "Max Rottenkolber <max@mr.gy>"
+           :index-headers-p nil
+           :index-p nil)
+:publication-date nil
