@@ -5,6 +5,12 @@
         <link>http://mr.gy/blog/</link>
         <language>en-us</language>
         <item>
+            <title>Announcing Vita: a high-performance IPsec&#xA0;VPN&#xA0;endpoint that
+                   runs on commodity hardware</title>
+            <link>http://mr.gy/blog/vita.html</link>
+            <pubDate>Mon, 26 Mar 2018 13:22:00 GMT</pubDate>
+        </item>
+        <item>
             <title>Exploring distributed designs with Erlangen: Kademlia</title>
             <link>http://mr.gy/blog/erlangen-explore-kademlia-dht.html</link>
             <pubDate>Tue, 6 Jun 2017 13:53:00 GMT</pubDate>
