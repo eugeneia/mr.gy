@@ -1,5 +1,7 @@
 Hi, I’m [Max Rottenkolber](http://mr.gy) and this is my technical Blog.
 
++ [Announcing Vita: a high-performance IPsec VPN endpoint that runs on
+  commodity hardware](vita.html) _Monday, 26 March 2018_
 + [Exploring distributed designs with Erlangen:
   Kademlia](erlangen-explore-kademlia-dht.html) _Tuesday, 6 June 2017_
 + [Erlangen: asynchronous, distributed message passing for Clozure CL
