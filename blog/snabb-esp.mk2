@@ -6,7 +6,7 @@ _IP Encapsulating Security Payload_ and [RFC 4106](https://tools.ietf.org/html/
 _The Use of Galois/Counter Mode (GCM) in IPsec Encapsulating Security Payload
 (ESP)_ landed in [Snabb](https://github.com/snabbco/snabb) for use with
 Snabb NFV.
-Since then then implementation has received many improvements, but the original
+Since then, the implementation has received many improvements, but the original
 design is essentially unchanged. Nowadays, it also serves as one of the core
 pieces of [Vita](https://github.com/inters/vita#-). In fact, the majority of
 CPU cycles used by Vita are spent in the ESP implementation, which makes it a
