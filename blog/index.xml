@@ -5,6 +5,11 @@
         <link>http://mr.gy/blog/</link>
         <language>en-us</language>
         <item>
+            <title>Notes on implementing IPsec ESP for Snabb</title>
+            <link>http://mr.gy/blog/snabb-esp.html</link>
+            <pubDate>Fri, 27 Apr 2018 10:09:00 GMT</pubDate>
+        </item>
+        <item>
             <title>Announcing Vita: a high-performance IPsec&#xA0;VPN&#xA0;endpoint that
                    runs on commodity hardware</title>
             <link>http://mr.gy/blog/vita.html</link>

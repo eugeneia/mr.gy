@@ -1,5 +1,7 @@
 Hi, I’m [Max Rottenkolber](http://mr.gy) and this is my technical Blog.
 
++ [Notes on implementing IPsec ESP for
+  Snabb](snabb-esp.html) _Friday, 27 April 2018_
 + [Announcing Vita: a high-performance IPsec VPN endpoint that runs on
   commodity hardware](vita.html) _Monday, 26 March 2018_
 + [Exploring distributed designs with Erlangen:
