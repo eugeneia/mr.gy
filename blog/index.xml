@@ -5,6 +5,11 @@
         <link>http://mr.gy/blog/</link>
         <language>en-us</language>
         <item>
+            <title>Ephemeral Key Exchange in Vita, part&#xA0;one</title>
+            <link>http://mr.gy/blog/ephemeral-key-exchange.html</link>
+            <pubDate>Wed, 1 Aug 2018 15:53:00 GMT</pubDate>
+        </item>
+        <item>
             <title>Notes on implementing IPsec ESP for Snabb</title>
             <link>http://mr.gy/blog/snabb-esp.html</link>
             <pubDate>Fri, 27 Apr 2018 10:09:00 GMT</pubDate>
