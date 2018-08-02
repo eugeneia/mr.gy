@@ -161,9 +161,9 @@ in order to signify it as such.
  state-of-the-art framework for secure transport protocols with a beautifully
  written specification. It is versatile enough to describe a wide range of
  protocols, called Noise instances, and includes constructs for authenticated
- key exchange (handshake). It does not cover authenticated key exchange with a
- preshared symmetric key though, and I think it requires the use of a transport
- layer protocol that provides sessions.
+ key exchange (handshake). Its flexibility can be a overwhelming for a novice
+ though, and I think it requires the use of a transport layer protocol that
+ provides sessions.
 
  [IKEv2](https://tools.ietf.org/html/rfc7296) is the IPsec key exchange
  protocol. It is based on the before-mentioned [SIGMA](http://webee.technion.ac.il/~hugo/sigma.html)
