@@ -1,71 +1,33 @@
-(Skip to [Making things easy](#section-2) unless you are interested in my
-contextual musings.)
+I have a pet project called [Athens](https://github.com/eugeneia/athens), it is
+a server application built with CCL. What it does is entirely irrelevant for
+the topic at hand. What follows are my thoughts on dependency management for
+Lisp applications, and my experience with some tools—old and new—that solved my
+woes.
 
-I have this Common Lisp application I call [Athens](XXX). Long story short, it
-is my stab at a news analysis tool from a time where I was interested in, and
-at the same time overwhelmed by journalism. Eventually, it shall help scholars
-gain insights about relations in the public narrative. Right now, Athens does
-two things: it scrapes and archives syndication feeds and summarizes the
-collected data using a lame statistical model. It represents a work in progress
-on hold, but its chugging along happily archiving a bunch of RSS and Atom feeds
-from big news vendors around the anglosphere. The theory: one day I will feel
-like hacking on Athens again, and by then I will have a lush data set covering
-years of news.
-
-At the time when I started this project I had no experience with running Lisp
-applications as production services—my relationship with Lisp consisted of
-using it as my computational habitat. In Lisp machine fashion, my user session
-started a Lisp compiler, and loaded it up with a bunch of systems for me to use
-interactively. If something went awry the trusty Slime debugger popped up and
-helped me figure out what was wrong on the fly. Those were the early days of my
-ongoing UNIX escapism.
-
-The first Athens prototype had a habit of getting stuck, and when it did it
-silently stopped scraping feeds. When I failed to notice the outage in time I
-would miss headlines. That was no good, especially for a side project with a
-miniscule attention budget. Athens was supposed to run without human
-supervision for long periods of time, a quest which eventually lead to
-[Erlangen](XXX) (for which Athens serves as a pilot¹.)
-
-+ 1. I am happy to report that thanks to Erlangen and—let’s face it—programming
-     experience Athens nowadays runs for years without human intervention.
-
-< Dependency Hell
+< Dependency hell
 
  For being a seemingly simple application, Athens has an awful lot of
  dependencies of different kinds. A dozen primary dependencies include both
- third-party systems from [Quicklisp](XXX), as well as homegrown systems not in
- Quicklisp. These primary dependencies pull in countless secondary dependencies
- from Quicklisp, which in turn depend on C libraries provided by the OS such as
- OpenSSL and LibXML2. Ouch.
+ third-party systems from [Quicklisp](https://www.quicklisp.org/beta/), as well
+ as homegrown systems not in Quicklisp. These primary dependencies pull in
+ countless secondary dependencies from Quicklisp, which in turn depend on C
+ libraries provided by the OS such as OpenSSL and LibXML2. Ouch.
 
- The process of actually getting Athens to run on a new machine was painful.
- First, install [CCL](XXX) and setup Quicklisp. Clone Athens and its
- non-Quicklisp dependencies into {local-projects}, and {quickload} it. If at
- that point everything seems fine its probably not, at all. Quite possibly some
- dependency (be it one of the homegrown or a third-party library) changed
- between now and the last time I deployed Athens and breaks the app. Debug,
- fix, and repeat all that on the next deployment.
-
- This sort of fragility affects development as well. Say you find the time to
- hack an hour or two on your pet project, the last thing you want to do is
- spend most of that time wrestling with changing upstream dependencies because
- you have upgraded your Quicklisp dist in the meantime (and no idea which dist
- you last ran your application successfully with.) To be clear: the things that
- break are mostly my own fault, and every bug uncovered is a chance to improve
- things. Though, it would be nice to have more control over _when_ we do
- dependency upgrades and the subsequently required testing. This way, we could
- decide when we want to work on new features, and when we want to do
- housekeeping.
+ I want building Athens to be trivial and predictable. No chasing down
+ dependencies. I also want to be in control of when dependencies are upgraded,
+ and be able to reproduce build and test environments faithfully. I am fine
+ with only supporting the Unix-like operating systems supported by CCL, so
+ platform support is restricted to those.
  
 >
 
 < Making things easy
 
- Today, Athens has a human-readable [Makefile](XXX) that describes how the
- application is built. You can {cd} into its source directory and type {make}
- to produce an executable (which includes the CCL kernel and the Athens Lisp
- image) that will act like a reasonable UNIX citizen.
+ Athens has a human-readable [Makefile](https://github.com/eugeneia/athens/blob/mr.gy/blog/lisp-vendoring-quicklisp-nix/Makefile)
+ that describes how the application is built. You can {cd} into its source
+ directory and type {make} to produce an executable (which includes the CCL
+ kernel and the Athens Lisp image) which will act like a reasonable Unix
+ citizen.
 
  #code Building Athens.#
  $ cd ~/git/athens/
@@ -85,21 +47,22 @@ supervision for long periods of time, a quest which eventually lead to
         athens -h|-help|--help
  #
 
- Right now, its build dependencies are CCL, OpenSSL and LibXML2, the latter two
- of which are also runtime dependencies that are dynamically loaded as shared
- objects.
+ Right now, its build dependencies (minus ubiquitous core utilities and
+ GNU Make) are CCL, OpenSSL and LibXML2, the latter two of which are also
+ runtime dependencies that are dynamically loaded as shared objects.
 
- #code Rule to build athens.#
+ #code Rule to build Athens.#
  bin/athens: quicklisp bin build/athens.lisp $(SOURCE_OBJECTS)
 	ccl -Q -b -n -l quicklisp/setup.lisp -l build/athens.lisp
 	du -h bin/athens
  #
 
- As you can see, it invokes {ccl} to run the actual [build script](XXX) which
- is written in Lisp. It also loads a project-local Quicklisp installation!
- Athens ships with Quicklisp, and includes all its Lisp dependencies checked
- into the repository as part of the Quicklisp installation. The release manager
- (me) makes sure all is in order on the {master} branch.
+ The Make rule to build Athens invokes {ccl} to run the actual [build script](https://github.com/eugeneia/athens/blob/mr.gy/blog/lisp-vendoring-quicklisp-nix/build/athens.lisp)
+ which is written in Lisp. It also loads a project-local Quicklisp
+ installation! Athens ships with Quicklisp, and includes all its Lisp
+ dependencies checked into the repository as part of the Quicklisp
+ installation. The release manager (me) makes sure all is in order on the
+ {master} branch.
 
  #code Rule to vendor in a Quicklisp dist.#
  ASD = $(shell find src/ -regex '[^\#]*\.asd' -printf '%p ')
@@ -116,9 +79,9 @@ supervision for long periods of time, a quest which eventually lead to
  {xmls-1.7}, because its API changed and I have not found the time to restore
  compatibility in my downstream library, yet) in {lib/}. The remaining
  third-party dependencies are managed via the fabulous Quicklisp. The above
- rule installs Qucklisp into the source tree and links all non-Quicklisp
- systems to its {local-projects/}. In order to upgrade to a new Qicklisp dist I
- would do
+ rule installs Quicklisp into the source tree and links all non-Quicklisp
+ systems to its {local-projects/}. In order to upgrade to a new Quicklisp dist
+ I would do
 
  #code#
  $ make tidy && make
@@ -129,37 +92,121 @@ supervision for long periods of time, a quest which eventually lead to
  expected.) To avoid excessive repository bloat, Athens has some Quicklisp
  specific patterns in its {.gitignore} file.
 
- #code Patterns in {.gitignore} specific to Quicklisp#
+ #code Patterns in {.gitignore} specific to Quicklisp.#
  quicklisp/tmp
  quicklisp/dists/quicklisp/archives
  #
+
+ I manage the vendored dependencies in {lib/} (including
+ [quicklisp-bootstrap](https://github.com/quicklisp/quicklisp-bootstrap)) with
+ [git-subtree](https://raw.githubusercontent.com/git/git/v2.18.0/contrib/subtree/git-subtree.txt)
+ when possible.
 
 >
 
 < Nixing the build
 
- Now that we got our Lisp dependencies under control we are left with our pesky
- non-Lisp dependencies. In Athens’ case, these are C libraries, typically
- distributed as shared object ({.so}) files, and provided by the operating
- system. The availability and location of these libraries varies across the
- various Unix-like operating systems, so I use [Nix](https://nixos.org/nix/) to
- shield myself from all that jazz.
- 
- In addition to its {Makefile}, Athens comes with a [default.nix](XXX) file
- that enables it to be built by Nix. To build Athens you can do
+ In addition to its {Makefile}, Athens comes with a [default.nix](https://github.com/eugeneia/athens/blob/mr.gy/blog/lisp-vendoring-quicklisp-nix/default.nix)
+ file that enables it to be built by [Nix](https://nixos.org/nix/). To build
+ Athens using Nix you can do
 
- #code#
+ #code Build outputs will be in {./result}.#
  $ nix-build path/to/athens
  #
 
- …which resolves all build dependencies automatically. Basically, it performs
- {make} in a tidy environment that provides everything required by the build
- and nothing more. Likewise, Athens can be installed in a Nix environment via
+ …which performs the build in tidy environment with all build dependencies
+ provided, and produces a so-called Nix derivation of Athens. Likewise, Athens
+ (and its runtime dependencies) can be installed in a Nix environment via
 
  #code#
  $ nix-env -f path/to/athens -i
  #
 
- 
+ We can also interactively test Athens and its build in a controlled
+ environment:
+
+ #code#
+ $ cd path/to/athens
+ $ nix-shell
+ $ runHook preBuild
+ $ make
+ #
+
+ By default, Nix will use the dependencies from the active system or user
+ environment, but it does not restrict you to your current system. On of its
+ cool features is that you can reproduce the build environment for any previous
+ or future version of [nixpkgs](https://github.com/NixOS/nixpkgs) (a Git
+ repository of Nix expressions for every piece of software distributed by Nix.)
+ To test Athens with the most recent nixpkgs you could do
+
+ #code Note: the argument to {-I} could also be your private fork of _nixpkgs_,
+ so its easy to vendor and customize dependency configurations.#
+ $ nix-shell -I nixpkgs=https://github.com/NixOS/nixpkgs/archive/master.tar.gz
+ #
+
+ Athens’ {default.nix} contains a few Lisp specific bits that warrant an
+ explanation. It starts out by declaring its build dependencies. Since Athens
+ is a CCL application this includes {ccl} and its dependencies {openssl} and
+ {libxml2}, as well as a utility {makeWrapper} provided by Nix (to be explained
+ later.)
+
+ #code#
+ buildInputs = [ makeWrapper ccl openssl libxml2 ];
+ #
+
+ Runtime dependencies are declared by inheriting {openssl} and {libxml2} (along
+ with the version string for this build of Athens) into the derivation.
+
+ #code Note that CCL is not a runtime dependency of Athens since the Lisp
+ kernel will be included with the executable produced during build.#
+ inherit version openssl libxml2;
+ #
+
+ Our {preBuild} hook specifies some steps to ensure a clean build. CCL will try
+ to load shared objects for OpenSSL and LibXML2 provided by the operating
+ system (on [NixOS](https://nixos.org/) these won’t be present in the usual
+ locations at all.) To ensure that it will only use the shared objects
+ specified for the build we set {LD_LIBRARY_PATH} accordingly. The remaining
+ bits tell ASDF where to cache compiled Lisp code during the build by setting
+ {XDG_CACHE_HOME} to a suitable location, and to cease its attempt to load
+ system and user configurations for the source registry (which could mess with
+ the build) via {CL_SOURCE_REGISTRY}.
+
+ #code#
+ preBuild = ''
+   make clean
+   export LD_LIBRARY_PATH=${lib.makeLibraryPath [ openssl libxml2 ]}
+   export XDG_CACHE_HOME="$TMP/.cache"
+   export CL_SOURCE_REGISTRY="(:source-registry :ignore-inherited-configuration)"
+ '';
+ #
+
+ Nix will implicitly build software using {make}, and that works just fine for
+ Athens so we can get away without declaring a {buildPhase}. Athens’ {Makefile}
+ does not have an {install} target though, a custom {installPhase} is needed.
+ This is also where {makeWrapper} comes into play. When the CCL kernel loads
+ the Athens Lisp image, it will dynamically open the shared libraries used by
+ Athens (take a look at CCL’s [REVIVE-SHARED-LIBRARIES](https://github.com/Clozure/ccl/blob/1.11/level-0/l0-cfm-support.lisp#L535-L552)
+ function for the gritty details.) To make sure it finds the share objects
+ specified in the derivation the Athens executable is replaced by a shell
+ script that again sets {LD_LIBRARY_PATH} and then {exec}s the actual
+ executable.
+
+ #code#
+ installPhase = ''
+   mkdir -p $out/bin
+   cp bin/athens $out/bin/athens.orig
+   makeWrapper $out/bin/athens.orig $out/bin/athens \
+       --suffix LD_LIBRARY_PATH : $LD_LIBRARY_PATH
+ '';
+ #
+
+ Finally, we need to inhibit Nix’s default behavior of stripping ELF symbols
+ from the resulting executables. This just happens to botch the executable
+ produced by CCL.
+
+ #code#
+ dontStrip = true;
+ #
 
 >
