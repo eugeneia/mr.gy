@@ -1,8 +1,8 @@
 I have a pet project called [Athens](https://github.com/eugeneia/athens), it is
-a server application built with CCL. What it does is entirely irrelevant for
-the topic at hand. What follows are my thoughts on dependency management for
-Lisp applications, and my experience with some tools—old and new—that solved my
-woes.
+a server application built with [CCL](https://ccl.clozure.com/). What it does
+is entirely irrelevant for the topic at hand. What follows are my thoughts on
+dependency management for Lisp applications, and my experience with some
+tools—old and new—that solved my woes.
 
 < Dependency hell
 

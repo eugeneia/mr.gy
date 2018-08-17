@@ -1,4 +1,4 @@
-:document (:title "Vendoring with Lisp, Quicklisp, Make, Git, and Nix"
+:document (:title "Vendoring with Quicklisp, Make, Git, and Nix"
            :author "Max Rottenkolber <max@mr.gy>"
            :index-headers-p nil
            :index-p nil)
