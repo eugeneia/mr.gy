@@ -1,0 +1,165 @@
+(Skip to [Making things easy](#section-2) unless you are interested in my
+contextual musings.)
+
+I have this Common Lisp application I call [Athens](XXX). Long story short, it
+is my stab at a news analysis tool from a time where I was interested in, and
+at the same time overwhelmed by journalism. Eventually, it shall help scholars
+gain insights about relations in the public narrative. Right now, Athens does
+two things: it scrapes and archives syndication feeds and summarizes the
+collected data using a lame statistical model. It represents a work in progress
+on hold, but its chugging along happily archiving a bunch of RSS and Atom feeds
+from big news vendors around the anglosphere. The theory: one day I will feel
+like hacking on Athens again, and by then I will have a lush data set covering
+years of news.
+
+At the time when I started this project I had no experience with running Lisp
+applications as production services—my relationship with Lisp consisted of
+using it as my computational habitat. In Lisp machine fashion, my user session
+started a Lisp compiler, and loaded it up with a bunch of systems for me to use
+interactively. If something went awry the trusty Slime debugger popped up and
+helped me figure out what was wrong on the fly. Those were the early days of my
+ongoing UNIX escapism.
+
+The first Athens prototype had a habit of getting stuck, and when it did it
+silently stopped scraping feeds. When I failed to notice the outage in time I
+would miss headlines. That was no good, especially for a side project with a
+miniscule attention budget. Athens was supposed to run without human
+supervision for long periods of time, a quest which eventually lead to
+[Erlangen](XXX) (for which Athens serves as a pilot¹.)
+
++ 1. I am happy to report that thanks to Erlangen and—let’s face it—programming
+     experience Athens nowadays runs for years without human intervention.
+
+< Dependency Hell
+
+ For being a seemingly simple application, Athens has an awful lot of
+ dependencies of different kinds. A dozen primary dependencies include both
+ third-party systems from [Quicklisp](XXX), as well as homegrown systems not in
+ Quicklisp. These primary dependencies pull in countless secondary dependencies
+ from Quicklisp, which in turn depend on C libraries provided by the OS such as
+ OpenSSL and LibXML2. Ouch.
+
+ The process of actually getting Athens to run on a new machine was painful.
+ First, install [CCL](XXX) and setup Quicklisp. Clone Athens and its
+ non-Quicklisp dependencies into {local-projects}, and {quickload} it. If at
+ that point everything seems fine its probably not, at all. Quite possibly some
+ dependency (be it one of the homegrown or a third-party library) changed
+ between now and the last time I deployed Athens and breaks the app. Debug,
+ fix, and repeat all that on the next deployment.
+
+ This sort of fragility affects development as well. Say you find the time to
+ hack an hour or two on your pet project, the last thing you want to do is
+ spend most of that time wrestling with changing upstream dependencies because
+ you have upgraded your Quicklisp dist in the meantime (and no idea which dist
+ you last ran your application successfully with.) To be clear: the things that
+ break are mostly my own fault, and every bug uncovered is a chance to improve
+ things. Though, it would be nice to have more control over _when_ we do
+ dependency upgrades and the subsequently required testing. This way, we could
+ decide when we want to work on new features, and when we want to do
+ housekeeping.
+ 
+>
+
+< Making things easy
+
+ Today, Athens has a human-readable [Makefile](XXX) that describes how the
+ application is built. You can {cd} into its source directory and type {make}
+ to produce an executable (which includes the CCL kernel and the Athens Lisp
+ image) that will act like a reasonable UNIX citizen.
+
+ #code Building Athens.#
+ $ cd ~/git/athens/
+ $ make
+ mkdir bin
+ ccl -Q -b -n -l quicklisp/setup.lisp -l build/athens.lisp
+ To load "athens":
+   Load 1 ASDF system:
+     athens
+ ; Loading "athens"
+ ...
+ du -h bin/athens
+ 65M	bin/athens
+ $ bin/athens --help
+ Usage: athens init <configuration>
+        athens start <configuration>
+        athens -h|-help|--help
+ #
+
+ Right now, its build dependencies are CCL, OpenSSL and LibXML2, the latter two
+ of which are also runtime dependencies that are dynamically loaded as shared
+ objects.
+
+ #code Rule to build athens.#
+ bin/athens: quicklisp bin build/athens.lisp $(SOURCE_OBJECTS)
+	ccl -Q -b -n -l quicklisp/setup.lisp -l build/athens.lisp
+	du -h bin/athens
+ #
+
+ As you can see, it invokes {ccl} to run the actual [build script](XXX) which
+ is written in Lisp. It also loads a project-local Quicklisp installation!
+ Athens ships with Quicklisp, and includes all its Lisp dependencies checked
+ into the repository as part of the Quicklisp installation. The release manager
+ (me) makes sure all is in order on the {master} branch.
+
+ #code Rule to vendor in a Quicklisp dist.#
+ ASD = $(shell find src/ -regex '[^\#]*\.asd' -printf '%p ')
+ VENDOR_ASD = $(shell find lib/ -regex '[^\#]*\.asd' -printf '%p ')
+ quicklisp:
+	ccl -Q -b -n -l lib/quicklisp/quicklisp.lisp \
+		-e '(quicklisp-quickstart:install :path "quicklisp/")' \
+		-e '(quit)'
+	for asd in $(ASD) $(VENDOR_ASD); \
+		do ln -s -v ../../$$asd quicklisp/local-projects/; done
+ #
+
+ Athens vendors a bunch of homegrown and pinned dependencies (currently
+ {xmls-1.7}, because its API changed and I have not found the time to restore
+ compatibility in my downstream library, yet) in {lib/}. The remaining
+ third-party dependencies are managed via the fabulous Quicklisp. The above
+ rule installs Qucklisp into the source tree and links all non-Quicklisp
+ systems to its {local-projects/}. In order to upgrade to a new Qicklisp dist I
+ would do
+
+ #code#
+ $ make tidy && make
+ #
+
+ …and check in the resulting {quicklisp/} tree into the repository (after
+ testing that the resulting Athens binary built with the new dist works as
+ expected.) To avoid excessive repository bloat, Athens has some Quicklisp
+ specific patterns in its {.gitignore} file.
+
+ #code Patterns in {.gitignore} specific to Quicklisp#
+ quicklisp/tmp
+ quicklisp/dists/quicklisp/archives
+ #
+
+>
+
+< Nixing the build
+
+ Now that we got our Lisp dependencies under control we are left with our pesky
+ non-Lisp dependencies. In Athens’ case, these are C libraries, typically
+ distributed as shared object ({.so}) files, and provided by the operating
+ system. The availability and location of these libraries varies across the
+ various Unix-like operating systems, so I use [Nix](https://nixos.org/nix/) to
+ shield myself from all that jazz.
+ 
+ In addition to its {Makefile}, Athens comes with a [default.nix](XXX) file
+ that enables it to be built by Nix. To build Athens you can do
+
+ #code#
+ $ nix-build path/to/athens
+ #
+
+ …which resolves all build dependencies automatically. Basically, it performs
+ {make} in a tidy environment that provides everything required by the build
+ and nothing more. Likewise, Athens can be installed in a Nix environment via
+
+ #code#
+ $ nix-env -f path/to/athens -i
+ #
+
+ 
+
+>
