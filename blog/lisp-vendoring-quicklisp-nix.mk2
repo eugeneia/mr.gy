@@ -1,8 +1,9 @@
-I have a pet project called [Athens](https://github.com/eugeneia/athens), it is
-a server application built with [CCL](https://ccl.clozure.com/). What it does
-is entirely irrelevant for the topic at hand. What follows are my thoughts on
-dependency management for Lisp applications, and my experience with some
-tools—old and new—that solved my woes.
+I have a pet project called [Athens](https://athens.mr.gy)
+([source](https://github.com/eugeneia/athens)), it is a server application
+built with [CCL](https://ccl.clozure.com/). What it does is entirely irrelevant
+for the topic at hand. What follows are my thoughts on dependency management
+for Lisp applications, and my experience with some tools—old and new—that
+solved my woes.
 
 < Dependency hell
 
@@ -139,7 +140,7 @@ tools—old and new—that solved my woes.
  repository of Nix expressions for every piece of software distributed by Nix.)
  To test Athens with the most recent nixpkgs you could do
 
- #code Note: the argument to {-I} could also be your private fork of _nixpkgs_,
+ #code Note: the argument to {-I} could also be a local fork of _nixpkgs_,
  so its easy to vendor and customize dependency configurations.#
  $ nix-shell -I nixpkgs=https://github.com/NixOS/nixpkgs/archive/master.tar.gz
  #
@@ -188,7 +189,7 @@ tools—old and new—that solved my woes.
  the Athens Lisp image, it will dynamically open the shared libraries used by
  Athens (take a look at CCL’s [REVIVE-SHARED-LIBRARIES](https://github.com/Clozure/ccl/blob/1.11/level-0/l0-cfm-support.lisp#L535-L552)
  function for the gritty details.) To make sure it finds the share objects
- specified in the derivation the Athens executable is replaced by a shell
+ specified in the derivation, the Athens executable is replaced by a shell
  script that again sets {LD_LIBRARY_PATH} and then {exec}s the actual
  executable.
 
@@ -202,11 +203,17 @@ tools—old and new—that solved my woes.
  #
 
  Finally, we need to inhibit Nix’s default behavior of stripping ELF symbols
- from the resulting executables. This just happens to botch the executable
+ from the resulting executables. This just happens to lobotomize the executable
  produced by CCL.
 
  #code#
  dontStrip = true;
  #
+
+ So where does this leave us? If you are a user of Nix then you can let Nix
+ figure out the dependencies and produce a clean build of Athens easily. Or put
+ alternatively, Athens is left with only a single dependency: Nix. Of course,
+ it is still possible to build and run Athens without Nix by manually resolving
+ its its dependencies, and using the Makefile directly.
 
 >
