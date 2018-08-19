@@ -5,6 +5,11 @@
         <link>http://mr.gy/blog/</link>
         <language>en-us</language>
         <item>
+            <title>Vendoring with Quicklisp, Make, Git, and Nix</title>
+            <link>http://mr.gy/blog/lisp-vendoring-quicklisp-nix.html</link>
+            <pubDate>Sun, 19 Aug 2018 12:37:00 GMT</pubDate>
+        </item>
+        <item>
             <title>Ephemeral Key Exchange in Vita, part&#xA0;one</title>
             <link>http://mr.gy/blog/ephemeral-key-exchange.html</link>
             <pubDate>Wed, 1 Aug 2018 15:53:00 GMT</pubDate>

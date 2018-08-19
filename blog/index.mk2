@@ -1,5 +1,7 @@
 Hi, I’m [Max Rottenkolber](http://mr.gy) and this is my technical Blog.
 
++ [Vendoring with Quicklisp, Make, Git, and
+  Nix](lisp-vendoring-quicklisp-nix.html) _Sunday, 19 August 2018_
 + [Ephemeral Key Exchange in Vita,
   part one](ephemeral-key-exchange.html) _Wednesday, 1 August 2018_
 + [Notes on implementing IPsec ESP for
