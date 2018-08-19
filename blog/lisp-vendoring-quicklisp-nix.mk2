@@ -65,7 +65,9 @@ solved my woes.
  installation. The release manager (me) makes sure all is in order on the
  {master} branch.
 
- #code Rule to vendor in a Quicklisp dist.#
+ #code Rule to vendor in a Quicklisp dist. Note: there is another, officially
+ supported way to do essentially the same thing via Quicklisp’s
+ [bundle-systems](http://blog.quicklisp.org/2015/04/new-feature-quicklisp-library-bundles.html).#
  ASD = $(shell find src/ -regex '[^\#]*\.asd' -printf '%p ')
  VENDOR_ASD = $(shell find lib/ -regex '[^\#]*\.asd' -printf '%p ')
  quicklisp:
