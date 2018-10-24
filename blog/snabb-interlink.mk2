@@ -8,18 +8,17 @@ processes where each process is typically bound to a dedicated core. Together
 they form a _process group_, and while each process executes an independent
 event loop, some memory segments are shared across the group.
 
-Processes can share a network I/O device while receiving and transmitting on
-dedicated hardware queues—e.g. via receive-side scaling (RSS)—but they can also
-forward packets from one to another. The latter is accomplished through
-low-overhead [inter-process links](http://snabbco.github.io/tag/v2018.09.html#inter-process-links-apps.interlink.),
+With hardware support for receive-side scaling (RSS), processes can share a
+network I/O device while receiving and transmitting on dedicated hardware
+queues, but they can also forward packets from one to another. The latter is
+accomplished through low-overhead [inter-process links](http://snabbco.github.io/tag/v2018.09.html#inter-process-links-apps.interlink.),
 which will be the topic of this article.
 
 _“Systems programmers are the high priests of a low cult”_—Robert S. Barton
 
-< Fast, multi-core, single-producer/single-consumer queues
+< Fast, multi-core, SPSC queues
 
- At the
- [heart](https://github.com/snabbco/snabb/blob/v2018.09/src/lib/interlink.lua)
+ At the [heart](https://github.com/snabbco/snabb/blob/v2018.09/src/lib/interlink.lua)
  of Snabb’s inter-process links lies a single-producer/single-consumer (SPSC)
  queue that is optimized for low overhead, multi-core operation. For these
  inter-process queues we have adapted a ring buffer design described in
@@ -48,11 +47,11 @@ _“Systems programmers are the high priests of a low cult”_—Robert S. Barto
  }
  #
 
- The basic ring buffer above can be inherently consistent during multi-core
- operation on modern x86\_64 processors when used as a
+ On x86\_64 processors, the basic ring buffer above can be inherently
+ consistent during multi-core operation when used as a
  single-producer/single-consumer queue: the {read} and {write} cursors are
- mutated by the producer and consumer exclusively, and storing of doublewords¹
- is atomic. Total store ordering (TSO) takes care of the rest.
+ mutated by the producer and consumer exclusively, and to store a doubleword¹
+ is an atomic operation. Total store ordering (TSO) takes care of the rest.
 
  There is only one problem: assuming the producer and consumer run on separate
  cores, whenever the consumer increments the {read} cursor it will also
