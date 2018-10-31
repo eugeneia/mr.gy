@@ -5,6 +5,11 @@
         <link>http://mr.gy/blog/</link>
         <language>en-us</language>
         <item>
+            <title>Inter-process&#xA0;links for Snabb</title>
+            <link>http://mr.gy/blog/snabb-interlink.html</link>
+            <pubDate>Wed, 31 Oct 2018 11:53:00 GMT</pubDate>
+        </item>
+        <item>
             <title>Vendoring with Quicklisp, Make, Git, and Nix</title>
             <link>http://mr.gy/blog/lisp-vendoring-quicklisp-nix.html</link>
             <pubDate>Sun, 19 Aug 2018 12:37:00 GMT</pubDate>

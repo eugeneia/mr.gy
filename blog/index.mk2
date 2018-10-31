@@ -1,5 +1,7 @@
 Hi, I’m [Max Rottenkolber](http://mr.gy) and this is my technical Blog.
 
++ [Inter-process links for
+  Snabb](snabb-interlink.html) _Wednesday, 31 October 2018_
 + [Vendoring with Quicklisp, Make, Git, and
   Nix](lisp-vendoring-quicklisp-nix.html) _Sunday, 19 August 2018_
 + [Ephemeral Key Exchange in Vita,
