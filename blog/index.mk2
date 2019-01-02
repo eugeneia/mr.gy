@@ -1,5 +1,7 @@
 Hi, I’m [Max Rottenkolber](http://mr.gy) and this is my technical Blog.
 
++ [A Glimpse into the Timeline: a Probabilistic Event Log for
+  Snabb](vita-timeline.html) _Wednesday, 2 January 2019_
 + [Inter-process links for
   Snabb](snabb-interlink.html) _Wednesday, 31 October 2018_
 + [Vendoring with Quicklisp, Make, Git, and

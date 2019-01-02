@@ -5,6 +5,12 @@
         <link>http://mr.gy/blog/</link>
         <language>en-us</language>
         <item>
+            <title>A Glimpse into the Timeline: a Probabilistic Event&#xA0;Log for
+                   Snabb</title>
+            <link>http://mr.gy/blog/vita-timeline.html</link>
+            <pubDate>Wed, 2 Jan 2019 17:48:00 GMT</pubDate>
+        </item>
+        <item>
             <title>Inter-process&#xA0;links for Snabb</title>
             <link>http://mr.gy/blog/snabb-interlink.html</link>
             <pubDate>Wed, 31 Oct 2018 11:53:00 GMT</pubDate>
