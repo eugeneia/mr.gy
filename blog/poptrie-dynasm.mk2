@@ -27,31 +27,30 @@ possibly other use cases as well).
  structure to hold the _forwarding information base_ (FIB), which is
  networking-speak for a mapping from prefixes (keys) to next hops (values). In
  this compressed trie each node holds edges for the next _k_ = 6 bits of the
- prefix which again point to either nodes or leaves.
+ prefix which in turn point to either child nodes or leaves.
 
  Poptrie nodes are efficiently encoded using a trick based on the [popcnt](https://www.felixcloutier.com/x86/popcnt)
  instruction which counts the number of bits set in a bit vector. Each node
- consists of two base pointers—one into an array of nodes, and another into an
+ consists of two base offsets—one into an array of nodes, and another into an
  array of leaves—as well as two 64‑bit vectors that hold compressed information
- about the edges of the node. Let us call them the node vector and the leaf
- vector respectively.
+ about the edges of the node. Let us call them the node and the leaf vectors.
 
  #media Figure 3 from the Poptrie paper showing the encoding of a node.#
  poptrie-figure3.png
 
  Since _k_ = 6 bits can represent 64 distinct values, each of the vectors has
- one bit of information for every possible value of the next 6 bit chunk of the
- prefix. A set bit in the corresponding position of the node vector indicates
- that the edge points to a node, and the number of bits set up that position
- indicates the child node’s offset from the node base pointer.
+ one bit of information for every possible value of the next _k_‑bit chunk of
+ the prefix. A set bit in the corresponding position of the node vector
+ indicates that the edge points to a node, and the number of bits set up that
+ position indicates the child node’s offset from the node base.
 
  While we could just invert the node vector and then count the set bits to get
  an offset into the leaves array, we expect the trie to be sparse and leaves to
- be plenty (a “no match” is represented by a leaf with value zero.) A node with
+ be plenty—a “no match” is represented by a leaf with value zero. A node with
  a single edge would imply 63 additional zero leaves in the leaves array. Enter
  _leaf compression_. In order minimize the size of the leaves array, the leaf
  vector has bits at the corresponding positions set if the edge points to a
- leaf and only if the leaf’s value differs from the value of the preceeding
+ leaf, and only if the leaf’s value differs from the value of the preceding
  leaf. I.e., adjacent identical leaves are deduplicated.
 
  #media Figure 5 from the Poptrie paper illustrating the _direct pointing_
@@ -74,9 +73,9 @@ possibly other use cases as well).
  Besides the lookup routine there is quite bit of logic required to build the
  Poptrie lookup structure in the first place. An incremental way of tackling
  the problem is to first build a simple binary trie to hold the routing
- information. Following networking-speak rather inaccurately our code calls
+ information. Following networking-speak (rather inaccurately) our code calls
  this the RIB (for _routing information base_). After we built the RIB we can
- convert it to an equivalent, compressed Poptrie structure (the FIB).
+ convert it to an equivalent, compressed Poptrie structure, the FIB.
 
  Note that no particular consideration was given towards optimizing either
  building the RIB or converting it to a FIB because we do not necessarily have
@@ -90,16 +89,16 @@ possibly other use cases as well).
  Currently, [lib.poptrie](https://github.com/eugeneia/snabb/blob/poptrie/src/lib/poptrie.lua)
  has the following interface:
 
- + {new}(_init_) — instantiate a new Poptrie object, either empty or from a
+ + {new}(_init_) — Instantiate a new Poptrie object, either empty or from a
    pre-built FIB. Additionally, _init_ is a map that allows you to tweak things
-   like _s_ or if you want the _direct pointing_ optimization at all.
- + {Poptrie:add}(_key_, _length_, _value_) — add prefix _key_ (a {uint8_t *})
+   like _s_ or whether you want to enable the _direct pointing_ optimization at
+   all.
+ + {Poptrie:add}(_key_, _length_, _value_) — Add prefix _key_ (a {uint8_t *})
    of _length_ to the RIB, mapping it to _value_ (a {uint16_t} with zero being
    reserved to indicate “no match”)
- + {Poptrie:build}() — derive the FIB from the RIB (overwrite the previous FIB)
- + {Poptrie:lookup32},{Poptrie:lookup64},{Poptrie:lookup128}(_key_) — look
-   up _key_ and return the associated value. These routines expect 32‑bit,
-   64‑bit, and 128‑bit keys respectively.
+ + {Poptrie:build}() — Derive the FIB from the RIB (overwrite the previous FIB)
+ + {Poptrie:lookup32/64/128}(_key_) — Look up _key_ and return the associated
+   value. These routines expect 32‑bit, 64‑bit, and 128‑bit keys respectively.
 
  There is currently no interface to remove individual prefixes or even clear
  the RIB, although there is no particular reason that prevents this from being
@@ -124,13 +123,13 @@ function Poptrie:add (key, length, value)
 end
  #
 
- The recurring theme of the code is bootstrapping from “simple, slow but
- correct” to “more complex but fast”. For instance we start with a innocent Lua
- implementation of a binary trie to tricky but safe Lua code that builds the
- compressed Poptrie structure. I am not going to go into that hairy piece of
- code here, but recommend to checkout the {Poptrie:build_node} function for
- those that are interested. Let’s just say I am happy I was able to do this in
- a high-level language.
+ The recurring theme of the code is bootstrapping from “simple, slow, and
+ obviously (ha!) correct” to “more complex but fast”. For instance we start
+ with an innocent Lua implementation of a binary trie, and transition to tricky
+ but safe Lua code that builds the compressed Poptrie structure. I am not going
+ to go into that hairy piece of code here, but recommend to checkout the
+ {Poptrie:build_node} function for those that are interested. Let’s just say I
+ am happy I was able to do this in a high-level language.
 
  #code#
 -- Map f over keys of length in RIB
@@ -150,12 +149,12 @@ end
  #
 
  Nodes and leaves are allocated on a contiguous chunk of memory. When a chunk
- is exhausted a new chunk twice the size of the previous chunk is allocated.
- The old chunk is copied into the new chunk, and the next node or leaf are
- allocated in the new extra space. The old chunk is eventually garbage
- collected. This works because all references to leaves or nodes are relative
- to the beginning of their backing chunk, so you can just swap out chunks by
- updating the pointers to the nodes and leaves arrays respectively.
+ is exhausted, a new chunk twice the size of the previous chunk is allocated.
+ The old chunk is copied into the new chunk, and the next node or leaf is
+ allocated in the new extra space. The old chunk becomes garbage and is
+ eventually collected. This works because all references to leaves or nodes are
+ relative to the pointer to their backing chunk, so you can just swap out
+ chunks by updating the pointers to the nodes and leaves arrays respectively.
 
  #code#
 function Poptrie:allocate_node ()
@@ -173,9 +172,9 @@ end
  #
 
  It remains visible in the code that it was constructed incrementally,
- initially lacking any of the optimizations described in the paper, and then
- adding them one by one. The leftovers of this scaffolding are toggles that you
- can switch off to access intermediary versions of the algorithm.
+ initially lacking any of the optimizations described in the paper, which where
+ then added one after the other. The leftovers of this scaffolding are toggles
+ that you can switch off to access intermediary versions of the algorithm.
 
  #code#
 -- Compress RIB into Poptrie
@@ -214,11 +213,11 @@ end
 
 < Lookup
 
- There are three flavours of lookup routines. First there is a simple
+ There are three flavors of lookup routines. First there is a simple
  {Poptrie:rib_lookup} routine to look up prefixes in the RIB. It is a dead
- simple recurive binary tree search, and useful as a reference since the
- Poptrie lookup routines should return the exact same results when querying our
- the compressed FIB.
+ simple recursive binary trie search, and useful as a reference since the
+ Poptrie lookup routines should return the exact same results when querying the
+ compressed FIB.
 
  Let us quickly recap how the Poptrie lookup works:
 
@@ -227,14 +226,14 @@ end
    tag) of the value is set. If the entry is a leaf then return early with its
    value, which is obtained by masking off the leaf tag. Otherwise start the
    lookup at the node denoted by the entry.
- + *2.* Check if the edge denoted by the next _k_ bit segement of the prefix
+ + *2.* Check if the edge denoted by the next _k_ bit segment of the prefix
    points to a node. If so fetch the next node and repeat this step with the
    child node and the next prefix segment.
  + *3.* Fetch the leaf denoted by the _k_ bit segment and return its value.
 
- Our first implementation is written in Lua. It is not particularily fast, but
+ Our first implementation is written in Lua. It is not particularly fast, but
  supports all combinations of optimizations turned on or off and works on
- prefixes of any length. It is mainly used as a runnable reference for
+ prefixes of any length. It is mainly used as a runable reference for
  comparison with the x86 assembly implementation.
 
  #code#
@@ -253,10 +252,15 @@ end
 
  The [DynASM generator](https://github.com/eugeneia/snabb/blob/poptrie/src/lib/poptrie_lookup.dasl)
  for the optimized x86 lookup routines on the other hand is supposed to
- generate the best code possible, and keeps all of its working set in
- registers. [Pete Cawley](https://www.corsix.org/) helped a lot by reviewing
- the first version of the code and subsequently pointing out a bunch of x86
- tricks that earned its right to be called “optimized”. :-)
+ generate the best code possible, and keeps its working data set in registers.
+ [Pete Cawley](https://www.corsix.org/) helped a lot by reviewing the first
+ version of the code and subsequently pointing out a bunch of x86 tricks that
+ justify this code to be called “optimized”. :-)
+
+ Note that to use the optimized lookup routines you must ensure that RIB and
+ FIB contain no prefixes longer than the keys you will look up. I.e., you would
+ call {Poptrie:lookup32} on a FIB with prefixes of length less than or equal to
+ 32 bits.
 
  #code#
  ...
@@ -288,12 +292,12 @@ end
  ...
  #
 
- The above excerpt shows how its parameterized on prefix/key size as well as on
- the availability of certain new x86 features such as [BMI2](https://en.wikipedia.org/wiki/Bit_Manipulation_Instruction_Sets#BMI2_\(Bit_Manipulation_Instruction_Set_2\)).
- This {ifdef}-esque code is certainly not pretty to look at, but we are not
- leaving any performance on the table here. Note that to use the optimized
- lookup routines you must ensure that the FIB contains no keys longer than
- the keys you will look up.
+ The above excerpt shows how the generator is parameterized on prefix/key size
+ as well as on the availability of certain new x86 features such as [BMI2](https://en.wikipedia.org/wiki/Bit_Manipulation_Instruction_Sets#BMI2_\(Bit_Manipulation_Instruction_Set_2\)).
+ That is, we assemble different routines for each key size, and different code
+ depending on which features the executing CPU supports at runtime. This
+ {ifdef}-esque code is certainly not pretty to look at, but we would rather not
+ leave any performance on the table here.
 
 >
 
@@ -358,14 +362,14 @@ lookup128(direct_pointing): 34.39 cycles/lookup 66.80 instructions/lookup
  It is difficult to make general statements about how memory latency impacts
  performance because it really depends on the runtime profile of your
  application when it processes a real world workload. Worst case performance
- might not necessairly a particularily interesting cas either. It is clear
- however that memory accesses will become the bottleneck depending on your
+ might not necessarily a particularly interesting case either. However, it is
+ clear that memory accesses will become the bottleneck depending on your
  routing table and traffic profile.
 
  Testing in [Vita](https://github.com/inters/vita) has shown practically
  equivalent performance when compared to the previously used _DIR-24-8_
  implementation. This is good news for Vita because we need to support IPv6
- routes, but might not be particularily representative for other applications
+ routes, but might not be particularly representative for other applications
  as Vita typically uses very small routing tables.
 
 >
