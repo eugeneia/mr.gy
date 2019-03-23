@@ -339,47 +339,65 @@ end
 < Benchmarking
 
  The library also includes a micro-benchmark to help quantify changes and
- optimizations. It seems most useful to ensure the benchmark executes in L3
- cache to highlight how the code performs on the CPU pipeline. Cache misses and
- the ensuing memory latency masks pressure on the pipeline and could cause us
- to miss valuable optimizations.
+ optimizations. To help quantify micro-optimizations in the x86 code it appears
+ most useful to ensure the benchmark executes in L3 cache in order to highlight
+ how the code performs on the CPU pipeline. Cache misses and the ensuing memory
+ latency masks pressure on the pipeline and could cause us to miss valuable
+ optimizations.
 
- #code Micro-benchmark results with the default parameters on a laptop. Hot
- cache.#
-PMU analysis (numentries=10000, keysize=32)
+ #code Micro-benchmark results with the default parameters on a laptop.
+ Executes within cache.#
+PMU analysis (numentries=10000, numhit=100, keysize=32)
 build: 0.2241 seconds
-lookup: 7877.08 cycles/lookup 17605.28 instructions/lookup
-lookup32: 60.41 cycles/lookup 99.95 instructions/lookup
-lookup64: 60.31 cycles/lookup 99.96 instructions/lookup
-lookup128: 70.94 cycles/lookup 118.61 instructions/lookup
-build(direct_pointing): 0.1960 seconds
-lookup(direct_pointing): 1218.53 cycles/lookup 3033.57 instructions/lookup
-lookup32(direct_pointing): 32.84 cycles/lookup 62.59 instructions/lookup
-lookup64(direct_pointing): 32.63 cycles/lookup 62.59 instructions/lookup
-lookup128(direct_pointing): 34.39 cycles/lookup 66.80 instructions/lookup
+lookup: 7922.54 cycles/lookup 17583.86 instructions/lookup
+lookup32: 61.34 cycles/lookup 99.96 instructions/lookup
+lookup64: 60.50 cycles/lookup 99.95 instructions/lookup
+lookup128: 70.93 cycles/lookup 118.62 instructions/lookup
+build(direct_pointing): 0.2007 seconds
+lookup(direct_pointing): 1281.85 cycles/lookup 3033.97 instructions/lookup
+lookup32(direct_pointing): 33.12 cycles/lookup 62.59 instructions/lookup
+lookup64(direct_pointing): 33.46 cycles/lookup 62.59 instructions/lookup
+lookup128(direct_pointing): 34.72 cycles/lookup 66.80 instructions/lookup
  #
 
- It is difficult to make general statements about how memory latency impacts
+ The number of instructions needed per lookup increases linearly with prefix
+ length, but is mostly unaffected by the total number of entries in the
+ Poptrie. That is, as long as the set of prefixes you query stay in cache. It
+ seems difficult to make general statements about how memory latency impacts
  performance because it really depends on the runtime profile of your
- application when it processes a real world workload. Worst case performance
- might not necessarily a particularly interesting case either. However, it is
- clear that memory accesses will become the bottleneck depending on your
- routing table and traffic profile.
+ application when it processes a real world workload.
+
+ #media Plot showing instructions/lookup vs number of Poptrie entries for
+ multiple prefix lengths on a Xeon E3-1246v3.#
+ poptrie-ins-numentries.svg
+
+ However, it is clear that memory access latency will become the bottleneck
+ depending on the size of your routing table and traffic profile. You can tweak
+ the {numhit} variable which controls how many distinct entries will be looked
+ up during the benchmark. Doing so shows that the instructions executed per
+ cycle ratio (IPC) takes a dive once the live data outgrows the cache.
+
+ #media Plot showing IPC vs number unique prefixes queried in a Poptrie with
+ 100,000 prefixes on a Xeon E3-1246v3.#
+ poptrie-ins-cycle-numhit.svg
 
  Testing in [Vita](https://github.com/inters/vita) has shown practically
  equivalent performance when compared to the previously used _DIR-24-8_
  implementation. This is good news for Vita because we need to support IPv6
- routes, but might not be particularly representative for other applications
- as Vita typically uses very small routing tables.
+ routes, and it looks like we can do that with a single algorithm without a
+ performance regression in IPv4 routing. Vita might not be a particularly
+ representative test case for other applications though, since it typically
+ uses very small routing tables.
 
 >
 
 < Next Steps
 
  Luke Gorrie brought up the possibility parallelizing lookups to amortize
- memory latency. That is, if we could somehow perform multiple lookups
- concurrently we could do useful work while waiting for the next nodes to be
- fetched from memory. Maybe someone wants to take a stab at vectorizing the
- poptrie lookup routine? :-)
+ memory latency. That is, if we could somehow perform multiple lookups in
+ parallel we could do useful work while waiting for the next nodes to be
+ fetched from memory. At least in theory this could help us keep a more steady
+ IPC ratio with random accesses on big routing tables. Maybe someone wants to
+ take a stab at vectorizing the Poptrie lookup routine? :-)
 
 >
