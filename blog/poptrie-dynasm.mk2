@@ -17,8 +17,8 @@ known as the cache.
 One reason to choose Poptrie is that it is sufficiently general to work on
 prefixes of arbitrary lengths. Hence, it is suitable for both IPv4 and IPv6
 addresses, unlike say [DIR-24-8](http://tiny-tera.stanford.edu/~nickm/papers/Infocom98_lookup.pdf)
-which targets 32‑bit prefixes exclusively. It would be neat if we can use a
-single, highly optimized lookup routine for all our routing needs (and
+which targets prefixes if up to 32 bits exclusively. It would be neat if we can
+use a single, highly optimized lookup routine for all our routing needs (and
 possibly other use cases as well).
 
 < A rough overview of Poptrie (go read the paper!)
@@ -171,10 +171,11 @@ function Poptrie:allocate_node ()
 end
  #
 
- It remains visible in the code that it was constructed incrementally,
- initially lacking any of the optimizations described in the paper, which where
- then added one after the other. The leftovers of this scaffolding are toggles
- that you can switch off to access intermediary versions of the algorithm.
+ It remains visible in the code that it was constructed incrementally. At first
+ {lib.poptrie} did not implement any of the optimizations described in the
+ paper, which where then added one after another. The leftovers of this
+ scaffolding are toggles that you can switch off to access intermediary
+ versions of the algorithm.
 
  #code#
 -- Compress RIB into Poptrie
@@ -208,6 +209,13 @@ function Poptrie:configure_lookup ()
       unpack(asm_cache[config])
 end
  #
+
+ Credit where credit is due: a lot of the design choices were influenced by
+ Pete Bristow’s earlier work on [LPM implementations](https://github.com/snabbco/snabb/tree/v2018.09/src/lib/lpm)
+ for [Snabb](https://github.com/snabbco/snabb). Notably, the requirement that
+ the compressed FIB is easily copied between processes was inherited from his
+ design. Likewise, the idea of bootstrapping from a simple trie was apparent
+ from looking at the prior LPM implementations.
  
 >
 
@@ -254,8 +262,8 @@ end
  for the optimized x86 lookup routines on the other hand is supposed to
  generate the best code possible, and keeps its working data set in registers.
  [Pete Cawley](https://www.corsix.org/) helped a lot by reviewing the first
- version of the code and subsequently pointing out a bunch of x86 tricks that
- justify this code to be called “optimized”. :-)
+ version of the code and suggesting a bunch of x86 tricks that justify calling
+ the resulting code “optimized”. :-)
 
  Note that to use the optimized lookup routines you must ensure that RIB and
  FIB contain no prefixes longer than the keys you will look up. I.e., you would
@@ -342,7 +350,7 @@ end
  optimizations. To help quantify micro-optimizations in the x86 code it appears
  most useful to ensure the benchmark executes in L3 cache in order to highlight
  how the code performs on the CPU pipeline. Cache misses and the ensuing memory
- latency masks pressure on the pipeline and could cause us to miss valuable
+ latency mask pressure on the pipeline and could cause us to miss valuable
  optimizations.
 
  #code Micro-benchmark results with the default parameters on a laptop.
