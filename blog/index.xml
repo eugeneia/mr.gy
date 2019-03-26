@@ -5,6 +5,11 @@
         <link>http://mr.gy/blog/</link>
         <language>en-us</language>
         <item>
+            <title>Implementing Poptrie in Lua and DynASM</title>
+            <link>http://mr.gy/blog/poptrie-dynasm.html</link>
+            <pubDate>Tue, 26 Mar 2019 09:13:00 GMT</pubDate>
+        </item>
+        <item>
             <title>A Glimpse into the Timeline: a Probabilistic Event&#xA0;Log for
                    Snabb</title>
             <link>http://mr.gy/blog/vita-timeline.html</link>
