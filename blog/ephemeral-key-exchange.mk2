@@ -76,7 +76,7 @@ in order to signify it as such.
  protocol messages and resend them at a later time. If a node can be made to
  believe these duplicate messages to be genuine then authenticity is broken.
 
- The SIGMA paper (Krawczyk, 2003) referenced before describes more of such
+ The SIGMA paper (Krawczyk, 2003) referenced before describes more such
  subtle requirements (loosely quoted):
 
  + *aliveness requirement* if _A_ completes a session with peer _B_ then _A_
@@ -89,7 +89,7 @@ in order to signify it as such.
 
  Another requirement expected of a modern key exchange protocol is that it
  provides [forward secrecy](https://en.wikipedia.org/wiki/Forward_secrecy).
- Assuming a protocol provides confidentiality and authenticity by means of a
+ Assuming a protocol provides confidentiality and authenticity by means of
  (a)symmetric preshared keys that were exchanged out-of-band, what happens
  if any of these mother keys is compromised? In order for forward secrecy to
  be provided, an attacker should not be able to recover past ephemeral keys
@@ -319,8 +319,8 @@ in order to signify it as such.
 
  One remaining danger is memory corruption. Since we are using the LuaJIT FFI
  to call to libsodium and to fiddle with packet headers there is always some
- uncertainty about what might go wrong if write a byte too much. I am hopeful
- what this situation can be [improved](https://github.com/raptorjit/raptorjit/issues/156)
+ uncertainty about what might go wrong if we write a byte too much. I am
+ hopeful that this situation can be [improved](https://github.com/raptorjit/raptorjit/issues/156)
  in RaptorJIT by harnessing the powers of runtime type information on foreign
  pointers. “Details to be determined!”
 
