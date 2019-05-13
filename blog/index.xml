@@ -5,6 +5,11 @@
         <link>http://mr.gy/blog/</link>
         <language>en-us</language>
         <item>
+            <title>Ephemeral Key Exchange in Vita, part&#xA0;two</title>
+            <link>http://mr.gy/blog/ephemeral-key-exchange-2.html</link>
+            <pubDate>Mon, 13 May 2019 13:10:00 GMT</pubDate>
+        </item>
+        <item>
             <title>Implementing Poptrie in Lua and DynASM</title>
             <link>http://mr.gy/blog/poptrie-dynasm.html</link>
             <pubDate>Tue, 26 Mar 2019 09:13:00 GMT</pubDate>
