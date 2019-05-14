@@ -5,5 +5,5 @@
          :href "http://mr.gy/blog/index.xml"))
 
 :blog (:description "Hi, I’m [Max Rottenkolber](http://mr.gy) and this is
-                     my technical Blog."
+                     my technical Blog. [Subscribe](index.xml) via RSS."
        :url "http://mr.gy/blog/")
