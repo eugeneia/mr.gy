@@ -3,7 +3,7 @@ Recently we investigated some latency fluctuations (i.e., packet loss) in
 Igaliaʼs lwAFTR, a non-trivial Snabb application. I think the initial suspects
 were garbage collector pressure from stray heap allocations or a stray syscall
 blocking the engine. After ruling out GC and reaching for trusty old {strace}
-could see… {mprotect} calls!
+we could see… {mprotect} calls!
 
 What calls {mprotect} to mark pages _read-write_ and then calls {mprotect}
 again to mark them _read-execute_? A just‑in‑time compiler. Turns out RaptorJIT
@@ -15,18 +15,18 @@ process packets.#
 trace-frequency-before.jpg
 
 Looking into the offending code paths, they appeared to be mostly periodic
-house keeping tasks. Things run in timers at regular intervals to do this and
-that, and other rarely taken branches. They were getting “hot” and being
-compiled, but should they?
+house keeping tasks. Things that are run in timers at regular intervals to do
+this and that, and other rarely taken branches. They were getting “hot” and
+being compiled, but should they?
 
 My intuition of how a tracing JIT compiler like RaptorJIT (and LuaJIT, its
 ancestor) works is that frequently executed code paths are detected and
 subsequently compiled. To detect what is hot and needs compiling the VM
-profiles the application at runtime. The rationale being that paths that get
-executed often benefits from being optimized, while paths that are seldomly
-taken do not significantly affect the total execution time even if they are
-interpreted. Hey, infrequently executed paths might not even be worth the
-overhead in compilation.
+profiles the application at run time. The rationale being that paths that get
+executed often benefit from being optimized, while paths that are taken
+seldomly do not significantly affect total execution time, even if they are
+interpreted. Hey, compiling infrequently executed paths might not even be worth
+the overhead.
 
 What LuaJIT, and by extension RaptorJIT, implements in reality goes like
 follows. The virtual machine maintains counters for branches in the program.
@@ -35,17 +35,17 @@ and once that counter overflows a certain threshold the JIT attempts to compile
 a trace following that branch. At least, schematically it works like that.
 
 So in effect, LuaJIT will attempt compile all code paths that hit the threshold
-eventually, first come first served. That does not exactly match what was at
-least my intuition. Even rarely executed house keeping branches that are
-executed, say, once every minute or even every hour will eventually overflow
-their counters and trigger the JIT compiler.
+eventually—first-come, first-served. That does not exactly match what was at
+least my intuition. Even branches taken rarely, say, once every minute or even
+every hour will eventually overflow their counters and trigger the JIT
+compiler.
 
 One could argue that the system should not behave like that. The mere total
 number of executions of a given branch might not be a good metric to decide
 whether a code path is hot or not. Maybe there should be a connection to the
-time domain. Could we base our divisions on what to compile on whether a code
-path has been executed a certain number of times within a given time period? Or
-as Luke Gorrie [commented](https://github.com/Igalia/snabb/issues/1226#issuecomment-538967897):
+time domain. Could we base compilation decisions on whether a code path has
+been executed a certain number of times within a given time period? Or as
+Luke Gorrie [commented](https://github.com/Igalia/snabb/issues/1226#issuecomment-538967897):
 “Code gets hot when you hit it _frequently_ and frequency is about both number
 of hits and length of time.”
 
@@ -56,7 +56,7 @@ the deadline has elapsed before the threshold overflow, it causes trace
 recording to bail and thus inhibits trace compilation. This way RaptorJIT
 compiles traces for branches that are taken at least _N_ times within a second,
 instead of just _N_ times overall. Initially, that patch was not without bugs.
-Andy Wingo helpfully pointed out that I overlooked the counters that track
+Andy Wingo helpfully pointed out that I overlooked the counters that track
 trace exits. Hence, {trace_clearsnapcounts} was born.
 
 #code Patch for RaptorJIT to reset hot counters every second.#
@@ -174,7 +174,8 @@ index 5954771f..57184c1d 100644
 
 The patch appears to work. At least, our immediate problems are solved, and as
 hypothesized the code paths that are no longer compiled after the patch do not
-significantly affect performance. I feel like this patch shows some promise.
+significantly affect performance. I feel like this approach shows some promise.
 
-#media Trace creation timeline after the patch is applied.#
+#media Trace creation timeline after the patch is applied. Most traces are
+recorded and compiled within seconds of starting the benchmark.#
 trace-frequency-after.jpg
