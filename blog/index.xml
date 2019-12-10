@@ -5,6 +5,11 @@
         <link>http://mr.gy/blog/</link>
         <language>en-us</language>
         <item>
+            <title>Hacking RaptorJIT: hot or not?</title>
+            <link>http://mr.gy/blog/trace-frequency.html</link>
+            <pubDate>Tue, 10 Dec 2019 11:39:00 GMT</pubDate>
+        </item>
+        <item>
             <title>Ephemeral Key Exchange in Vita, part&#xA0;two</title>
             <link>http://mr.gy/blog/ephemeral-key-exchange-2.html</link>
             <pubDate>Mon, 13 May 2019 13:10:00 GMT</pubDate>
