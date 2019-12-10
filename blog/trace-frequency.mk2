@@ -1,6 +1,6 @@
 
 Recently we investigated some latency fluctuations (i.e., packet loss) in
-Igaliaʼs lwAFTR, a non-trivial Snabb application. I think the initial suspects
+Igalia’s lwAFTR, a non-trivial Snabb application. I think the initial suspects
 were garbage collector pressure from stray heap allocations or a stray syscall
 blocking the engine. After ruling out GC and reaching for trusty old {strace}
 we could see… {mprotect} calls!
