@@ -1,0 +1,6 @@
+:document (:title "How to XDP (with Snabb)"
+           :author "Max Rottenkolber <max@mr.gy>"
+           :index-headers-p nil
+           :index-p t)
+:publication-date nil
+;:stylesheets ((:media "screen" :href "/site-assets/api.css"))
