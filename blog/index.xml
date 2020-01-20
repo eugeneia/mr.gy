@@ -5,6 +5,11 @@
         <link>http://mr.gy/blog/</link>
         <language>en-us</language>
         <item>
+            <title>How to XDP (with Snabb)</title>
+            <link>http://mr.gy/blog/snabb-xdp.html</link>
+            <pubDate>Mon, 20 Jan 2020 17:26:00 GMT</pubDate>
+        </item>
+        <item>
             <title>Hacking RaptorJIT: hot or not?</title>
             <link>http://mr.gy/blog/trace-frequency.html</link>
             <pubDate>Tue, 10 Dec 2019 11:39:00 GMT</pubDate>

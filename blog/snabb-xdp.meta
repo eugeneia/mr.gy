@@ -2,5 +2,5 @@
            :author "Max Rottenkolber <max@mr.gy>"
            :index-headers-p nil
            :index-p t)
-:publication-date nil
+:publication-date "2020-01-20 18:26+0100"
 ;:stylesheets ((:media "screen" :href "/site-assets/api.css"))
