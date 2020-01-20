@@ -44,7 +44,6 @@
 
  First thing we need is to request a new {AF_XDP} type socket from Linux. This
  is done using the {socket(2)} system call. With ljsyscall this is as easy as
- this:
 
  #code#
  sock = assert(S.socket('xdp', 'raw'))
@@ -60,7 +59,7 @@
  be contiguous and mapped into the virtual address space of the process,
  aligned to the page size. The region is then subdivided into a number of
  chunks each used to store a single packet. The chunk size is configurable, but
- can not be larger than the size of a page. (Ergo, no huge packets with XDP.)
+ can not be larger than the size of a page.
 
  #code#
  page_size = S.getpagesize()
@@ -213,7 +212,7 @@
  of the mapping). This differs depending on whether a ring is a
  receive/transmit or a fill/completion ring. We can do this by summing the
  {desc} field’s offset (because we just happen to know that its always the last
- field!) with the descriptor size multiplied by the number of descriptors. For
+ field?) with the descriptor size multiplied by the number of descriptors. For
  example for the receive ring calculate the size like so
 
  #code#
@@ -232,10 +231,10 @@
  {mmap(2)} on the socket file descriptor with a constant offset specific to the
  individual rings. These offsets are defined by the kernel:
 
- + {XDP_PGOFF_RX_RING}:0x000000000ULL—for the receive ring
- + {XDP_PGOFF_TX_RING}:0x080000000ULL—for the transmit ring
- + {XDP_UMEM_PGOFF_FILL_RING}:0x100000000ULL—for the fill ring
- + {XDP_UMEM_PGOFF_COMPLETION_RING}:0x180000000ULL—for the completion ring
+ + {XDP_PGOFF_RX_RING}: 0x000000000—for the receive ring
+ + {XDP_PGOFF_TX_RING}: 0x080000000—for the transmit ring
+ + {XDP_UMEM_PGOFF_FILL_RING}: 0x100000000—for the fill ring
+ + {XDP_UMEM_PGOFF_COMPLETION_RING}: 0x180000000—for the completion ring
 
  For example, to map the receive ring one would then do something like this:
 
@@ -384,8 +383,8 @@
   past that and do some hot needling.
 
   BPF is a fairly simple fantasy instruction set. The kernel is capable of
-  loading an executing programs encoded in this instruction set, and defines a
-  single eBPF instruction like so:
+  loading and executing programs encoded in this instruction set, and it
+  defines a single eBPF instruction like so:
 
   #code#
   bpf_ins = ffi.typeof[[
@@ -407,7 +406,7 @@
   #code This instruction loads the constant zero into the third register. To
   get the right opcode we really just need to bitwise-or a bunch of constants
   (operand class, ALU mode, source mode, …). Here, {op} is {0x04|0xb0|0x00} in
-  C syntax.#
+  C syntax. See _include/uapi/linux/bpf.h_#
   { op=bor(c.ALU, a.MOV, s.K), dst=3, imm=0 }
   #
 
@@ -420,6 +419,12 @@
   used for forwarding packets. Calling built-ins such as {redirect_map} (which
   we will use) follows the generic calling convention.
 
+  #code Assemble a sequence of BPF instructions.#
+  function bpf_asm (insn)
+     return ffi.typeof("$[?]", bpf_ins)(#insn, insn)
+  end
+  #
+
   Below is the shortest program I could come up with that does the job. You
   could go crazy too, and do way more elaborate filtering of packets here
   (e.g., sending some to the kernel networking stack etc.).
@@ -427,8 +432,8 @@
   #code Note that we are embedding our BPF map into the program by doing a
   special load with its file descriptor as the source operand. We can load the
   queue index of the packet via the {struct xdp_md *} context look up the
-  associated XDP socket in our map. Kernel magic.#
-  local insns = bpf.asm{
+  associated XDP socket in our map. Kernel magic.#
+  local insns = bpf_asm{
      -- r3 = XDP_ABORTED
      { op=bor(c.ALU, a.MOV, s.K), dst=3, imm=0 },
      -- r2 = ((struct xdp_md *)ctx)->rx_queue_index
@@ -447,7 +452,7 @@
   There we have our XDP program. All that left to do is load it with the
   {bpf(2)} command code {BPF_PROG_LOAD} and make sure we load it as
   {BPF_PROG_TYPE_XDP}. Good news: in case you messed up the BPF program I found
-  that the error log produces by {BPF_PROG_LOAD} is really detailed and
+  that the error log produced by {BPF_PROG_LOAD} is really detailed and
   helpful!
 
   #code#
@@ -470,8 +475,9 @@
   Almost there! In the last step of our setup we need to tell the kernel to run
   our BPF program on packets incoming on our given interface. To do that we
   need to use the {netlink(7)} facility which entails opening a special kind of
-  socket, crafting a message that expresses our desire and sending it over the
-  socket to the kernel, and finally reading back the kernel’s response.
+  socket, crafting a message that expresses our desire, sending it to the
+  kernel via the netlink socket, and finally reading back the kernel’s
+  response.
 
   First we create the socket using the {socket(2)} system call with address
   family {AF_NETLINK}, and type {SOCK_RAW} since we will send a datagram. The
@@ -531,13 +537,13 @@
   Luckily, a bunch of those fields we can leave zeroed. There is no shortage of
   fields we have to fill with magic values though. Some of those constants are
   in ljsyscall already, others can be looked up in the kernel sources. The
-  operands should be clear however: we select an interface by index obtained via
-  {if_nametoindex(3)}, and pass the file descriptor that represents our loaded
-  BPF program. Oh and there a multiple length fields which you really need to
-  get right!
+  operands should be clear however: we select an interface by index obtained
+  via {if_nametoindex(3)}, and pass the file descriptor that represents our
+  loaded BPF program. Oh, and there a multiple length fields which you really
+  need to get right!
 
-  #code Heads up: when this failed I really had not much remedy besides reading
-  kernel sources. The error code does not tell you too much.#
+  #code _Heads up!_ When this failed I really had not much remedy besides
+  reading kernel sources. The error code does not tell you too much.#
   local IFLA_XDP = 43
   local IFLA_XDP_FD = 1
   local IFLA_XDP_FLAGS = 3
@@ -605,7 +611,7 @@
  the cursors we let them exceed the array boundaries, and when they would
  overflow we let them wrap around in the modulo 32‑bit range. To translate the
  cursors to indices into the array we mask off the extra bits—the array’s size
- must be a power of two.
+ must be a power of two!
 
  Assume we mapped the fill ring to {fr_producer}, {fr_consumer} (of type
  {uint32_t *}), and {fr_desc} (of type {uintptr_t *}). We can get the number of
@@ -618,7 +624,7 @@
  #
 
  We are the producer of the fill ring. To supply fresh chunks to the kernel we
- could with a loop like this:
+ could write a loop like this:
 
  #code Note: {band} is bitwise _and_.#
  while fr_entries() < xdp_ring_ndesc do
@@ -689,10 +695,11 @@
  + we do not read or write from the cursors unless absolutely necessary to
    minimize cache misses
 
- If you were wondering why _Mapping the descriptor rings_ was so contrived, its
- because the size of a cache line depends on the CPU model. Hence, the memory
- layout of the rings can differ depending on the CPU. The {XDP_MMAP_OFFSETS}
- socket option can be queries to get the layout for you current CPU.
+ If you were wondering why _Mapping the descriptor rings_ was so contrived,
+ it’s because the size of a cache line depends on the CPU model. Hence, the
+ memory layout of the rings can differ depending on the CPU. The
+ {XDP_MMAP_OFFSETS} socket option can be queried to get the layout for you
+ current CPU.
 
  Additionally, we really do not want to read {rx_producer} and {rx_consumer}
  for every packet we receive or transmit. We can work around this by keeping
@@ -748,7 +755,7 @@
  #
 
  The next step is to unmap the the rings we mapped into our virtual address
- space. Before we do that we might want to first reclaim the chunks that are
+ space. Before we do that we first might want to reclaim the chunks that are
  still on the rings. If you can get away with deallocating the whole UMEM
  region you do not need to bother. However, if you (like me) share the UMEM
  region with multiple stand-alone XDP sockets (i.e., with independent
@@ -764,15 +771,17 @@
  ring, and decremented when read a packet off the receive ring. The other
  counter is incremented when you put a packet on the transmit ring, and
  decremented when you take a chunk off the completion ring. After closing the
- XDP socket you can then flush the receive and completion rings and know how
- many chunks are still in-flight on the fill and transmit rings. You can then
- undo the right amount of writes to the fill and transmit rings to reclaim your
- chunks. This hack depends on three assumptions:
+ XDP socket you can then flush the receive and completion rings—e.g., consume
+ all packets that remain on those rings. When you update your counters
+ accordingly you now know how many chunks are still in-flight on the fill and
+ transmit rings. You can then undo the right amount of writes to the fill and
+ transmit rings to reclaim your chunks. This hack depends on the assumption
+ that the kernel…
 
- + the kernel does not modify the rings after closing the XDP socket
- + the kernel moves packets from the fill ring to the receive ring and from the
-   transmit ring to the completion ring _in-order_
- + the kernel does not clobber descriptors that have not yet moved to a receive
+ + does not modify the rings after closing the XDP socket
+ + moves packets from the fill ring to the receive ring and from the transmit
+   ring to the completion ring _in-order_
+ + does not clobber descriptors that have not yet moved to a receive
    or completion ring
 
  Finally, you can unmap the rings using a {munmap(2)} system call. You might
