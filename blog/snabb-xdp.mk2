@@ -247,7 +247,7 @@
  #
 
  Given the ring’s layout obtained previously we can now construct pointers to
- the fields of the ring. (I will explain what how to use these later.)
+ the fields of the ring—I will explain what how to use these later.
 
  #code Note: if this was a fill or completion ring the type for the descriptors
  would be {uintptr_t *} instead.#
@@ -267,7 +267,7 @@
 
 < Binding an XDP socket to an interface
 
- This one is fairly easy. All we need to is bind the socket using an
+ This one is fairly easy. All we need do to is bind the socket using an
  XDP-specific socket address. It looks like this:
 
  #code#
