@@ -1,0 +1,100 @@
+#media Chiomonte#
+stm32-iching.jpg
+
+What a year! It’s been pretty quiet on this blog. However, I’ve been busy and it
+can’t hurt to recap some of the things I did last year. Last year actually
+started out with FOSDEM. Big crowd. Huge event. I gave two talks, in person.
+Can you imagine?
+
+< RaptorJIT VM
+
+ [At FOSDEM 2020 I gave a talk](https://archive.fosdem.org/2020/schedule/event/raptorjit_lua/)
+ on the work done on RaptorJIT, and the goals and motivations of the project. I
+ also gave [a more general talk at ELS 2020](https://mr.gy/screen/Later%20Binding%20ELS2020%20talk%20video%202.mp4)
+ on the workings, benefits, and caveats of just-in-time compilation, using LuaJIT
+ as an example. That talk, [Later Binding](LaterBinding.pdf), is also available
+ in a more detailed paper format.
+ 
+ A milestone was reached on the work of porting LuaJIT’s interpreter to C. After
+ fixing a [handful more bugs](https://github.com/eugeneia/raptorjit/compare/f56b4db...9d61343)
+ I managed to run the Snabb _basic1_ benchmark successfully using the new VM, and
+ currently our new interpreter passes almost two thirds of the Snabb test suite.
+ Famous last mile, huh?
+
+>
+
+< Rush
+
+ Mostly to learn Rust, I ported [Snabb](https://github.com/snabbco/snabb) to
+ Rust, and you can relive my experience doing so in a
+ [screencast series I recorded while hacking on Rush](https://mr.gy/screen/rush).
+ That work turned out commercially viable, and I’m currently working with a
+ startup on network shaping tools based on Rush.
+ 
+>
+
+< Embedded hacking
+
+ I also wanted to give Rust a spin for embedded hacking, and ended up doing a
+ couple project around the STM32 bluepill and Waveshare e-ink screens. I had to
+ learn some very basic soldering—behold my first ever solder, which I thought I
+ botched but turned out to work fine:
+
+ #media My first solder#
+ first-solder.jpg
+ 
+ …and I also used a logic analyzer for the first time. A new form of debugging
+ for me which I enjoyed thoroughly! I ended up doing an [I Ching](https://en.wikipedia.org/wiki/I_Ching)
+ divination appliance, that collects entropy by tuning two clock crystals on the
+ STM32F103C8 against each others, and renders the resulting hexagram to a
+ e-ink screen.
+
+ #media I Ching on E-Paper#
+ epaper-iching.jpg
+ 
+ Following Dmitry V. Sokolov’s [Understandable RayTracing in 256 lines of bare C++](https://github.com/ssloy/tinyraytracer/wiki/Part-1:-understandable-raytracing)
+ I hacked up a scruffy ray tracer. Mind you the e-ink displays I was working with
+ support just two colors, so I came up with a dithering based approach.
+
+ #media Attempts at ray tracing#
+ ray-tracing.jpg
+ 
+ I then ported that ray tracer to the STM32F103C8 board, this time using
+ Mecrisp-Stellaris Forth, because I always wanted to do some Forth hacking.
+ That turned out to be quite the fun exercise given the constraints of this
+ particular microcontroller. 72 MHz core clock frequency, 20 Kbytes of RAM,
+ 128 Kbytes of ROM, and no [FPU](https://en.wikipedia.org/wiki/Floating-point_unit).
+
+ #media STM32 ray tracing#
+ stm32-raytracer.jpg
+ 
+ Forth was lots of fun. In some ways it is truly elegant, and fully interactive
+ given the compiler and interpreter run on the freakin’ microcontroller, snappy,
+ even at 8 MHz. Below you can marvel at my breakpoint-to-REPL debugger in six
+ lines of Forth. Nevertheless, I feel I saturated my hunger for Forth hacking for
+ now.
+
+ #code Forth breakpoint-to-REPL debugger#
+ false variable break-continue
+ : continue true break-continue ! ;
+ : break
+   cr ." Breakpoint hit"
+   cr begin cr query interpret ." ok." break-continue @ until
+   cr false break-continue ! ;
+ #
+
+>
+
+< Designing a CPU, and an ISA, and an assembler, and a compiler!
+
+ https://twitter.com/eugeneia_/status/1324346320744841223
+ 
+ https://twitter.com/eugeneia_/status/1331630768846741504
+ 
+ https://twitter.com/eugeneia_/status/1336300229595947008
+ 
+ https://twitter.com/eugeneia_/status/1346420747875586051
+ 
+ https://twitter.com/eugeneia_/status/1348965734051930115
+
+>
