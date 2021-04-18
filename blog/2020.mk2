@@ -1,4 +1,4 @@
-#media Chiomonte#
+#media#
 stm32-iching.jpg
 
 What a year! It’s been pretty quiet on this blog. However, I’ve been busy and it
@@ -62,14 +62,15 @@ Can you imagine?
  I then ported that ray tracer to the STM32F103C8 board, this time using
  Mecrisp-Stellaris Forth, because I always wanted to do some Forth hacking.
  That turned out to be quite the fun exercise given the constraints of this
- particular microcontroller. 72 MHz core clock frequency, 20 Kbytes of RAM,
- 128 Kbytes of ROM, and no [FPU](https://en.wikipedia.org/wiki/Floating-point_unit).
+ particular micro-controller.
+ 
+ 72 MHz core clock frequency, 20 Kbytes of RAM, 128 Kbytes of ROM, and no [FPU](https://en.wikipedia.org/wiki/Floating-point_unit).
 
  #media STM32 ray tracing#
  stm32-raytracer.jpg
  
  Forth was lots of fun. In some ways it is truly elegant, and fully interactive
- given the compiler and interpreter run on the freakin’ microcontroller, snappy,
+ given the compiler and interpreter run on the freakin’ micro-controller, snappy,
  even at 8 MHz. Below you can marvel at my breakpoint-to-REPL debugger in six
  lines of Forth. Nevertheless, I feel I saturated my hunger for Forth hacking for
  now.
@@ -87,14 +88,89 @@ Can you imagine?
 
 < Designing a CPU, and an ISA, and an assembler, and a compiler!
 
- https://twitter.com/eugeneia_/status/1324346320744841223
+ Continuing the hardware theme, I decided I wanted to learn Verilog and what
+ better way to learn than to design and implement your own tiny CPU core and ISA?
+
+ #media A fledgeling CPU architecture and ISA#
+ modena-v0.jpg
  
- https://twitter.com/eugeneia_/status/1331630768846741504
+ While I think the ISA turned out OK, my first core design isn’t very good as
+ could be expected. I’ll have to re-architect this one to get it to synthesize on
+ a real FPGA. It does however simulate fine in Verilator already, and that’s good
+ enough for quite a test drive.
  
- https://twitter.com/eugeneia_/status/1336300229595947008
+ And its already somewhat fully featured too, at least conceptually. I made a
+ branch predictor, instruction and data caches, an ALU, and a load/store unit.
+
+ #media Debugging my puny branch predictor#
+ modena-branch-predict.png
  
- https://twitter.com/eugeneia_/status/1346420747875586051
+ To play with my core, I had to write an assembler for my branch new ISA of
+ course, but I didn’t stop there. Learning about SSA based compilers was high on
+ my bucket list, so I built my first compiler for a subset of Lua targeting my
+ fledgeling architecture.
  
- https://twitter.com/eugeneia_/status/1348965734051930115
+ Compilers are quite the rabbit hole! I ended up implementing function calls,
+ call inlining, code folding, dead code elimination, structs and arrays, and
+ a simple compile-time type system. And while its still in a very early stage of
+ development, it kind of works nicely? I can compile and assembly non-trivial
+ programs, and correctly run them on my CPU core under Verilator. How cool?
+ 
+ Below is a test program and its compiler output, just to show off. I can’t wait
+ to get back to hacking on this next time I can free up some significant time!
+ 
+ #code Non-trivial Lua program#
+ function foo (a, b)
+    local sum = 0
+    for i = a, b do
+       sum = sum + i
+    end
+    if sum > 100 then
+       return bar(sum)
+       -- return -sum
+    else
+       return sum
+    end
+ end
+ 
+ function bar (x) return baz(x) end
+ 
+ function baz (x) return -x  end
+ 
+ function main ()
+    return foo(1, 100)
+ end
+ #
+ 
+ #code Compiler output for our non-trivial Lua program#
+ k r0 @main
+ jmpl r0
+ 
+ @main:
+ k r1 0
+ k r2 100
+ k r3 1
+ k r4 1
+ L1:
+ cmps r5 r2 r4
+ jge r5 >L2
+ jmp >L3
+ L2:
+ add r1 r1 r4
+ add r4 r4 r3
+ jmp <L1
+ L3:
+ k r4 100
+ cmps r4 r4 r1
+ jge r4 >L4
+ jmp >L5
+ L4:
+ mov r0 r1
+ ret r29
+ L5:
+ k r4 0
+ sub r0 r4 r1
+ ret r29
+ #
 
 >
