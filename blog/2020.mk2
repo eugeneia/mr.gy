@@ -46,7 +46,7 @@ Can you imagine?
  …and I also used a logic analyzer for the first time. A new form of debugging
  for me which I enjoyed thoroughly! I ended up doing an [I Ching](https://en.wikipedia.org/wiki/I_Ching)
  divination appliance, that collects entropy by tuning two clock crystals on the
- STM32F103C8 against each others, and renders the resulting hexagram to a
+ STM32F103C8 against each other, and renders the resulting hexagram to a
  e-ink screen.
 
  #media I Ching on E-Paper#
