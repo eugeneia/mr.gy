@@ -64,14 +64,14 @@ Can you imagine?
  That turned out to be quite the fun exercise given the constraints of this
  particular micro-controller.
  
- 72 MHz core clock frequency, 20 Kbytes of RAM, 128 Kbytes of ROM, and no [FPU](https://en.wikipedia.org/wiki/Floating-point_unit).
+ 72 MHz core clock frequency, 20 Kbytes of RAM, 128 Kbytes of ROM, and no [FPU](https://en.wikipedia.org/wiki/Floating-point_unit).
 
  #media STM32 ray tracing#
  stm32-raytracer.jpg
  
  Forth was lots of fun. In some ways it is truly elegant, and fully interactive
  given the compiler and interpreter run on the freakin’ micro-controller, snappy,
- even at 8 MHz. Below you can marvel at my breakpoint-to-REPL debugger in six
+ even at 8 MHz. Below you can marvel at my breakpoint-to-REPL debugger in six
  lines of Forth. Nevertheless, I feel I saturated my hunger for Forth hacking for
  now.
 
