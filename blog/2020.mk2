@@ -62,7 +62,7 @@ Can you imagine?
  I then ported that ray tracer to the STM32F103C8 board, this time using
  Mecrisp-Stellaris Forth, because I always wanted to do some Forth hacking.
  That turned out to be quite the fun exercise given the constraints of this
- particular micro-controller. 72 MHz core clock frequency, 20 Kbytes of RAM,
+ particular micro-controller: 72 MHz core clock frequency, 20 Kbytes of RAM,
  128 Kbytes of ROM, and no [FPU](https://en.wikipedia.org/wiki/Floating-point_unit).
 
  #media STM32 ray tracing#
