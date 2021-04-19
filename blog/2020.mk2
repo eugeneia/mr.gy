@@ -36,7 +36,7 @@ Can you imagine?
 < Embedded hacking
 
  I also wanted to give Rust a spin for embedded hacking, and ended up doing a
- couple project around the STM32 bluepill and Waveshare e-ink screens. I had to
+ couple projects around the STM32 bluepill and Waveshare e-ink screens. I had to
  learn some very basic soldering—behold my first ever solder, which I thought I
  botched but turned out to work fine:
 
@@ -62,9 +62,8 @@ Can you imagine?
  I then ported that ray tracer to the STM32F103C8 board, this time using
  Mecrisp-Stellaris Forth, because I always wanted to do some Forth hacking.
  That turned out to be quite the fun exercise given the constraints of this
- particular micro-controller.
- 
- 72 MHz core clock frequency, 20 Kbytes of RAM, 128 Kbytes of ROM, and no [FPU](https://en.wikipedia.org/wiki/Floating-point_unit).
+ particular micro-controller. 72 MHz core clock frequency, 20 Kbytes of RAM,
+ 128 Kbytes of ROM, and no [FPU](https://en.wikipedia.org/wiki/Floating-point_unit).
 
  #media STM32 ray tracing#
  stm32-raytracer.jpg
@@ -105,7 +104,7 @@ Can you imagine?
  #media Debugging my puny branch predictor#
  modena-branch-predict.png
  
- To play with my core, I had to write an assembler for my branch new ISA of
+ To play with my core, I had to write an assembler for my brand new ISA of
  course, but I didn’t stop there. Learning about SSA based compilers was high on
  my bucket list, so I built my first compiler for a subset of Lua targeting my
  fledgeling architecture.
@@ -113,7 +112,7 @@ Can you imagine?
  Compilers are quite the rabbit hole! I ended up implementing function calls,
  call inlining, code folding, dead code elimination, structs and arrays, and
  a simple compile-time type system. And while its still in a very early stage of
- development, it kind of works nicely? I can compile and assembly non-trivial
+ development, it kind of works nicely? I can compile and assemble non-trivial
  programs, and correctly run them on my CPU core under Verilator. How cool?
  
  Below is a test program and its compiler output, just to show off. I can’t wait
